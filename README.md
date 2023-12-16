@@ -1,6 +1,7 @@
 # MSc. Thesis @ FCUP 2023/2024
-
 ### Information
+This repo contains information and code related to my MSc dissertation.
+
 Title: "Author name disambiguation in publications using graph neural networks"
 
 Professors Miguel Silva (mepsilva@fc.up.pt) and Fernando Silva (fmsilva@fc.up.pt)
