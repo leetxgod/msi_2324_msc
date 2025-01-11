@@ -11,6 +11,10 @@ class CCount(Power):
 		self.sigma = sigma
 		super().__init__(arg, n, sigma)
 
+	def __repr__(self):
+		"""Representation of the regular expression's syntactical tree."""
+		return 'CCount({0:>s})'.format(self.__str__())
+
 	def derivative(self, sigma):
 		if self.n == 0:
 			return CEmptySet()

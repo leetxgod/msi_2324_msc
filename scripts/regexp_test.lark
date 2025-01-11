@@ -1,0 +1,54 @@
+start: rege
+
+?rege: pow_grp
+    ?pow_grp: disjn
+        | rege _CARET _LEFBR digit _RIGBR -> pow_min
+        | rege _CARET _LEFBR digit _COMMA digit _RIGBR -> pow_minmax
+        | rege _CARET _LEFBR digit _COMMA _INFTY _RIGBR -> pow_inf
+
+    ?disjn:  conjn
+        | pow_grp _UNIONT conjn -> disj
+
+    ?conjn: shufflen
+        |conjn _CONJT shufflen -> conj
+
+    ?shufflen: concatn
+        | shufflen _SHUFFLET concatn -> shuffle
+
+    ?concatn: rep
+        | concatn [_CONCATT] rep -> concat
+
+    ?rep: lre
+        | rep _START -> star
+        | rep _OPTIONT  -> option
+
+    ?lre: base
+        | _NOTT  lre  -> notn
+        | _USHUFFLET  lre -> u_shuffle
+
+    ?base: "(" rege ")" | symbol | epsilon | emptyset | sigmas | sigmap
+
+_START: "*"
+_SHUFFLET: ":"
+_CONJT: "&"
+_NOTT: "~"
+_CONCATT: "."
+_UNIONT: "+" | "|"
+_OPTIONT: "-" | "?"
+_TUPLET: "/"
+_USHUFFLET: "!"
+_CARET: "^"
+_LEFBR: "["
+_RIGBR: "]"
+_INFTY: "..."
+_COMMA: ","
+
+digit: /[0-9]+/
+symbol: /[a-zA-Z0-9]/
+
+epsilon: "@epsilon"
+emptyset: "@empty_set"
+sigmap: "@sigmaP"
+sigmas: "@sigmaS"
+
+%ignore /[ \t\f\"]+/
