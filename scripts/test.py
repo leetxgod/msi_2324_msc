@@ -3,7 +3,6 @@ from FAdo.reex import *
 from FAdo.fio import *
 from FAdo.rndadfa import *
 
-
 class CCount(Power):
 	def __init__(self, arg, n, sigma=None):
 		self.arg = arg
