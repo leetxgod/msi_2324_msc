@@ -17,8 +17,8 @@ start: rege
         | rep _START -> star
         | rep _OPTIONT  -> option
         | rep _CARET _LEFBR digit _RIGBR -> pow_min
-        | rep _CARET _LEFBR digit _COMMA digit _RIGBR -> pow_minmax
-        | rep _CARET _LEFBR digit _COMMA _INFTY _RIGBR -> pow_inf
+        | rep _CARET _LEFBR digit _COMMA digit _LEFBR -> pow_minmax
+        | rep _CARET _LEFBR digit _COMMA _INFTY _LEFBR -> pow_inf
 
     ?lre: base
         | _NOTT  lre  -> notn
