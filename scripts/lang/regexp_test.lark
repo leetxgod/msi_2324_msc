@@ -15,6 +15,7 @@ start: rege
 
     ?rep: lre
         | rep _START -> star
+        | rep _PLUST -> plus
         | rep _OPTIONT  -> option
         | rep _CARET _LEFBR digit _RIGBR -> pow_min
         | rep _CARET _LEFBR digit _COMMA digit _LEFBR -> pow_minmax
@@ -40,6 +41,7 @@ _LEFBR: "["
 _RIGBR: "]"
 _INFTY: "..."
 _COMMA: ","
+_PLUST: "%"
 
 digit: /[0-9]+/
 symbol: /[a-zA-Z0-9]/
