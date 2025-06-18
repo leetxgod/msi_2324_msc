@@ -95,164 +95,164 @@ class CPlus(Unary):
         (r1, pos1) = self.arg._marked(pos)
         return CPlus(r1), pos1
 
-    def reduced(self, has_epsilon=False):
-        rarg = self.arg._reducedS(False)
-        if rarg.emptysetP():
-            return CEmptySet(self.Sigma)
-        if rarg.epsilonP():
-            return CEpsilon(self.Sigma)
-        if self.arg is rarg:
-            return self
-        reduced = CPlus(rarg, self.Sigma)
-        return reduced
+    # def reduced(self, has_epsilon=False):
+    #     rarg = self.arg._reducedS(False)
+    #     if rarg.emptysetP():
+    #         return CEmptySet(self.Sigma)
+    #     if rarg.epsilonP():
+    #         return CEpsilon(self.Sigma)
+    #     if self.arg is rarg:
+    #         return self
+    #     reduced = CPlus(rarg, self.Sigma)
+    #     return reduced
 
-    # noinspection PyUnusedLocal
-    def _reducedS(self, has_epsilon=False):
-        return self.arg._reducedS(False)
+    # # noinspection PyUnusedLocal
+    # def _reducedS(self, has_epsilon=False):
+    #     return self.arg._reducedS(False)
 
-    def derivative(self, sigma):
-        d = self.arg.derivative(sigma)
-        return CConcat(d, CStar(self.arg, self.Sigma), self.Sigma)
+    # def derivative(self, sigma):
+    #     d = self.arg.derivative(sigma)
+    #     return CConcat(d, CStar(self.arg, self.Sigma), self.Sigma)
 
-    def partialDerivatives(self, sigma):
-        arg_pdset = self.arg.partialDerivatives(sigma)
-        pds = set()
-        star_arg = CStar(self.arg, self.Sigma)
-        for pd in arg_pdset:
-            if pd.emptysetP():
-                pds.add(CEmptySet(self.Sigma))
-            elif pd.epsilonP():
-                pds.add(star_arg)
-            else:
-                pds.add(CConcat(pd, star_arg, self.Sigma))
-        return pds
+    # def partialDerivatives(self, sigma):
+    #     arg_pdset = self.arg.partialDerivatives(sigma)
+    #     pds = set()
+    #     star_arg = CStar(self.arg, self.Sigma)
+    #     for pd in arg_pdset:
+    #         if pd.emptysetP():
+    #             pds.add(CEmptySet(self.Sigma))
+    #         elif pd.epsilonP():
+    #             pds.add(star_arg)
+    #         else:
+    #             pds.add(CConcat(pd, star_arg, self.Sigma))
+    #     return pds
 
-    def linearForm(self):
-        arg_lf = self.arg.linearForm()
-        lf = dict()
-        star_arg = CStar(self.arg, self.Sigma)
-        for head in arg_lf:
-            lf[head] = set()
-            for tail in arg_lf[head]:
-                if tail.emptysetP():
-                    lf[head].add(CEmptySet(self.Sigma))
-                elif tail.epsilonP():
-                    lf[head].add(star_arg)
-                else:
-                    lf[head].add(CConcat(tail, star_arg, self.Sigma))
-        return lf
+    # def linearForm(self):
+    #     arg_lf = self.arg.linearForm()
+    #     lf = dict()
+    #     star_arg = CStar(self.arg, self.Sigma)
+    #     for head in arg_lf:
+    #         lf[head] = set()
+    #         for tail in arg_lf[head]:
+    #             if tail.emptysetP():
+    #                 lf[head].add(CEmptySet(self.Sigma))
+    #             elif tail.epsilonP():
+    #                 lf[head].add(star_arg)
+    #             else:
+    #                 lf[head].add(CConcat(tail, star_arg, self.Sigma))
+    #     return lf
 
-    def support(self, side=True):
-        return self._odot(self.arg.support(side), side)
+    # def support(self, side=True):
+    #     return self._odot(self.arg.support(side), side)
 
-    def supportlast(self, side=True):
-        return self._odot(self.arg.supportlast(side), side)
+    # def supportlast(self, side=True):
+    #     return self._odot(self.arg.supportlast(side), side)
 
-    def _memoLF(self):
-        if hasattr(self, "_lf"):
-            return
-        self.arg._memoLF()
-        self._lf = dict()
-        star_arg = CStar(self.arg, self.Sigma)
-        for head in self.arg._lf:
-            pd_set = set()
-            self._lf[head] = pd_set
-            for tail in self.arg._lf[head]:
-                if tail.emptysetP():
-                    pd_set.add(CEmptySet(self.Sigma))
-                elif tail.epsilonP():
-                    pd_set.add(star_arg)
-                else:
-                    pd_set.add(CConcat(tail, star_arg, self.Sigma))
+    # def _memoLF(self):
+    #     if hasattr(self, "_lf"):
+    #         return
+    #     self.arg._memoLF()
+    #     self._lf = dict()
+    #     star_arg = CStar(self.arg, self.Sigma)
+    #     for head in self.arg._lf:
+    #         pd_set = set()
+    #         self._lf[head] = pd_set
+    #         for tail in self.arg._lf[head]:
+    #             if tail.emptysetP():
+    #                 pd_set.add(CEmptySet(self.Sigma))
+    #             elif tail.epsilonP():
+    #                 pd_set.add(star_arg)
+    #             else:
+    #                 pd_set.add(CConcat(tail, star_arg, self.Sigma))
 
-    def ewp(self):
-        if hasattr(self, "_ewp"):
-            self._ewp = self.arg.ewp()
-        return self.arg.ewp()
+    # def ewp(self):
+    #     if hasattr(self, "_ewp"):
+    #         self._ewp = self.arg.ewp()
+    #     return self.arg.ewp()
 
-    def tailForm(self):
-        arg_tf = self.arg.tailForm()
-        tf = dict()
-        star_arg = CStar(self.arg, self.Sigma)
-        for tail in arg_tf:
-            tf[tail] = set()
-            for head in arg_tf[tail]:
-                if head.emptysetP():
-                    tf[tail].add((CEmptySet(self.Sigma), CEmptySet(self.Sigma)))
-                elif head.epsilonP():
-                    tf[tail].add(star_arg)
-                else:
-                    new = _ifconcat(star_arg, head, both=True, sigma=self.Sigma)
-                    tf[tail].add(new)
-        return tf
+    # def tailForm(self):
+    #     arg_tf = self.arg.tailForm()
+    #     tf = dict()
+    #     star_arg = CStar(self.arg, self.Sigma)
+    #     for tail in arg_tf:
+    #         tf[tail] = set()
+    #         for head in arg_tf[tail]:
+    #             if head.emptysetP():
+    #                 tf[tail].add((CEmptySet(self.Sigma), CEmptySet(self.Sigma)))
+    #             elif head.epsilonP():
+    #                 tf[tail].add(star_arg)
+    #             else:
+    #                 new = _ifconcat(star_arg, head, both=True, sigma=self.Sigma)
+    #                 tf[tail].add(new)
+    #     return tf
 
-    def snf(self, _hollowdot=False):
-        if _hollowdot:
-            return self.arg.snf(False)
-        return CPlus(self.arg.snf(False), self.Sigma)
+    # def snf(self, _hollowdot=False):
+    #     if _hollowdot:
+    #         return self.arg.snf(False)
+    #     return CPlus(self.arg.snf(False), self.Sigma)
 
-    def nfaThompson(self):
-        sun = self.arg.nfaThompson()
-        star_nfa = CStar(self.arg, self.Sigma).nfaThompson()
-        au = sun.dup()
-        star_au = star_nfa.dup()
-        r_final = list(au.Final)
-        star_initial = list(star_au.Initial)[0]
-        state_map = {}
-        for state in star_au.States:
-            if state == star_initial:
-                for f_state in r_final:
-                    state_map[state] = f_state
-            else:
-                new_state = au.addState()
-                state_map[state] = new_state
-        for state in star_au.delta:
-            for symbol in star_au.delta[state]:
-                for target in star_au.delta[state][symbol]:
-                    if state == star_initial:
-                        for f_state in r_final:
-                            au.addTransition(f_state, symbol, state_map[target])
-                    else:
-                        au.addTransition(state_map[state], symbol, state_map[target])
-        new_finals = []
-        for f_state in star_au.Final:
-            if f_state == star_initial:
-                new_finals.extend(r_final)
-            else:
-                new_finals.append(state_map[f_state])
+    # def nfaThompson(self):
+    #     sun = self.arg.nfaThompson()
+    #     star_nfa = CStar(self.arg, self.Sigma).nfaThompson()
+    #     au = sun.dup()
+    #     star_au = star_nfa.dup()
+    #     r_final = list(au.Final)
+    #     star_initial = list(star_au.Initial)[0]
+    #     state_map = {}
+    #     for state in star_au.States:
+    #         if state == star_initial:
+    #             for f_state in r_final:
+    #                 state_map[state] = f_state
+    #         else:
+    #             new_state = au.addState()
+    #             state_map[state] = new_state
+    #     for state in star_au.delta:
+    #         for symbol in star_au.delta[state]:
+    #             for target in star_au.delta[state][symbol]:
+    #                 if state == star_initial:
+    #                     for f_state in r_final:
+    #                         au.addTransition(f_state, symbol, state_map[target])
+    #                 else:
+    #                     au.addTransition(state_map[state], symbol, state_map[target])
+    #     new_finals = []
+    #     for f_state in star_au.Final:
+    #         if f_state == star_initial:
+    #             new_finals.extend(r_final)
+    #         else:
+    #             new_finals.append(state_map[f_state])
         
-        au.setFinal(new_finals)
-        return au
+    #     au.setFinal(new_finals)
+    #     return au
 
-    def _nfaGlushkovStep(self, aut, initial, final):
-        previous_trans = dict()
-        for i_state in initial:
-            if i_state in aut.delta:
-                previous_trans[i_state] = aut.delta[i_state]
-                del aut.delta[i_state]
+    # def _nfaGlushkovStep(self, aut, initial, final):
+    #     previous_trans = dict()
+    #     for i_state in initial:
+    #         if i_state in aut.delta:
+    #             previous_trans[i_state] = aut.delta[i_state]
+    #             del aut.delta[i_state]
         
-        new_initial, arg_final = self.arg._nfaGlushkovStep(aut, initial, final)
-        for i_state in initial:
-            if i_state in aut.delta:
-                for symbol in aut.delta[i_state]:
-                    for target in aut.delta[i_state][symbol]:
-                        for f_state in arg_final:
-                            aut.addTransition(f_state, symbol, target)
-        for i_state in previous_trans:
-            for sym in previous_trans[i_state]:
-                for target in previous_trans[i_state][sym]:
-                    aut.addTransition(i_state, sym, target)
+    #     new_initial, arg_final = self.arg._nfaGlushkovStep(aut, initial, final)
+    #     for i_state in initial:
+    #         if i_state in aut.delta:
+    #             for symbol in aut.delta[i_state]:
+    #                 for target in aut.delta[i_state][symbol]:
+    #                     for f_state in arg_final:
+    #                         aut.addTransition(f_state, symbol, target)
+    #     for i_state in previous_trans:
+    #         for sym in previous_trans[i_state]:
+    #             for target in previous_trans[i_state][sym]:
+    #                 aut.addTransition(i_state, sym, target)
         
-        return new_initial, arg_final
+    #     return new_initial, arg_final
 
-    def _nfaFollowEpsilonStep(self, conditions):
-        aut, initial, final = conditions
-        arg_state = aut.addState()
-        self.arg._nfaFollowEpsilonStep((aut, arg_state, arg_state))
-        aut.addTransition(initial, Epsilon, arg_state)
-        aut.addTransition(arg_state, Epsilon, final)
-        tomerge = aut.epsilonPaths(arg_state, arg_state)
-        aut.mergeStatesSet(tomerge)
+    # def _nfaFollowEpsilonStep(self, conditions):
+    #     aut, initial, final = conditions
+    #     arg_state = aut.addState()
+    #     self.arg._nfaFollowEpsilonStep((aut, arg_state, arg_state))
+    #     aut.addTransition(initial, Epsilon, arg_state)
+    #     aut.addTransition(arg_state, Epsilon, final)
+    #     tomerge = aut.epsilonPaths(arg_state, arg_state)
+    #     aut.mergeStatesSet(tomerge)
     
 def plus(self, s):
 	r = CPlus(s[0], self.sigma)
