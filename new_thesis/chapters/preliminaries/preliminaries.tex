@@ -1,0 +1,60 @@
+\chapter{Preliminaries}\label{chap:prelim}
+Theory builds upon theory, therefore it is essential to establish a solid foundation by understanding the basic concepts and terminology that compose the core topics of formal languages and automata theory.
+In this chapter we begin by formally defining what a language is and then move on to describe the class of languages known as regular languages.
+Along the way, we will also introduce various concepts such as finite/non-finite automata and regular expressions.
+
+\section{Alphabets, Strings and Languages}
+\subsection*{Alphabets}
+
+An \emph{alphabet} is a finite, non-empty set of symbols. It is usually denoted by the Greek letter $\Sigma$.
+
+\[
+\Sigma = \{ a_1, a_2, \dots, a_n \}
+\]
+
+where each $a_i$ is a symbol. \newline
+
+For example, one can represent the binary alphabet as $\Sigma = \{ 0, 1 \}$, or the English alphabet as $\Sigma = \{ a, b, c, \ldots, z \}$.
+
+\subsection*{Strings}
+
+A \emph{string} over an alphabet $\Sigma$ is a finite sequence of symbols from $\Sigma$.
+
+- The empty string (the string of length 0) is denoted by $\varepsilon$.
+- If $w$ is a string, then $|w|$ denotes the \emph{length} of $w$.
+- The set of all strings (including the empty string) that can be formed from $\Sigma$ is denoted by $\Sigma^*$.
+
+\[
+\Sigma^* = \{ w \mid w \text{ is a finite sequence of symbols from } \Sigma \}
+\]
+
+For example, if $\Sigma = \{ 0, 1 \}$, then we have that:
+\begin{center}
+	$\Sigma^* = \{ \varepsilon, 0, 1, 00, 01, 10, 11, 000, 001, 010, 011, 100, 101, 110, 111, \ldots \}$
+\end{center}
+
+Where the empty string is, as mentioned above, denoted by $\varepsilon$ and also belongs to $\Sigma^*$.
+
+\subsection*{Languages}
+
+A \emph{language} over an alphabet $\Sigma$ is a set of strings over $\Sigma$.
+
+\[
+L \subseteq \Sigma^*
+\]
+
+That is, a language is any subset of $\Sigma^*$, possibly infinite, finite, or even empty. \newline
+Since a language is a set of strings, the following standard set operations can be applied: % such as \emph{union}, \emph{intersection}, and \emph{complement} can be applied to languages.
+\begin{itemize}
+	\item \emph{Intersection}: $A \cap B = \{ x \mid x \in A \text{ and } x \in B \}$
+	\item \emph{Union}: $A \cup B = \{ x \mid x \in A \text{ or } x \in B \}$
+	\item \emph{Difference}: $A - B = \{ x \mid x \in A \text{ and } x \notin B \}$
+	% \item \emph{Union}: $L_1 \cup L_2 = \{ w \mid w \in L_1 \text{ or } w \in L_2 \}$
+	% \item \emph{Intersection}: $L_1 \cap L_2 = \{ w \mid w \in L_1 \text{ and } w \in L_2 \}$
+\end{itemize}
+
+Furthermore, we can also operate 
+
+
+The \emph{complement} of a language $L$ over an alphabet $\Sigma$ is denoted by $\overline{L}$ and is defined as:
+
