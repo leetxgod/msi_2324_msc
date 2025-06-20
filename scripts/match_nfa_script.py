@@ -11,7 +11,7 @@ reg.setSigma(reg.setOfSymbols())
 x : matchNFA = reg.toNFA("nfaPosCount")
 # x.display()
 
-w2 = "ab"
+w2 = "ababababababab"
 #x.table_matcher(w2)
 d = x.table_matcher(w2)
 f = x.enum_matches(d, w2)
