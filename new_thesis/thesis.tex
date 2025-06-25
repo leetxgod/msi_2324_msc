@@ -42,6 +42,9 @@
 \usepackage{upthesis}
 \usepackage{xcolor}
 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
 % the bibliography file
 \addbibresource{refs.bib}
 
@@ -116,13 +119,15 @@ pdfpagelabels=false
 %\chapter{Introduction}\label{chap:intro}
 \include{chapters/introduction/introduction}
 
-\include {chapters/preliminaries/preliminaries}
+\include{chapters/preliminaries/preliminaries}
 
 %\chapter{State of the Art}\label{chap:art}
 \include{chapters/state-of-the-art/sota}
 
 %\chapter{Desenho da Arquitetura}\label{chap:syst}
 \include{chapters/development/development}
+
+\include{chapters/matching/matching}
 
 %\chapter{Resultados e análise}\label{chap:results}
 \include{chapters/results/results} 
@@ -142,7 +147,7 @@ pdfpagelabels=false
 
 %% appendix
 \appendix
-\include{appendix1}
+\include{appendix/appendix1}
 
 %% bye
 \end{document}
