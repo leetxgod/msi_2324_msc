@@ -151,7 +151,14 @@ class matchNFA(NFA):
                     for initial_state in self.Initial:
                         # last_row[s] = (0,0)
                         new_row[initial_state] = [(symbol_counter,symbol_counter)]
-                            
+                
+                for s in new_row:
+                    print("State", s)
+                    #for posset in new_row[s]:
+                        #print("\t", posset)
+                    print("\t", new_row[s])
+#                print(new_row)
+                print("----------------------")
                 last_row = new_row
 
                 # print(new_row)

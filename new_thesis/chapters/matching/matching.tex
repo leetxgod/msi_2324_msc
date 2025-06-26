@@ -17,31 +17,25 @@ A \emph{position automaton} is a type of nondeterministic finite automaton (NFA)
 \Ensure A NFA $A$
 
 \State $A \gets$ new empty NFA
-\State $i \gets A.\text{addState}()$
-\State $A.\text{addInitial}(i)$
-
-\If{$R.\Sigma \neq \emptyset$}
-    \State $A.\text{setSigma}(R.\Sigma)$
-\EndIf
-
-\State $A.\text{addTransitionStar}(i, i)$ \Comment{Enable overlapping matches}
+\State $i \gets A.\text{addInitialState}()$
+\State $A.\text{addTransitionStar}(i, i)$ \Comment{Accept any symbol from $\Sigma$}
 
 \State $f_R \gets R.\text{marked}()$
 \State $\text{stack} \gets$ empty stack
 \State $\text{addedStates} \gets$ empty map
 
-\ForAll{$p \in f_R.\text{First}()$}
+\ForAll{$p \in First(f_R)$}
     \State $q \gets A.\text{addState}(p)$
     \State $\text{addedStates}[p] \gets q$
     \State $\text{stack}.\text{push}((p, q))$
-    \State $A.\text{addTransition}(i, p.\text{symbol}(), q)$
+    \State $A.\text{addTransition}(i, p, q)$
 \EndFor
 
-\State $\text{FollowSets} \gets f_R.\text{followListsD}()$
+% \State $\text{FollowSets} \gets Follow(f_R)$
 
 \While{stack is not empty}
     \State $(s, s_{\text{idx}}) \gets \text{stack}.\text{pop}()$
-    \ForAll{$t \in \text{FollowSets}[s]$}
+    \ForAll{$t \in Follow(f_R, s))$}
         \If{$t \in \text{addedStates}$}
             \State $q \gets \text{addedStates}[t]$
         \Else
@@ -49,7 +43,7 @@ A \emph{position automaton} is a type of nondeterministic finite automaton (NFA)
             \State $\text{addedStates}[t] \gets q$
             \State $\text{stack}.\text{push}((t, q))$
         \EndIf
-        \State $A.\text{addTransition}(s_{\text{idx}}, t.\text{symbol}(), q)$
+        \State $A.\text{addTransition}(s_{\text{idx}}, t, q)$
     \EndFor
 \EndWhile
 
@@ -106,9 +100,9 @@ One can find all matches over an input string by constructing the modified posit
         \State $nextRow \gets$ empty map
         \If{$sym \in \Sigma$}
             \ForAll{$q \in$ \textbf{keys}($currentRow$)}
-                \State $transitions \gets \delta(q, sym)$
-                \If{$transitions$ is not empty}
-                    \ForAll{$q' \in transitions$}
+                % \State $transitions \gets \delta(q, sym)$
+                \If{$|\delta(q, sym)| > 0$}
+                    \ForAll{$q' \in \delta(q, sym)$}
                         \ForAll{$(start, \_) \in currentRow[q]$}
                             \If{$q' = q$ and $q' \in I$}
                                 \State append $(position, position)$ to $nextRow[q']$
