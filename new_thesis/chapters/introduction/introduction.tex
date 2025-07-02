@@ -4,6 +4,22 @@
 %https://arxiv.org/abs/2407.20479
 %https://www.regular-expressions.info/catastrophic.html
 
-In this chapter, the problem is overviewed, the study’s importance is explained along with goals for the proposed solution. 
+In this chapter, the problem is overviewed, the study's importance is explained along with goals for the proposed solution. 
 
 \section{Background}
+Regular expressions are a foundational tool in computer science, widely used in pattern matching, lexical analysis, input validation, and string processing. Their expressiveness and concise syntax make them a powerful language for describing regular languages.
+
+% However, when implemented without care, especially in backtracking-based engines, regular expressions can become a source of serious security vulnerabilities.
+
+A regular expression $R$ is used (along with an input $W$) in regex matching engines. The matching engines will verify if $W$ is fully matched by $R$, meaning that the entire input is a match - or they will verify if a substring of $W$ is matched by $R$. 
+
+% Current matching engines commonly fall into one of the following categories:
+% \begin{itemize}
+% 	\item \textbf{Finite State Machine Regular Expression Engines}: A finite state machine (or finite \emph{automaton}) is built and evaluated using every symbol $\sigma \in W$. Used \emph{UNIX}-based systems.
+% 	\item \textbf{Backtracking Regular Expression Engines}: Instead of building a finite state machine, 
+% \end{itemize}
+
+\section{Regular Expression Denial of Service}
+One such vulnerability is known as \emph{Regular Expression Denial of Service} (ReDoS). ReDoS exploits the pathological worst-case behavior of certain regular expressions, causing exponential time complexity during matching. In typical backtracking matchers---such as those found in JavaScript, Java, and many scripting environments---ambiguous or nested expressions (especially involving repetition, such as \texttt{(a+)+}) can lead the engine to explore an exponential number of paths for certain crafted inputs. This behavior allows an attacker to intentionally supply inputs that force excessive computation, effectively rendering a service unavailable or degraded.
+
+The root of the ReDoS problem lies not in regular expressions as a theoretical model but in how they are operationalized in software. While deterministic finite automata (DFAs) evaluate regular expressions in linear time, many real-world engines opt for backtracking NFAs due to their flexibility and ease of implementation. Unfortunately, these NFAs are susceptible to exponential blow-up in ambiguous or unguarded patterns.
