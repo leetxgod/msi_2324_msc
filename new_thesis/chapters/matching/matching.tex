@@ -35,7 +35,7 @@ A \emph{position automaton} is a type of nondeterministic finite automaton (NFA)
 
 \While{stack is not empty}
     \State $(s, s_{\text{idx}}) \gets \text{stack}.\text{pop}()$
-    \ForAll{$t \in Follow(f_R, s))$}
+    \ForAll{$t \in Follow(f_R, s)$}
         \If{$t \in \text{addedStates}$}
             \State $q \gets \text{addedStates}[t]$
         \Else

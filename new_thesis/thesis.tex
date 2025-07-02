@@ -40,7 +40,6 @@
 % see file below for more packages and settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{upthesis}
-\usepackage{xcolor}
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -70,7 +69,7 @@ pdfpagelabels=false
    breaklinks=true,
 	%hyperindex=true 	% Makes the page numbers of index entries into hyperlinks. Relays on unique page anchors (pageanchor) 
 % see for colors http://mirror.ctan.org/macros/latex/contrib/xcolor/xcolor.pdf
-   linkcolor=	Sepia, %MidnightBlue,% BlueViolet,%Sepia, % Color for normal internal links.
+   linkcolor=Sepia, %MidnightBlue,% BlueViolet,%Sepia, % Color for normal internal links.
    %anchorcolor=black,% Color for anchor text.
    citecolor=RedViolet,% Color for bibliographical citations in text.
    %filecolor=cyan% Color for URLs which open local files.
@@ -116,7 +115,6 @@ pdfpagelabels=false
 %% If you want further configurability you can use subfiles package
 %% https://www.ctan.org/pkg/subfiles
 
-%\chapter{Introduction}\label{chap:intro}
 \include{chapters/introduction/introduction}
 
 \include{chapters/preliminaries/preliminaries}
@@ -124,8 +122,7 @@ pdfpagelabels=false
 %\chapter{State of the Art}\label{chap:art}
 \include{chapters/state-of-the-art/sota}
 
-%\chapter{Desenho da Arquitetura}\label{chap:syst}
-\include{chapters/development/development}
+\include{chapters/counting/counting}
 
 \include{chapters/matching/matching}
 

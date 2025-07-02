@@ -107,8 +107,6 @@ class matchNFA(NFA):
         NFA.__init__(self)
     
     def table_matcher(self, string: str):
-        print(self.Sigma)
-
         nw : list = [CEpsilon()]
         for c in string:
             nw.append(c)
@@ -120,6 +118,7 @@ class matchNFA(NFA):
         # ROW -> {state_id_1: [(s1,e1)], state_id_2: [(s1,e1), (s2,e2)]} .. 
 
         for sym in nw:
+            print("Symbol:", sym, "Counter:", symbol_counter)
             if sym == CEpsilon():
                 for initial_state in self.Initial:
                     # last_row[s] = (0,0)
@@ -136,11 +135,13 @@ class matchNFA(NFA):
                                     for last_row_end_state in self.delta[last_row_start_state][sym]:
                                         if last_row_end_state in self.Initial and last_row_end_state == last_row_start_state:
                                             new_row[last_row_end_state] = [(symbol_counter, symbol_counter)]
+                                            # print("Initial state:", last_row_end_state, "at position", symbol_counter, "to", (symbol_counter, symbol_counter))
                                         else:
                                             if last_row_end_state not in new_row:
                                                 new_row[last_row_end_state] = []
                                             
                                             new_row[last_row_end_state].append((pos_tuple[0], symbol_counter))
+                                            # print("Initial state:", last_row_end_state, "at position", symbol_counter, "to", (pos_tuple[0], symbol_counter))
 
                                             if last_row_end_state in self.Final:
                                                 if last_row_end_state in final_positions_table:
@@ -152,13 +153,13 @@ class matchNFA(NFA):
                         # last_row[s] = (0,0)
                         new_row[initial_state] = [(symbol_counter,symbol_counter)]
                 
-                for s in new_row:
-                    print("State", s)
-                    #for posset in new_row[s]:
-                        #print("\t", posset)
-                    print("\t", new_row[s])
-#                print(new_row)
-                print("----------------------")
+#                 for s in new_row:
+#                     print("State", s)
+#                     #for posset in new_row[s]:
+#                         #print("\t", posset)
+#                     print("\t", new_row[s])
+# #                print(new_row)
+#                 print("----------------------")
                 last_row = new_row
 
                 # print(new_row)

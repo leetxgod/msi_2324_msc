@@ -4,7 +4,7 @@ from termcolor import colored, cprint
 import time
 #from count import *
 
-w1 = "(a+aa)%"
+w1 = "(a+aa+aaa)%"
 regGrammar = lark.Lark.open("lang/regexp_test.lark", start="rege", parser="lalr")
 tree = regGrammar.parse(w1)
 reg = BuildRegexp(context={"sigma": None}).transform(tree)
