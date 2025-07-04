@@ -191,17 +191,17 @@ Given $r \in RE$ - \emph{associativity, commutativity and idempotence} also appl
 
 \section{From Regular Expressions to Automata}
 While regular expressions provide a declarative way to specify patterns in strings, finite automata offer an operational model for recognizing such patterns.
-The equivalence between regular expressions and finite automata is not merely theoretical---it is constructive. Algorithms exist to convert any regular expression into an equivalent NFA, typically using Thompson's construction. This NFA can then be transformed into a DFA using the powerset construction, and further minimized for efficiency.
+% The equivalence between regular expressions and finite automata is not merely theoretical---it is constructive. Algorithms exist to convert any regular expression into an equivalent NFA, typically using Thompson's construction. This NFA can then be transformed into a DFA using the powerset construction, and further minimized for efficiency.
 
-Thompson's construction creates an NFA by recursively building automata for each component of the regular expression:
-\begin{itemize}
-    \item For a literal character, it creates a simple automaton with a single transition.
-    \item For union $R_1 \mid R_2$, it constructs a new start and accept state with $\varepsilon$-transitions to and from the sub-automata.
-    \item For concatenation $R_1 R_2$, it connects the accept state of the first to the start state of the second.
-    \item For repetition $R^*$, it creates cycles with $\varepsilon$-transitions to allow zero or more iterations.
-\end{itemize}
+% Thompson's construction creates an NFA by recursively building automata for each component of the regular expression:
+% \begin{itemize}
+%     \item For a literal character, it creates a simple automaton with a single transition.
+%     \item For union $R_1 \mid R_2$, it constructs a new start and accept state with $\varepsilon$-transitions to and from the sub-automata.
+%     \item For concatenation $R_1 R_2$, it connects the accept state of the first to the start state of the second.
+%     \item For repetition $R^*$, it creates cycles with $\varepsilon$-transitions to allow zero or more iterations.
+% \end{itemize}
 
-The resulting NFA may be nondeterministic but is guaranteed to accept the same language as the original regular expression. Once converted into a DFA, the automaton can efficiently recognize the pattern with linear time complexity in the size of the input.
+% The resulting NFA may be nondeterministic but is guaranteed to accept the same language as the original regular expression. Once converted into a DFA, the automaton can efficiently recognize the pattern with linear time complexity in the size of the input.
 
 \subsection{Thompson's Algorithm}
 Thompson's construction is a classic algorithm for converting a regular expression into a nondeterministic finite automaton (NFA) with $\varepsilon$-transitions. It was introduced in 1968 by Ken Thompson and is the foundation for many regex engines, including the \texttt{lex} lexical analyzer generator.
@@ -227,7 +227,7 @@ Antimirov's approach is especially efficient for regex evaluation and analysis t
 
 % To first recall the notion of \emph{position automata} (also known as \emph{Glushkov automata}), one must first understand the idea of marking each occurrence of a symbol in a regular expression with a unique position. This transforms a regular expression into a \emph{marked regular expression}, where each letter is indexed according to its position in the expression when read left to right. The position automaton is then constructed from this marked version by associating each position with a distinct state, and defining transitions based on the structural analysis of the expression.
 
-The \emph{position automaton}, also known as the \emph{Glushkov automaton}, is a type of $\varepsilon$-free nondeterministic finite automaton (NFA) constructed directly from a regular expression. Unlike the standard Thompson construction, which introduces $\varepsilon$-transitions that must later be eliminated, the Glushkov construction yields an automaton in which each state corresponds uniquely to a symbol occurrence---or \emph{position}---in the expression.
+The \emph{position automaton}, also known as the \emph{Glushkov automaton}, is a type of $\varepsilon$-free nondeterministic finite automaton (NFA) constructed directly from a regular expression. Unlike the standard Thompson construction, which introduces $\varepsilon$-transitions that must later be eliminated, the Glushkov construction yields an automaton in which each state corresponds uniquely to a symbol occurrence---or \emph{position}---in the expression. \cite{mesh-of-automata}
 
 Given a regular expression $E$, the Glushkov automaton $M_E$ is defined based on three key position-based functions:
 
@@ -261,3 +261,26 @@ An important property of the Glushkov automaton is its relationship to unambigui
 
 
 \section{FAdo}
+The FAdo \cite{fado_paper} project is an open-source implementation of several sets of tools for formal languages manipulation. In order to allow quick prototyping and testing of algorithms, these tools were developed in Python. Regular languages can be represented by regular expressions which are defined in \texttt{reex.py} - or by finite automata which are defined in \texttt{fa.py}.
+
+\subsection{Regular Expressions}
+In \texttt{reex.py}, FAdo defines the \texttt{RegExp} base class for all regular expressions, declaring therein a class variable \texttt{sigma}, formally known as the set of symbols ($\Sigma$).
+To represent any and all base constructions of a regular expressions, FAdo defines base classes for each of them:
+\begin{itemize}
+    \item \textbf{CEmptySet}: The empty symbol set. ($\emptyset$)
+    \item \textbf{CEpsilon}: The empty string. ($\varsigma$)
+    \item \textbf{CAtom}: A simple symbol. (e.g. $'a'$)
+    \item \textbf{CDisj}: The $+$ operation between symbols. (e.g. \texttt{CDisj(CAtom(a),CAtom(b))} represents the regular expression $R=a+b$ where $a,b \in \Sigma_R$)
+    \item \textbf{CConcat}: The $\cdot$ operation 
+    \item \textbf{CStar}: The Kleene closure over a set of symbols (e.g. \texttt{CStar(CDisj(CAtom(a),CAtom(b)))} representes the regular expression $R=(a+b)^*$ where $a,b \in \Sigma_R$)
+
+\end{itemize}
+
+In order to parse expressions into FAdo's classes and types, \emph{lark} was used. \emph{lark} is a parsing toolkit for Python. It can parse all context-free languages.
+
+
+
+\subsection{Finite Automata}
+
+
+\subsection{Extended Regular Expressions}

@@ -45,11 +45,12 @@
 \usepackage{algpseudocode}
 
 % the bibliography file
+% \usepackage{biblatex}
 \addbibresource{refs.bib}
 
 
 %% Definitions for acronyms
-\newcommand*\acronymbiggest{HTTP} % defines the biggest Acronym used to define the column size
+\newcommand*\acronymbiggest{ReDoS} % defines the biggest Acronym used to define the column size
 
 
 
@@ -62,10 +63,10 @@ pdfpagelabels=false
    pdfkeywords ={palavras chave},
    pdfsubject = {assunto},
 	bookmarksnumbered=true,
-   pdfauthor ={Your name}, % see other options on manual (can be page) needs empty line on bibitem
+   pdfauthor ={Daniel Resende}, % see other options on manual (can be page) needs empty line on bibitem
    plainpages=false, 
    pdfborder={0 0 0},
-   colorlinks,%colorlinks=false,
+   % colorlinks=truecolorlinks=false,
    breaklinks=true,
 	%hyperindex=true 	% Makes the page numbers of index entries into hyperlinks. Relays on unique page anchors (pageanchor) 
 % see for colors http://mirror.ctan.org/macros/latex/contrib/xcolor/xcolor.pdf
@@ -87,7 +88,7 @@ pdfpagelabels=false
 
 \begin{document}
 
-\title{Thesis title}
+\title{Efficient Regular Pattern Matching avoiding Denial of Service}
 %% The following is not currently being used.
 % Part of the coverp in upthesis.sty
 % \submitionplace{Tese submetida à Faculdade de Ciências da \\
@@ -139,7 +140,7 @@ pdfpagelabels=false
 % os meses do ficheiro bib poderão aparecer em inglês, caso se pretenda deve-se colocar o texto em português explicitamente no ficheiro bid
 \cleardoublepage%
 \phantomsection%
-\printbibliography[heading=bibintoc]%
+\printbibliography[heading=bibintoc]
 
 
 %% appendix
