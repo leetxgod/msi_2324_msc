@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Pedro Brandao's trial to get a template for thesis for students
+% Pedro Brandão's trial to get a template for thesis for students
 % Used the upthesis from Fernando Silva (see upthesis).
 % See also the packages file.
 % 2014/07/07 First draft
@@ -10,7 +10,7 @@
 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% LTeX: language=portuguese
+
 
 % makes all pages the height of the text on that page. No extra vertical space is added.
 \raggedbottom 
@@ -26,14 +26,7 @@
 % use UKenglish for UK or leave blank for US English
 % it will also change the names for some of the chapters (list of tables, figures, content,
 %\usepackage[UKenglish]{babel}
-%\usepackage[portuguese]{babel}
-% If you have multiple languages (as in this text) you can use both, leaving last the main one.
-% Then you can use 
-% \begin{otherlanguage}{UKenglish}
-% text in other language, UKEnglish in this case
-% \end{otherlanguage}
-\usepackage[UKenglish]{babel}
-
+\usepackage[portuguese]{babel}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%   Packages uses language definitions
@@ -41,36 +34,24 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{upthesis}
 
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-
-% the bibliography file
-% \usepackage{biblatex}
-% \addbibresource{refs.bib}
-
-
-%% Definitions for acronyms
-\newcommand*\acronymbiggest{ReDoS} % defines the biggest Acronym used to define the column size
-
-
-
 \usepackage[
 %backref={section},
-%pagebackref, % for getting references to the page where the citation is (in the biblio), note that biblatex above also has this
+%pagebackref, % for getting references to the page where the citation is (in the biblio)
 pdfpagelabels=false
 ]{hyperref}
-\hypersetup{pdftitle={Test}, %nao suporta acentos
+\hypersetup{pdftitle={Titulo da tese}, %nao suporta acentos
    pdfkeywords ={palavras chave},
    pdfsubject = {assunto},
 	bookmarksnumbered=true,
-   pdfauthor ={Daniel Resende}, % see other options on manual (can be page) needs empty line on bibitem
+   pdfauthor ={Autor}, % see other options on manual (can be page) needs empty line on bibitem
    plainpages=false, 
    pdfborder={0 0 0},
-   % colorlinks=truecolorlinks=false,
+   colorlinks,%colorlinks=false,
    breaklinks=true,
+	%linktocpage= false, make page number, not text, be link on TOC, LOF and LOT 
 	%hyperindex=true 	% Makes the page numbers of index entries into hyperlinks. Relays on unique page anchors (pageanchor) 
 % see for colors http://mirror.ctan.org/macros/latex/contrib/xcolor/xcolor.pdf
-   linkcolor=Sepia, %MidnightBlue,% BlueViolet,%Sepia, % Color for normal internal links.
+   linkcolor=	Sepia, %MidnightBlue,% BlueViolet,%Sepia, % Color for normal internal links.
    %anchorcolor=black,% Color for anchor text.
    citecolor=RedViolet,% Color for bibliographical citations in text.
    %filecolor=cyan% Color for URLs which open local files.
@@ -82,30 +63,28 @@ pdfpagelabels=false
 % from http://en.wikibooks.org/wiki/LaTeX/Hyperlinks#Customization
 \urlstyle{same}
 
-\usepackage{tikz}
-\usetikzlibrary{automata,positioning}
-
 
 \begin{document}
 
-\title{Efficient Regular Pattern Matching avoiding Denial of Service}
-%% The following is not currently being used.
-% Part of the coverp in upthesis.sty
-% \submitionplace{Tese submetida à Faculdade de Ciências da \\
-%   Universidade do Porto para obtenção do grau de Mestre \\ 
-%   em Ciência de Computadores}
-% \author{Nome do autor}
-% \department{Departamento de Ciência de Computadores \\ Faculdade de
-%   Ciências da Universidade do Porto}
-% \submitdate{Setembro 2015}
+\title{Título da Tese}
+\submitionplace{Tese submetida à Faculdade de Ciências da \\
+  Universidade do Porto para obtenção do grau de Mestre \\ 
+  em Ciência de Computadores}
+\author{Nome do autor}
+\department{Departamento de Ciência de Computadores \\ Faculdade de
+  Ciências da Universidade do Porto}
+\submitdate{Setembro 2015}
 
+%\includepdf[pages=1]{FrontPage-MSc.pdf}
+%\cleardoublepage
+%\includepdf[pages=2]{FrontPage-MSc.pdf}
+%\cleardoublepage
 
 \beforepreface%
 
-\include{chapters/abstract/abstract}
-\dedicationpage{Dedico à minha mãe \ldots}
+\include{abs}
 
-
+\dedicationpage{Dedico a \ldots}
 
 % end of thesis preamble
 \afterpreface%
@@ -116,40 +95,42 @@ pdfpagelabels=false
 %% If you want further configurability you can use subfiles package
 %% https://www.ctan.org/pkg/subfiles
 
-\include{chapters/introduction/introduction}
+%\chapter{Introdução}\label{chap:intro}
+\include{chap-intro}
 
-\include{chapters/preliminaries/preliminaries}
+%\chapter{Background}\label{chap:back}
+\include{chap-background}
 
-%\chapter{State of the Art}\label{chap:art}
-\include{chapters/state-of-the-art/sota}
+%\chapter{Estado da Arte}\label{chap:stat}
+\include{chap-related}
 
-\include{chapters/counting/counting}
+%\chapter{Desenho da Arquitetura}\label{chap:syst}
+\include{chap-development}
 
-\include{chapters/matching/matching}
+%\chapter{Desenvolvimento}\label{chap:dese}
+\include{chap-tests} 
 
 %\chapter{Resultados e análise}\label{chap:results}
-\include{chapters/results/results} 
+\include{chap-results} 
 
 %\chapter{Conclusões}\label{chap:conc}
-\include{chapters/conclusion/conclusion}
+\include{chap-conclusion}
 
 
+%% appendix
+\appendix
+%% \include{app1}
 
 %% references
 %\renewcommand{\bibname}{Referências} % o babel portuguese coloca Bibliografia
 % os meses do ficheiro bib poderão aparecer em inglês, caso se pretenda deve-se colocar o texto em português explicitamente no ficheiro bid
 \cleardoublepage%
 \phantomsection%
-
-\bibliography{refs}
-\bibliographystyle{alpha}
-% \printbibliography[heading=bibintoc]
-%\printbibliography
-
-
-%% appendix
-\appendix
-\include{appendix/appendix1}
+\addcontentsline{toc}{chapter}{\bibname}
+\bibliographystyle{plainnaturlAuthor} % use plainnaturlAppear to order references by appearance 
+% usually it is by author on thesis, to ease Author lookup
+%\nocite{*}  % Include all entries in references.bib, not just the ones cited.
+\bibliography{refs} %changed the env to make it a numbered chapter
 
 %% bye
 \end{document}

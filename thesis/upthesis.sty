@@ -92,17 +92,8 @@
 \usepackage{rotating}
 \usepackage{threeparttable}
 
-%to use when you want things to be kept on the same page
-% see https://www.texfaq.org/FAQ-nopagebrk
-\usepackage{needspace}
-
-%% To enable subfigures or subtables
-% see the documentation on https://ctan.org/pkg/subcaption
-% Note that this is part of caption, but the documentation is separated
-\usepackage{subcaption}
-
 % used for code examples and other listings
-\usepackage{listingsutf8}
+\usepackage{listings}
 \lstset{
   aboveskip={\baselineskip},
   % belowskip={1.5\baselineskip},
@@ -145,81 +136,27 @@
 %                                  % also try caption instead of title
 %  escapeinside={\%*}{*)},         % if you want to add a comment within your code
 %  morekeywords={*,...}            % if you want to add more keywords to the set
-   escapechar=\#,                   % enable to write latex and be interpreted as such
+   escapechar=\#,                   % enable to right latex and be interpreted as such
 }
 \newcommand*\acronymname{Acronyms}
+\newcommand*\acronymbiggest{HTTP}
 
   \@ifpackagewith{babel}{portuguese}{%
     \addto\captionsportuguese{\renewcommand*\lstlistlistingname{Lista de Blocos de Código}}%
     \addto\captionsportuguese{\renewcommand*\lstlistingname{Bloco de Código}}%
-    \addto\captionsportuguese{\renewcommand*\acronymname{Acrónimos e Siglas}}%
-  }{}
+    \addto\captionsportuguese{\renewcommand*\acronymname{Acrónimos}}%
+  }{ }
 
 % This adds the possibility of having lists in paragraphs
 \usepackage{paralist}
 
-% URLs, linking, and pdf parameters
-% break long urls, should be before hyperref and biblatex
-\usepackage[hyphens]{url}
-
-% References
-% For styles for the bib and cite styles see the documentation section 3.3
-%http://mirrors.ctan.org/macros/latex/contrib/biblatex/doc/biblatex.pdf
-\usepackage[
-url=false, % for the url fields of the bibtex entry to appear remove this option or set it to true
-% as we add the url to the title with hyperref below, it may not be needed
-% you may remove the doi entry with doi=false
-style=numeric-comp, % uses numbers for refs [12], and compresses ranges [2,3,4] -> [2-4]
-natbib=true, % aliases for natbid
-sorting = nty, % sort by name, title, year the default; if by order of appearance use none
-backref=true, % creates a backref on the bibliography to the page where it is cited
-backrefstyle=two, % for the backrefs above if there is a range with more than two pages compress it (see pp 11, 12, 13) --> (see pp 11-13)
-sortcites=true % when citing multiple references it orders then according to the order style in the citation
-]{bibtex}
-
-% A warning of using babel/polyglossia suggests csquotes
-\usepackage{csquotes}
-
-% For having titles with URLs based on the tex stackexchange entry:
-% https://tex.stackexchange.com/questions/48400/biblatex-make-title-hyperlink-to-dois-url-or-isbn
-
-
-% define the linked format
-% Define new format that applies a hypertext reference
-\DeclareFieldFormat{linked}{%
-  \ifboolexpr{ test {\ifhyperref} and not test {\ifentrytype{online}} }
-    {\iffieldundef{doi}
-       {\iffieldundef{url}
-          {\iffieldundef{isbn}
-             {\iffieldundef{issn}
-                {#1}
-                {\href{http://www.worldcat.org/search?qt=worldcat_org_all&q=\thefield{issn}}{#1}}}
-             {\href{http://www.worldcat.org/search?qt=worldcat_org_all&q=\thefield{isbn}}{#1}}}
-          {\href{\thefield{url}}{#1}}}
-       {\href{http://dx.doi.org/\thefield{doi}}{#1}}}
-    {#1}}
-
-%Format the new title entries in biblatex
-\DeclareFieldFormat{title}{\printtext[linked]{\mkbibemph{#1}}}
-\DeclareFieldFormat
-  [article,inbook,incollection,inproceedings,patent,thesis,unpublished]
-  {title}{\mkbibquote{\printtext[linked]{#1}\isdot}}
-\DeclareFieldFormat[suppbook,suppcollection,suppperiodical]{title}
-  {\printtext[linked]{#1}}
-
 % Enhance/improve fonts, kerning and spacing
 \usepackage{microtype}
 % Need to be a font compatible with microtype (or remove microtype package)
-\usepackage{charter} %% See for fonts http://www.tug.dk/FontCatalogue/ and http://www.tug.org/fonts/
-%fonts examples: newcent, charter, lmodern, mlmodern (seems not supported in Overleaf),  concmath (may need cm-super)
+\usepackage{lmodern} %% See for fonts http://www.tug.dk/FontCatalogue/ and http://www.tug.org/fonts/
+%fonts examples: newcent, utopia, charter, concmath (may need cm-super)
 % can also add the cm-super package (don't usepackage on the tex file,
 % just install using the package manager)
-% note that lmodern, cmbright, lato have some issues with spacing on some pdf viewers (perhaps also other fonts)
-% the issue (for a non specified font) is described here: 
-%https://tex.stackexchange.com/questions/323294/produce-copy-paste-able-pdf-output-with-correct-indentation-with-listing/323354#323354
-
-%% uncomment the following line if you prefer sans serif fonts
-%\renewcommand*\familydefault{\sfdefault}
 
 % for monotype use courier
 % http://www.macfreek.nl/mindmaster/LaTeX_Bold_Typewriter_Font
@@ -232,12 +169,15 @@ sortcites=true % when citing multiple references it orders then according to the
 \usepackage{amsfonts}
 \usepackage{amsmath}
 
+% Bibliography
+% for natbib see http://en.wikibooks.org/wiki/LaTeX/More_Bibliographies#Options
+%\usepackage[authoryear,sort]{natbib}
+\usepackage[numbers,sort&compress]{natbib}
+
 % Acronyms package
-\usepackage[smaller,printonlyused,nohyperlinks]{acronym}
+\usepackage{acronym}
 \newcommand*\acronymfile{acros.tex}
 
-%% to include pdf per page
-\usepackage{pdfpages}
 
 
 % Enable multicoluns, used in the acronyms appendix
@@ -246,14 +186,9 @@ sortcites=true % when citing multiple references it orders then according to the
 % just for testing purposes (get ipsum text)
 \usepackage{lipsum}
 
-% For symbols
-% see http://willbenton.com/wb-images/pifont.pdf
-\usepackage{pifont}
-\newcommand{\cmark}{\ding{51}}%
-\newcommand{\xmark}{\ding{53}}%
-\newcommand{\cmarkcell}{\cmark}% may be used in tables to mark it correct
-\newcommand{\xmarkcell}{\cellcolor{LRed}\xmark}% may be used in tables to mark it incorrect. red background
-
+% URLs, linking, and pdf parameters
+% break long urls, should be before hyperref
+\usepackage[hyphens]{url}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Headers/Footers/Chapters
@@ -328,10 +263,7 @@ sortcites=true % when citing multiple references it orders then according to the
          % commenting the two lines will remove the cover and title pages
         %\coverp
         %\titlep
-        \includepdf[pages=1]{cover-full/main.pdf}
-        \cleardoublepage
-        \includepdf[pages=2]{cover-full/main.pdf}
-        \cleardoublepage
+        %\newpage
 }
 
 \def\prefacesection#1{%
@@ -347,20 +279,28 @@ sortcites=true % when citing multiple references it orders then according to the
   \begin{multicols}{2}
   \setlength{\columnseprule}{0.5pt}
   \setlength\columnsep{35pt}
+%  \makeatletter
+%  \columnsep 35\p@
+%  \makeatother
   \begin{acronym}[\acronymbiggest] % the biggest acronym
     \input{\acronymfile}
   \end{acronym}
   \end{multicols}
 }
+%% Format the chapter
+%% for now only resets the acronyms expansions
+\usepackage[clearempty]{titlesec}
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{10pt}{\Huge}[\acresetall]
 
-\usepackage{etoolbox} % use etoolbox to reset the acronyms each chapter
-\preto\section\acresetall
 
 \usepackage{fancyhdr}
 \setlength{\headheight}{13.6pt} % current header uses at least this
 \def\afterpreface{%
         \tableofcontents
         \addcontentsline{toc}{chapter}{\contentsname}
+           \listoftables
+           \addcontentsline{toc}{chapter}{\listtablename}
            \listoffigures
            \addcontentsline{toc}{chapter}{\listfigurename}
            \lstlistoflistings
