@@ -25,14 +25,20 @@
 % Language settings
 % use UKenglish for UK or leave blank for US English
 % it will also change the names for some of the chapters (list of tables, figures, content,
-%\usepackage[UKenglish]{babel}
-\usepackage[portuguese]{babel}
+\usepackage[UKenglish]{babel}
+% \usepackage[portuguese]{babel}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%   Packages uses language definitions
 % see file below for more packages and settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{upthesis}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning}
 
 \usepackage[
 %backref={section},
@@ -84,7 +90,7 @@ pdfpagelabels=false
 
 \include{abs}
 
-\dedicationpage{Dedico a \ldots}
+\dedicationpage{Dedico a \ldots mim}
 
 % end of thesis preamble
 \afterpreface%
@@ -96,25 +102,28 @@ pdfpagelabels=false
 %% https://www.ctan.org/pkg/subfiles
 
 %\chapter{Introdução}\label{chap:intro}
-\include{chap-intro}
+% \include{chap-intro}
+\include{chapters/introduction/introduction}
 
 %\chapter{Background}\label{chap:back}
-\include{chap-background}
+% \include{chap-background}
+\include{chapters/preliminaries/preliminaries}
 
 %\chapter{Estado da Arte}\label{chap:stat}
-\include{chap-related}
+% \include{chap-related}
+\include{chapters/state-of-the-art/sota}
 
 %\chapter{Desenho da Arquitetura}\label{chap:syst}
-\include{chap-development}
+\include{chapters/counting/counting}
 
 %\chapter{Desenvolvimento}\label{chap:dese}
-\include{chap-tests} 
+\include{chapters/matching/matching}
 
 %\chapter{Resultados e análise}\label{chap:results}
-\include{chap-results} 
+% \include{chap-results} 
 
-%\chapter{Conclusões}\label{chap:conc}
-\include{chap-conclusion}
+% %\chapter{Conclusões}\label{chap:conc}
+% \include{chap-conclusion}
 
 
 %% appendix

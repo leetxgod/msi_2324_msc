@@ -1,17 +1,35 @@
 
 
+% \prefacesection{Abstract}
+
+% A long, long time ago... 
+
+% This section should summarize the content of the dissertation, namely: explain the context of problem, describe the problem itself and address the work done to mitigate/solve the problem. Results and/or contributions should be mentioned.
+
+% \prefacesection{Resumo}
+% Há muito, muito tempo
+
+% See the Abstract.
+% Test for real
+% Test
+
+% \prefacesection{Agradecimentos}
+
+% Obrigado a todos, obrigado \ldots
+
 \prefacesection{Abstract}
+Regular expressions (\emph{regex}) are a foundational tool in modern software, widely used for string matching, input validation, and text parsing. Despite their utility, improperly constructed regular expressions can introduce serious security vulnerabilities. One of the most critical threats is the Regular Expression Denial of Service (\emph{ReDoS}) attack, in which carefully crafted inputs cause the regex engine to perform excessive and redundant processing. This results in dramatic slowdowns or even complete unresponsiveness of the system. ReDoS poses a significant risk to web applications, APIs, and other input-facing systems, where user-controlled input is matched against vulnerable patterns.
 
-A long, long time ago... 
+In this work, we propose a system to address ReDoS by transforming regular expressions into a modified \emph{position automata}, a form of nondeterministic finite automaton (NFA) that tracks the exact start and end positions of all matches within an input string. This structure enables a matching function that computes \emph{all} match positions, including overlapping ones, without relying on backtracking. By exhaustively and efficiently exploring the automaton's transitions, our approach avoids the exponential blowup typical of vulnerable engines, while preserving a somewhat full regex expressiveness.
 
-This section should summarize the content of the dissertation, namely: explain the context of problem, describe the problem itself and address the work done to mitigate/solve the problem. Results and/or contributions should be mentioned.
+Furthermore, we also review and compare this approach with existing solutions present in state-of-the-art programming languages and libraries, such as \emph{RE\#}.
+\textbf{Palavras-chave:} regular expressions, ReDoS, position automata, nondeterministic finite automata, pattern matching.
 
 \prefacesection{Resumo}
-Há muito, muito tempo
+O teu resumo COOL, its me TEST WOWIEESSS
 
-See the Abstract.
-Test for real
+\textbf{Palavras-chave:} palavra, chave..
 
-\prefacesection{Agradecimentos}
+\prefacesection{Acknowledgements}
 
-Obrigado a todos, obrigado \ldots
+First of all, I would like to thank my family, etc, etc

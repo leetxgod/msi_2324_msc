@@ -1,0 +1,334 @@
+\chapter{Preliminaries}\label{chap:prelim}
+Theory builds upon theory, therefore it is essential to establish a solid foundation by understanding the basic concepts and terminology that compose the core topics of formal languages and automata theory.
+In this chapter we begin by formally defining what a language is and then move on to describe the class of languages known as regular languages.
+Along the way, we will also introduce various concepts such as finite automata (DFA, NFA) and regular expressions.
+
+\section{Alphabets, Strings and Languages}
+\subsection*{Alphabets}
+
+An \emph{alphabet} is a finite, non-empty set of symbols, typically denoted by the Greek letter $\Sigma$. That is,
+\[
+\Sigma = \{ a_1, a_2, \dots, a_n \}
+\]
+
+\noindent where each $a_i$ is a symbol in the alphabet.
+
+For example, one can represent the binary alphabet as $\Sigma = \{ 0, 1 \}$, or the English alphabet as $\Sigma = \{ a, b, c, \ldots, z \}$.
+
+\subsection*{Strings}
+A \emph{string} over an alphabet $\Sigma$ is a finite sequence of symbols from $\Sigma$. Strings are typically denoted by $w$, and the \emph{length} of a string $w$ is denoted by $|w|$.
+
+The set of all strings over the alphabet $\Sigma$ is denoted by $\Sigma^*$ and defined as:
+\[
+\Sigma^* = \{ w \mid w \text{ is a finite sequence of symbols from } \Sigma \}
+\]
+
+The unique string of length zero is called the \emph{empty string}, denoted by $\varepsilon$.
+It is important to note that $\varepsilon \in \Sigma^*$.
+
+For example, if $\Sigma = \{ 0, 1 \}$, then we have that:
+\begin{center}
+	$\Sigma^* = \{ \varepsilon, 0, 1, 00, 01, 10, 11, 000, 001, 010, 011, 100, 101, 110, 111, \ldots \}$
+\end{center}
+
+Where the empty string is, as mentioned above, denoted by $\varepsilon$ and also belongs to $\Sigma^*$.
+
+\subsection*{Languages}
+
+A \emph{language} over an alphabet $\Sigma$ is a set of strings over $\Sigma$.
+
+\[
+L \subseteq \Sigma^*
+\]
+
+That is, a language is any subset of $\Sigma^*$, possibly infinite, finite, or even empty. \newline
+Since a language is a set of strings, the following standard set operations can be applied (assuming $A$ and $B$ are languages over the same alphabet $\Sigma$):
+
+\begin{itemize}
+	\item \emph{Intersection}: $A \cap B = \{ x \mid x \in A \text{ and } x \in B \}$
+	\item \emph{Union}: $A \cup B = \{ x \mid x \in A \text{ or } x \in B \}$
+	\item \emph{Difference}: $A - B = \{ x \mid x \in A \text{ and } x \notin B \}$
+\end{itemize}
+
+Furthermore, we can also operate specifically over languages with the following operations (assuming $L_1$ and $L_2$ are languages over the same alphabet $\Sigma$):
+
+\begin{itemize}
+	\item \emph{Concatenation}: $L_1 \cdot L_2 = \{ xy \mid x \in L_1 \text{ and } y \in L_2 \}$
+	\item \emph{Kleene Star}: $L^* = \bigcup_{n=0}^{\infty} L^n$, where $L^0 = \{\varepsilon\}$ and $L^n = L \cdot L^{n-1}$ for $n > 0$.
+	\item \emph{Reversal}: $L^R = \{ x^R \mid x \in L \}$, where $x^R$ denotes the reversal of string $x$.
+	\item \emph{Complement}: $\overline{L} = \Sigma^* - L$, i.e., the set of all strings over $\Sigma$ that are not in $L$.
+\end{itemize}
+
+These operations form the basis for reasoning about the expressiveness and closure properties of language classes such as regular, context-free, and context-sensitive languages. In particular, regular languages are closed under all the operations listed above, including union, intersection, concatenation, and Kleene star. This robustness makes them especially amenable to algorithmic manipulation, as seen in finite automata and regular expression engines.
+
+\section{Finite Automata}
+A \emph{finite automaton} is a theoretical machine used to recognize regular languages. It processes input strings symbol by symbol and determines whether the string belongs to the language defined by the automaton. There are two main types of finite automata:
+
+\begin{itemize}
+    \item \textbf{Deterministic Finite Automaton (DFA)}: An automaton where, for each state and input symbol, there is exactly one possible next state.
+    \item \textbf{Non-deterministic Finite Automaton (NFA)}: An automaton that allows multiple possible transitions for a given state and input symbol, including transitions without consuming any input (called $\varepsilon$-transitions).
+\end{itemize}
+
+Formally defined, an NFA is a 5-tuple $(Q, \Sigma, \delta, q_0, F)$ where:
+
+\begin{itemize}
+    \item $Q$ is a finite set of states,
+    \item $\Sigma$ is the input alphabet,
+    \item $\delta: Q \times (\Sigma \cup \{\varepsilon\}) \rightarrow 2^Q$ is the transition function,
+    \item $q_0 \in Q$ is the initial state,
+    \item $F \subseteq Q$ is the set of accepting (final) states.
+\end{itemize}
+
+A string $w \in \Sigma^*$ is accepted by the NFA if there exists a sequence of transitions (possibly including $\varepsilon$-moves) that consumes $w$ and ends in a state $q$ such that $q \in F$.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto,initial text=]
+		\node[state, initial] (q0) {$q_0$};
+		\node[state] (q1) [above right=of q0] {$q_1$};
+		\node[state] (q2) [right=of q1] {$q_2$};
+		
+		\node[state] (q4) [below right=of q0] {$q_4$};
+		\node[state] (q5) [right=of q4] {$q_5$};
+		
+		\node[state, accepting] (q3) [below right=of q2] {$q_3$};
+		
+		\path[->]
+		(q0) edge node {a} (q1)
+			 edge node {a} (q4)
+		
+		(q1) edge node {b} (q2)
+		
+		(q2) edge node {a} (q3)
+
+		(q4) edge node {c} (q5)
+		 	 edge[loop below] node {c} ()
+		
+		(q5) edge node {d} (q3);
+	\end{tikzpicture}
+	\caption{Example of an NFA that accepts $L = \{aba, a(c^*)d\}$}
+\label{fig:nfa_example}
+\end{figure}
+
+
+
+An NFA is \emph{deterministic} (also known as DFA) if $|\delta(q,\sigma)| \leq 1$, for any $(q,\sigma) \in Q \times \Sigma$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto,initial text=]
+	\node[state, initial] (q0) {$q_0$};
+	\node[state] (q14) [right=of q0] {$q_1$};
+	\node[state] (q2) [above right=of q14] {$q_2$};
+	\node[state] (q45) [below right=of q14] {$q_3$};
+	\node[state, accepting] (q3) [above right=of q45] {$q_4$};
+
+    \path[->]
+    	(q0) edge node {a} (q14)
+    	
+    	(q14) edge node {b} (q2)
+    		  edge node {c} (q45)
+    	
+    	(q2) edge node {a} (q3)
+    	
+    	(q45) edge[loop below] node {c} (q45)
+    		  edge node {d} (q3);
+  
+\end{tikzpicture}
+\caption{A DFA whose language is the same as the NFA from \ref{fig:nfa_example}} 
+\end{figure}
+
+\section{Regular Expressions}
+Let $\Sigma$ be a finite alphabet. Let $L \subseteq \Sigma$. The set of \emph{regular expressions} over $\Sigma$, denoted by $\text{RegExp}(\Sigma)$, is defined inductively as follows:
+
+\begin{itemize}
+    \item $\emptyset$ is a regular expression denoting the empty language: $L(\emptyset) = \emptyset$.
+    \item $\varepsilon$ is a regular expression denoting the language containing only the empty string: $L(\varepsilon) = \{ \varepsilon \}$.
+    \item For each symbol $a \in \Sigma$, $a$ is a regular expression denoting the singleton language: $L(a) = \{ a \}$.
+    \item If $r_1$ and $r_2$ are regular expressions, then so are:
+    \begin{itemize}
+        \item $(r_1 \mid r_2)$, denoting the union: $L(r_1 \mid r_2) = L(r_1) \cup L(r_2)$.
+        \item $(r_1 \cdot r_2)$, denoting concatenation: $L(r_1 \cdot r_2) = L(r_1) \cdot L(r_2)$.
+        \item $(r_1)^*$, denoting Kleene star: $L(r_1^*) = (L(r_1))^*$.
+    \end{itemize}
+\end{itemize}
+
+We write $\text{RegExp}(\Sigma)$ to denote the set of all such syntactic expressions, and for each $r \in \text{RegExp}(\Sigma)$, the function $L(r)$ yields the language defined by $r$.
+
+\medskip
+
+Parentheses are used to disambiguate expressions and enforce precedence; by convention, Kleene star binds most tightly ($a^*$), followed by concatenation (e.g. $a \cdot b$, whose operator "$\cdot$" is omitted for convenience), and finally union ($+$).
+
+One can see if the regular expression contains an empty word by utilizing the \textit{empty word property}.
+The property is defined as the function $\varepsilon : RegExp \rightarrow \{\varepsilon, \emptyset\}$. \\
+Given $\alpha,\beta \in \text{RegExp}(\Sigma)$ and $a \in \Sigma$,
+\begin{align*}
+	\varepsilon(\emptyset) &= \emptyset \\
+	\varepsilon(\varepsilon) &= \varepsilon \\
+	\varepsilon(a) &= \emptyset \\
+%	\varepsilon(\alpha + \beta), \; \text{if } \varepsilon(\alpha)\text{=}\varepsilon(\beta)\text{=}\emptyset 
+\end{align*}
+
+
+	
+\subsection{Extended Regular Expressions}
+In addition to the basic operations, some extended operators are often used for convenience. These include:
+
+\begin{itemize}
+    \item \textbf{Kleene plus}: Given a regular expression $r$, the expression $r^+$ denotes one or more repetitions of $r$:
+    \[
+    L(r^+) = L(r) \cdot L(r)^*.
+    \]
+
+    \item \textbf{Fixed repetition (power)}: For a regular expression $r$ and integer $n \geq 0$, the expression $r^n$ denotes $n$ consecutive concatenations of $r$:
+    \[
+    L(r^0) = \{ \varepsilon \}, \quad L(r^n) = L(r) \cdot L(r^{n-1}) \text{ for } n > 0.
+    \]
+
+	 \item \textbf{Bounded repetition}: For a regular expression $r$ and integers $m, n$ with $0 \leq m < n$, the bounded repetition $r^{[m,n[}$ denotes the language containing all strings formed by concatenating between $m$ and $n$ copies of strings from $L(r)$:
+    \[
+    L(r^{[m,n[}) = \bigcup_{k=m}^{n} L(r^k).
+    \]
+\end{itemize}
+
+These extended forms do not increase the expressive power of regular expressions but are useful for readability and practical applications. They can always be rewritten using the fundamental operators: union and concatenation.
+
+\subsection{Derivatives}
+\label{chap:prelim:derivatives}
+% Need 1962 Janusz Brzozowski's paper for this section
+The \emph{derivative of a regular expression} was first introduced in 1962 by Janusz Brzozowski. It is a powerful concept used to define the behavior of regular expressions in a more operational manner. They can be used as a means of verifying equivalence of regular expressions, for example. The derivative of a regular expression $r$ with respect to a symbol $a$ is another regular expression $D_a(r)$ that describes the set of strings that can be obtained by taking the derivative of $r$ with respect to $a$.
+
+The derivative of a regular expression $r$ with respect to $\sigma \in \Sigma$ is itself a regular expression $d_\sigma(r)$ such that $\mathcal{L}(d_\sigma(r)) = \{w \ \vert \ \sigma w \in \mathcal{L}(r)\}$ is defined as:
+
+\begin{gather*}
+    d_\sigma(\emptyset) = \emptyset \\
+    d_\sigma(\varepsilon) = \emptyset \\
+    d_\varepsilon(r) = r \\
+    d_\sigma(r') = \begin{cases}
+        \varepsilon & \text{if $\sigma' = \sigma$} \\
+        \emptyset & \text{otherwise,}
+    \end{cases} \\
+    d_\sigma(r+r') = d_\sigma(r)+d_\sigma(r') \\
+    d_\sigma(rr') = \begin{cases}
+        d_\sigma(r)r' & \text{if $\varepsilon(r) = \emptyset$} \\
+        d_\sigma(r)r' + d_\sigma(r') & \text{otherwise,}
+    \end{cases} \\
+    d_\sigma(r^*) = d_\sigma(r)r^* \\
+    d_\sigma(r^+) = d_\sigma(r)r^*
+\end{gather*}
+
+Brzozowski defined a DFA equivalent to a regular expression with the help of derivatives. With this, it is important to note that, for example, a regular expression $r = a^*$ (matches zero or more 'a' symbols) can be used to construct an equivalent DFA using Brzozowski's construction, even though $d_a(r) = a \cdot d_a(r)$ which can lead to an infinite construction. This example is enough to show that the set of all derivaives of a regular expression may not be finite.
+
+\subsection{Partial Derivatives}
+The notion of \textit{partial derivative} was introduced by Antimirov. Opposite to Brzozowski's derivative, partial derivatives can lead to the construction of an NFA.
+
+Let $\alpha \in RegExp(\Sigma)$ be a \textit{regular expression} over $\Sigma$. The set of partial derivatives of $\alpha$ with respect to a symbol $b \in \Sigma$, represented as $\partial_b(\alpha)$, is defined as follows:
+
+\begin{align*}
+	\partial_b(\emptyset) &= \emptyset		&	\partial_b(\alpha + \beta) &= \partial_b(\alpha) \cup \partial_b(\beta), \; \beta \neq \alpha \\
+	\partial_b(\varepsilon) &= \emptyset	&	\partial_b(\alpha \beta) &= \partial_b(\alpha)\beta \cup \partial_b(\beta)\\
+	\partial_b(b) &= \varepsilon & \partial_b(\alpha \beta) &= \delta_b(\alpha)\beta \\
+	\partial_b(c) &= \emptyset, \; b \neq c \text{ and } b \in \Sigma & \partial_b(\alpha^*) &= \partial_b(\alpha)\alpha^*
+\end{align*}
+
+
+%& 
+%
+% &  \\
+%\partial_b(\alpha + \beta) = \partial_b(\alpha) \cup \partial_b(\beta), where \beta \neq \alpha
+
+\section{From Regular Expressions to Automata}
+While regular expressions provide a declarative way to specify patterns in strings, finite automata offer an operational model for recognizing such patterns.
+% The equivalence between regular expressions and finite automata is not merely theoretical---it is constructive. Algorithms exist to convert any regular expression into an equivalent NFA, typically using Thompson's construction. This NFA can then be transformed into a DFA using the powerset construction, and further minimized for efficiency.
+
+% Thompson's construction creates an NFA by recursively building automata for each component of the regular expression:
+% \begin{itemize}
+%     \item For a literal character, it creates a simple automaton with a single transition.
+%     \item For union $R_1 \mid R_2$, it constructs a new start and accept state with $\varepsilon$-transitions to and from the sub-automata.
+%     \item For concatenation $R_1 R_2$, it connects the accept state of the first to the start state of the second.
+%     \item For repetition $R^*$, it creates cycles with $\varepsilon$-transitions to allow zero or more iterations.
+% \end{itemize}
+
+% The resulting NFA may be nondeterministic but is guaranteed to accept the same language as the original regular expression. Once converted into a DFA, the automaton can efficiently recognize the pattern with linear time complexity in the size of the input.
+
+\subsection{Thompson's Algorithm}
+Thompson's construction is a classic algorithm for converting a regular expression into a nondeterministic finite automaton (NFA) with $\varepsilon$-transitions. It was introduced in 1968 by Ken Thompson and is the foundation for many regex engines, including the \texttt{lex} lexical analyzer generator.
+
+The construction proceeds recursively based on the structure of the regular expression. Each base case (such as a single symbol or the  $\varepsilon$) and each operator (`+`, concatenation, `*`) corresponds to a small NFA fragment. These fragments are then joined using $\varepsilon$-transitions.
+
+Although Thompson's NFA may contain many $\varepsilon$-transitions, it is guaranteed to be of size linear in the length of the regular expression. The resulting NFA can be converted into a deterministic finite automaton (DFA) using the standard powerset construction, typically after removing $\varepsilon$-transitions.
+
+\subsection{Brzozowski's Derivatives}
+Through the definition of \emph{derivatives} mentioned in \ref{chap:prelim:derivatives}, one can compute the derivatives for all symbols, memoize the results and build a DFA that represents the same language as the intended regular expression.
+
+This method can, however, lead to an exponential number of distinct derivatives in the worst case. Therefore, simplification rules and expression equivalences are critical to making the approach practical.
+
+\subsection{Antimirov's Partial Dertivatives}
+Proposed by Valery Antimirov in 1996, the partial derivatives construction generalizes Brzozowski's derivatives to build an NFA rather than a DFA. Instead of producing a single derivative for each symbol, Antimirov's method produces a \emph{set} of partial derivatives, reflecting the inherent nondeterminism of the regular expression.
+
+This construction avoids $\varepsilon$-transitions and yields a compact $\varepsilon$-free NFA. Each partial derivative corresponds to a transition in the automaton, and the process naturally handles alternation and repetition.
+
+Antimirov's approach is especially efficient for regex evaluation and analysis tasks, and forms the basis for several modern regex matchers and formal verification tools.
+
+\subsection{Position Automata}
+%https://www.dcc.fc.up.pt/~nam/resources/publica/dlt16.pdf
+
+% To first recall the notion of \emph{position automata} (also known as \emph{Glushkov automata}), one must first understand the idea of marking each occurrence of a symbol in a regular expression with a unique position. This transforms a regular expression into a \emph{marked regular expression}, where each letter is indexed according to its position in the expression when read left to right. The position automaton is then constructed from this marked version by associating each position with a distinct state, and defining transitions based on the structural analysis of the expression.
+
+The \emph{position automaton}, also known as the \emph{Glushkov automaton}, is a type of $\varepsilon$-free nondeterministic finite automaton (NFA) constructed directly from a regular expression. Unlike the standard Thompson construction, which introduces $\varepsilon$-transitions that must later be eliminated, the Glushkov construction yields an automaton in which each state corresponds uniquely to a symbol occurrence---or \emph{position}---in the expression. \cite{mesh-of-automata}
+
+Given a regular expression $E$, the Glushkov automaton $M_E$ is defined based on three key position-based functions:
+
+\begin{itemize}
+    \item \textbf{first$(E)$}: the set of positions that can appear first in some word of the language $\mathcal{L}(E)$.
+    \item \textbf{last$(E)$}: the set of positions that can appear last in some word of $\mathcal{L}(E)$.
+    \item \textbf{follow$(E, x)$}: for each position $x$, the set of positions that can immediately follow $x$ in some word of $\mathcal{L}(E)$.
+\end{itemize}
+
+To distinguish different occurrences of the same symbol, the construction introduces marked symbols. For example, the expression $(a + b)^*a(b + a)^*$ is rewritten as $(a_1 + b_2)^*a_3(b_4 + a_5)^*$. Each marked symbol corresponds to a unique position and becomes a distinct state in the automaton.
+
+The Glushkov automaton $M_E = (Q, \Sigma, \delta, q_0, F)$ is constructed as follows:
+
+\begin{itemize}
+    \item $Q$ is the set of positions in $E$ (i.e., the marked symbols), plus an initial state $q_0$.
+    \item For each symbol $a \in \Sigma$:
+    \begin{itemize}
+        \item $\delta(q_0, a) = \{ x \in \text{first}(E) \mid \text{symbol}(x) = a \}$
+        \item $\delta(x, a) = \{ y \in \text{follow}(E, x) \mid \text{symbol}(y) = a \}$
+    \end{itemize}
+    \item The set of final states $F$ is $\text{last}(E)$; if $\varepsilon \in \mathcal{L}(E)$, then $q_0$ is also final.
+\end{itemize}
+
+This automaton captures the structural flow of $E$ by tracing symbol sequences as state transitions. It is $\varepsilon$-free and has one state per symbol occurrence, which results in at most a quadratic number of transitions with respect to the size of $E$.
+
+An important property of the Glushkov automaton is its relationship to unambiguity. A regular expression is \emph{weakly unambiguous} if and only if its Glushkov automaton is unambiguous, i.e., there exists at most one accepting path for each accepted word. This makes the Glushkov construction a practical and efficient tool in applications requiring unambiguous parsing, such as syntax analysis in document type definitions (e.g., SGML and XML DTDs).
+
+
+
+% The key to this construction lies in the inductive computation of three sets: \emph{First}, \emph{Last}, and \emph{Follow}.The \emph{First} set contains positions that may begin a word in the language; the \emph{Last} set includes positions that may end such words; and the \emph{Follow} relation determines which positions can immediately follow a given position in any word generated by the expression. The resulting automaton has states corresponding to positions, transitions derived from the \emph{Follow} relation, an initial state representing position 0 (the start of matching), and final states determined by the \emph{Last} set, extended with position 0 if the empty string is accepted. \cite{mesh-of-automata}
+
+
+\section{FAdo}
+The FAdo \cite{fado_paper} project is an open-source implementation of several sets of tools for formal languages manipulation. In order to allow quick prototyping and testing of algorithms, these tools were developed in Python. Regular languages can be represented by regular expressions which are defined in \texttt{reex.py} - or by finite automata which are defined in \texttt{fa.py}.
+
+\subsection{Regular Expressions}
+In \texttt{reex.py}, FAdo defines the \texttt{RegExp} base class for all regular expressions, declaring therein a class variable \texttt{sigma}, formally known as the set of symbols ($\Sigma$).
+To represent any and all base constructions of a regular expressions, FAdo defines base classes for each of them:
+\begin{itemize}
+    \item \textbf{CEmptySet}: The empty symbol set. ($\emptyset$)
+    \item \textbf{CEpsilon}: The empty string. ($\varsigma$)
+    \item \textbf{CAtom}: A simple symbol. (e.g. $'a'$)
+    \item \textbf{CDisj}: The $+$ operation between symbols. (e.g. \texttt{CDisj(CAtom(a),CAtom(b))} represents the regular expression $R=a+b$ where $a,b \in \Sigma_R$)
+    \item \textbf{CConcat}: The $\cdot$ operation 
+    \item \textbf{CStar}: The Kleene closure over a set of symbols (e.g. \texttt{CStar(CDisj(CAtom(a),CAtom(b)))} representes the regular expression $R=(a+b)^*$ where $a,b \in \Sigma_R$)
+
+\end{itemize}
+
+In order to parse expressions into FAdo's classes and types, \emph{lark} was used. \emph{lark} is a parsing toolkit for Python. It can parse all context-free languages.
+
+
+
+\subsection{Finite Automata}
+
+
+\subsection{Extended Regular Expressions}

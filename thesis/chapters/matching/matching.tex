@@ -1,0 +1,211 @@
+\chapter{Matching}\label{chap:matching}
+% Matching is used to search, validate, or extract parts of text based on these patterns. For example, a regex can be used to find all dates in a document or to ensure a password meets certain rules.
+
+Regex \emph{matching} is the process of checking whether a piece of text fits a specific pattern described using a regular expression (regex). A regex is a compact, rule-based way to describe sets of strings—like email addresses, phone numbers, or specific word formats.
+
+In this chapter, we will discuss the different approaches to matching regular expressions, the implications of using them, and the performance considerations that arise from these choices. Furthermore, we will also present a novel approach based on position automata, which aims to mitigate the performance issues associated with traditional regex engines while preserving some of the extended expressiveness of regex patterns.
+
+\section{Modified Position Automata}
+A \emph{position automaton} is a type of nondeterministic finite automaton (NFA) that facilitates overlapped matching.
+
+\begin{algorithm}[H]
+\caption{\textsc{nfaPosCount}($R$): Construct Special Position Automaton}
+\label{alg:nfaPosCount}
+\begin{small}
+\begin{algorithmic}[1]
+\Require Regular expression $R$
+\Ensure NFA $A$
+
+\State $A \gets$ new empty NFA
+\State $i \gets A.\text{addInitialState}()$
+\State $A.\text{addTransitionStar}(i, i)$ \Comment{Accept any symbol from $\Sigma$}
+
+\State $f_R \gets R.\text{marked}()$
+\State $\text{stack} \gets$ empty stack
+\State $\text{addedStates} \gets$ empty map
+
+\ForAll{$p \in First(f_R)$}
+    \State $q \gets A.\text{addState}(p)$
+    \State $\text{addedStates}[p] \gets q$
+    \State $\text{stack}.\text{push}((p, q))$
+    \State $A.\text{addTransition}(i, p, q)$
+\EndFor
+
+% \State $\text{FollowSets} \gets Follow(f_R)$
+
+\While{stack is not empty}
+    \State $(s, s_{\text{idx}}) \gets \text{stack}.\text{pop}()$
+    \ForAll{$t \in Follow(f_R, s)$}
+        \If{$t \in \text{addedStates}$}
+            \State $q \gets \text{addedStates}[t]$
+        \Else
+            \State $q \gets A.\text{addState}(t)$
+            \State $\text{addedStates}[t] \gets q$
+            \State $\text{stack}.\text{push}((t, q))$
+        \EndIf
+        \State $A.\text{addTransition}(s_{\text{idx}}, t, q)$
+    \EndFor
+\EndWhile
+
+\State $e \gets A.\text{addState}()$
+\State $A.\text{addTransitionStar}(e, e)$
+
+\ForAll{$p \in f_R.\text{Last}()$}
+    \If{$p \in \text{addedStates}$}
+        \State $A.\text{addFinal}(\text{addedStates}[p])$
+        \State $A.\text{addTransitionStar}(\text{addedStates}[p], e)$
+    \EndIf
+\EndFor
+
+\end{algorithmic}
+\end{small}
+\end{algorithm}
+
+\section{Automata-Based Matching}
+
+Given a regular expression $R$, one can construct an NFA $A$ such that $L(A) = L(R)$. Matching then reduces to verifying whether the automaton $A$ accepts the input string $s$. In DFA-based engines, each character of the input leads to a deterministic transition from one state to another, resulting in a guaranteed linear-time match. In contrast, NFA-based engines may involve branching paths due to nondeterminism and can require simulating multiple transitions concurrently.
+
+% \section{Backtracking and Performance Implications}
+
+% Many practical regular expression engines (such as those in Java, Perl, and Python) implement matching using \emph{backtracking}, which simulates an NFA by exploring all possible paths through the automaton recursively. While this allows support for rich and flexible patterns, it can introduce performance issues in certain cases. In particular, patterns with nested or ambiguous quantifiers may cause excessive backtracking, leading to exponential runtime in the worst case—a phenomenon known as \emph{regular expression denial of service} (ReDoS).
+
+For example, consider the following regex pattern:
+\begin{verbatim}
+	^(a+)+$
+\end{verbatim}
+
+\section {Matching with the Modified Position Automaton}
+One can find all matches over an input string by constructing the modified position automaton from a regular expression and then simulating the automaton's transitions over the input string. The algorithm presented in this section is designed to track the start and end positions of all matches, including overlapping ones, without relying on backtracking.
+
+\begin{algorithm}[H]
+\caption{\textsc{tableMatcher}$(A, s)$: Modified Position Automaton Multi-matcher}
+\label{alg:table-matcher}
+\begin{small}
+\begin{algorithmic}[1]
+\Require $A = (\Sigma, Q, \delta, I, F)$: NFA
+\Require $s$: input string
+\Ensure $M$: mapping from final states to lists of match positions
+
+\State $symbols \gets$ list with $\varepsilon$ prepended to $s$
+\State $currentRow \gets$ empty map from states to list of position pairs
+\State $finalMatches \gets$ empty map from states to list of matches
+\State $position \gets 0$
+
+\ForAll{$sym$ in $symbols$}
+    \If{$sym = \varepsilon$}
+        \ForAll{$q_0 \in I$}
+            \State $currentRow[q_0] \gets [(0, 0)]$
+        \EndFor
+    \Else
+        \State $nextRow \gets$ empty map
+        \If{$sym \in \Sigma$}
+            \ForAll{$q \in$ \textbf{keys}($currentRow$)}
+                % \State $transitions \gets \delta(q, sym)$
+                \If{$|\delta(q, sym)| > 0$}
+                    \ForAll{$q' \in \delta(q, sym)$}
+                        \ForAll{$(start, \_) \in currentRow[q]$}
+                            \If{$q' = q$ and $q' \in I$}
+                                \State append $(position, position)$ to $nextRow[q']$
+                            \Else
+                                \State append $(start, position)$ to $nextRow[q']$
+                                \If{$q' \in F$}
+                                    \State append $(start, position)$ to $finalMatches[q']$
+                                \EndIf
+                            \EndIf
+                        \EndFor
+                    \EndFor
+                \EndIf
+            \EndFor
+        \Else
+            \Comment{Symbol not in $\Sigma$; treat as fresh start}
+            \ForAll{$q_0 \in I$}
+                \State $nextRow[q_0] \gets [(position, position)]$
+            \EndFor
+        \EndIf
+        \State $currentRow \gets nextRow$
+        \State $position \gets position + 1$
+    \EndIf
+\EndFor
+\State \Return $finalMatches$
+\end{algorithmic}
+\end{small}
+\end{algorithm}
+
+\clearpage
+
+As an example, consider the following regular expression $R$ and input string $w$:
+\begin{center}
+	$R = (aa+aaa)(aaa+aa)$ \break
+	$w = aaaaabaaaaa$
+\end{center}
+
+The Glushkov automaton construction for $R$ is as follows:
+
+\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
+	\node[state, initial] (q0) {$q_0$};
+	\node[state] (q2) [above right=of q0] {$q_2$};
+	\node[state] (q3) [right=of q2] {$q_3$};
+	\node[state] (q4) [right=of q3] {$q_4$};
+	\node[state] (q5) [right=of q4] {$q_5$};
+	\node[state] (q8) [right=of q5] {$q_8$};
+	\node[state,accepting] (q9) [right=of q8] {$q_9$};
+
+	\node[state] (q1) [below right=of q0] {$q_1$};
+	\node[state] (q10) [right=of q1] {$q_{10}$};
+	\node[state] (q6) [right=of q10] {$q_6$};
+	\node[state,accepting] (q7) [right=of q6] {$q_7$};
+
+	\path[->]	(q0)	edge	node	{a} (q1)
+						edge	node	{a} (q2)
+				(q1)	edge	node	{a} (q10)
+				(q10)	edge	node	{a} (q6)
+				(q10)	edge	node	{a} (q5)
+				(q6)	edge	node	{a} (q7)
+				(q2)	edge	node	{a} (q3)
+				(q3)	edge	node	{a} (q4)
+				(q4)	edge	node	{a} (q5)
+				(q4)	edge	node	{a} (q6)
+				(q5)	edge	node	{a} (q8)
+				(q8)	edge	node	{a} (q9);
+\end{tikzpicture}
+
+Meanwhile, the modified position automaton for this regular expression can be constructed using the algorithm presented in \ref{alg:nfaPosCount}, resulting in the following:
+
+\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
+	\node[state, initial] (q0) {$q_0$};
+	\node[state] (q2) [above right=of q0] {$q_2$};
+	\node[state] (q3) [right=of q2] {$q_3$};
+	\node[state] (q4) [right=of q3] {$q_4$};
+	\node[state] (q5) [right=of q4] {$q_5$};
+	\node[state] (q8) [right=of q5] {$q_8$};
+	\node[state,accepting] (q9) [right=of q8] {$q_9$};
+
+	\node[state] (q1) [below right=of q0] {$q_1$};
+	\node[state] (q10) [right=of q1] {$q_{10}$};
+	\node[state] (q6) [right=of q10] {$q_6$};
+	\node[state,accepting] (q7) [right=of q6] {$q_7$};
+
+	\node[state] (q11) [below right=of q9,right=of q7] {$q_{11}$};
+
+	\path[->]	(q0)	edge	node	{a} (q1)
+						edge	node	{a} (q2)
+						edge [loop above] node {$\sigma$} ()
+				(q1)	edge	node	{a} (q10)
+				(q10)	edge	node	{a} (q6)
+				(q10)	edge	node	{a} (q5)
+				(q6)	edge	node	{a} (q7)
+				(q7)	edge	node	{$\sigma$} (q11)
+				(q2)	edge	node	{a} (q3)
+				(q3)	edge	node	{a} (q4)
+				(q4)	edge	node	{a} (q5)
+				(q4)	edge	node	{a} (q6)
+				(q5)	edge	node	{a} (q8)
+				(q8)	edge	node	{a} (q9)
+				(q9)	edge	node	{$\sigma$} (q11)
+				(q11)	edge [loop below] node {$\sigma$} ();
+\end{tikzpicture}
+
+One can then apply the matching algorithm (\ref{alg:table-matcher}) to an input string, resulting in the following match table:
+
+
+% When we apply the matching algorithm (\ref{alg:table-matcher}) to an input string, it will traverse the automaton and record all positions where matches occur. This approach ensures that we can find all possible matches, including those that overlap, without falling into the exponential blowup trap of backtracking.
