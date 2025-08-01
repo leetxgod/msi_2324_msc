@@ -1,3 +1,64 @@
 \chapter{State of the Art}\label{chap:art}
-The current state-of-the-art for mitigating the \acl{ReDoS} What!
 
+\section{Introduction}
+Regular expressions (regex) remain one of the most powerful and widely adopted tools for string pattern matching across programming languages, search tools, and data processing pipelines. While their theoretical foundation lies in formal language theory, the practical implementation of regex engines often diverges from the idealized models. This chapter mentions the state of the art in regex engine designs and regex language features, with a particular focus on performance trade-offs, security concerns, and evolving capabilities.
+
+\section{Engine Architectures}
+Regex engines are typically implemented using one of the following architectures:
+
+\subsection{Deterministic Finite Automata (DFA)}
+DFA-based engines compile a regular expression into a finite-state machine that reads each input character exactly once, guaranteeing linear-time performance. 
+
+\subsection{Backtracking Engines}
+Backtracking engines simulate nondeterministic finite automata (NFA) and recursively explore different matching paths. They are expressive but can suffer from exponential worst-case behavior.
+
+For example, .NET's regex engine uses a traditional nondeterministic finite automaton that is also used in Perl, Python, Emacs and Tcl.
+
+
+\subsection{Hybrid Engines}
+Modern engines often combine DFA and backtracking strategies. For example, they may use a DFA to fast-forward through non-ambiguous parts and switch to backtracking only when needed.
+
+%%% Mention hybrid engine
+
+\section{Feature Sets of Regex Languages}
+Regex languages have evolved far beyond classical regular expressions as defined in formal language theory. The following extensions are now standard in most industrial-strength engines:
+
+\subsection{Backreferences}
+Backreferences allow the engine to refer to previously captured groups. This enables matching non-regular patterns (e.g., repeated substrings) but breaks the regular language model.
+
+\subsection{Lookahead and Lookbehind}
+These zero-width assertions check what follows or precedes a pattern without consuming input. They are useful for complex validations but add significant complexity.
+
+\subsection{Unicode and Multilingual Support}
+Modern engines increasingly support Unicode properties (e.g., \verb|\p{L}| for letters) and normalization, essential for multilingual applications.
+
+\subsection{Named Capture Groups and Subroutines}
+Named groups (\verb|(?<name>...)|) and recursive subpatterns (e.g., \verb|(?R)|) have become essential for advanced pattern extraction.
+
+\subsection{Flags and Modes}
+Regex engines support flags for case insensitivity, multiline matching, dot-all mode (where \verb|.| matches newlines), and others.
+
+\section{Engines and Libraries}
+\subsection{RE2}
+Developed by Google, RE2 is a DFA-based engine designed to never exceed linear time or memory. It disallows features like backreferences for safety and predictability. 
+%https://swtch.com/~rsc/regexp/regexp1.html
+
+\subsection{PCRE2}
+An industry-standard library used in PHP and many scripting tools. It supports extensive features including backtracking control verbs and recursive patterns. %https://github.com/PCRE2Project/pcre2
+
+\subsection{Hyperscan}
+Hyperscan is Intel’s regular expression matching engine, designed specifically for high-throughput and low-latency applications. It serves as a core component in several security and networking tools, including intrusion detection systems like Suricata and firewalls.
+
+Traditional regex engines (e.g., backtracking-based ones like PCRE) often struggle with performance bottlenecks due to their sequential nature and vulnerability to ReDoS attacks. Hyperscan addresses these limitations by combining multiple automata models—particularly NFAs and DFAs—with a hybrid execution strategy that leverages Single Instruction, Multiple Data (SIMD) parallelism and tiled execution on modern CPUs .
+
+According to Wang et al. (\cite{hyperscan}), Hyperscan divides regexes into multiple subgraphs, such as anchored DFAs for simple patterns and NFAs for complex constructs. This hybrid approach enables it to process large volumes of data streams efficiently without the exponential-time risks associated with backtracking engines.
+
+However, as also noted in \cite{hyperscan}, Hyperscan will also enforce syntactic restrictions when compiling. Regexes that are deemed vulnerable or ambiguous are rejected, therefore limiting expressiveness and versatility, especially when the user is looking for nested repetition (e.g. $(a+)+$, looking to match one or more of one or more $a$'s) or greedy alternation (e.g. $(a|aa)+$, matching a sequence of $a$ or $aa$, repeated, resulting in three matches for a string such as $aa$).
+
+\subsection{Rust's \texttt{regex} Crate}
+Implements a hybrid DFA/NFA model and guarantees linear-time performance by excluding features like backreferences.
+
+\section{Prevalency of ReDoS}
+\subsection{Revealer}
+Mention the revealer paper here!
+%https://seclab.cse.cuhk.edu.hk/papers/sp21_redos.pdf

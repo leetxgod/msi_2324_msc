@@ -1,12 +1,41 @@
 \chapter{Matching}\label{chap:matching}
 % Matching is used to search, validate, or extract parts of text based on these patterns. For example, a regex can be used to find all dates in a document or to ensure a password meets certain rules.
 
-Regex \emph{matching} is the process of checking whether a piece of text fits a specific pattern described using a regular expression (regex). A regex is a compact, rule-based way to describe sets of strings—like email addresses, phone numbers, or specific word formats.
+\emph{Matching} is the process of checking whether a piece of text fits a specific pattern described using a regular expression (regex).
+In this chapter, we will discuss the different approaches to matching regular expressions, the implications of using them, and the performance considerations that arise from these choices. Furthermore, we will also present a novel approach based on a modified position automata, which aims to mitigate the performance issues associated with traditional regex engines while preserving some of the extended expressiveness of regex patterns.
 
-In this chapter, we will discuss the different approaches to matching regular expressions, the implications of using them, and the performance considerations that arise from these choices. Furthermore, we will also present a novel approach based on position automata, which aims to mitigate the performance issues associated with traditional regex engines while preserving some of the extended expressiveness of regex patterns.
+\section{Overlapped versus Non-Overlapped Matching}
+\label{sec:overlap-vs-nonoverlap}
+
+In the context of regular expression matching, two distinct paradigms exist: \emph{overlapped matching} and \emph{non-overlapped matching}. Understanding their differences is crucial when designing matching engines, especially when completeness or performance is a concern.
+
+\subsection*{Overlapped Matching}
+Overlapped matching refers to finding all possible matches of a pattern in an input string. This is typically achieved by attempting a match starting at every index of the input. It is more exhaustive and useful in domains where no potential match should be missed, such as bioinformatics (DNA pattern searching).
+
+For example, the indexed string $w = a_0 a_1 a_2 a_3$, when matched against using the pattern $aa$, will yield the following matched substrings:
+
+\begin{itemize}
+	\item $w_{[0,2[} = {\color{green}{aa}}aa$
+	\item $w_{[1,3[} = a{\color{green}{aa}}a$
+	\item $w_{[2,4[} = aa{\color{green}{aa}}$
+\end{itemize}
+
+\subsection*{Non-Overlapped Matching}
+Non-overlapped matching (also referred to as \emph{disjoint}, \emph{standard}, or in some engines, \emph{greedy} matching) finds matches sequentially from left to right, and once a match is found, it advances the input pointer beyond the match. Unlike overlapped matchers, where overlapping is a feature by default, greedy matchers will often depend on the lookahead assertions to do so.
+
+Using the same pattern $aa$ on $w = a_0 a_1 a_2 a_3$, a non-overlapped matcher may return:
+
+\begin{itemize}
+	\item $w_{[0,2[} = {\color{green}{aa}}aa$
+	\item $w_{[2,4[} = aa{\color{green}{aa}}$
+\end{itemize}
+
+To summarize, overlapped matching provides a more complete view of potential matches, but at a higher computational cost. It is particularly well-suited to automata-based approaches like the modified position automaton described in this work.
+
 
 \section{Modified Position Automata}
-A \emph{position automaton} is a type of nondeterministic finite automaton (NFA) that facilitates overlapped matching.
+A \emph{position automaton} is a type of nondeterministic finite automaton (NFA).
+We can enable overlapped matching by modifying the position automaton's construction using the algorithm described on  \ref{alg:nfaPosCount}.
 
 \begin{algorithm}[H]
 \caption{\textsc{nfaPosCount}($R$): Construct Special Position Automaton}
@@ -139,73 +168,214 @@ As an example, consider the following regular expression $R$ and input string $w
 	$w = aaaaabaaaaa$
 \end{center}
 
+We can separate $R$ into two matching groups:
+\begin{itemize}
+	\item The first group $(aa+aaa)$ will match either two or three $a$ symbols (e.g. $aaa$ will yield three overlapped matches: ${\color{green}{aa}}a$, $a{\color{green}{aa}}$ and ${\color{green}{aaa}}$).
+	\item The second group $(aaa+aa)$ will also match either two or three $a$ symbols, much like the first group.
+\end{itemize}
+
+
+
 The Glushkov automaton construction for $R$ is as follows:
 
-\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
-	\node[state, initial] (q0) {$q_0$};
-	\node[state] (q2) [above right=of q0] {$q_2$};
-	\node[state] (q3) [right=of q2] {$q_3$};
-	\node[state] (q4) [right=of q3] {$q_4$};
-	\node[state] (q5) [right=of q4] {$q_5$};
-	\node[state] (q8) [right=of q5] {$q_8$};
-	\node[state,accepting] (q9) [right=of q8] {$q_9$};
+\begin{figure}[H]
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
+		\node[state, initial] (q0) {$q_0$};
+		\node[state] (q2) [above right=of q0] {$q_2$};
+		\node[state] (q3) [right=of q2] {$q_3$};
+		\node[state] (q4) [right=of q3] {$q_4$};
+		\node[state] (q5) [right=of q4] {$q_5$};
+		\node[state] (q8) [right=of q5] {$q_8$};
+		\node[state,accepting] (q9) [right=of q8] {$q_9$};
+		
+		\node[state] (q1) [below right=of q0] {$q_1$};
+		\node[state] (q10) [right=of q1] {$q_{10}$};
+		\node[state] (q6) [right=of q10] {$q_6$};
+		\node[state,accepting] (q7) [right=of q6] {$q_7$};
+		
+		\path[->]	(q0)	edge	node	{a} (q1)
+		edge	node	{a} (q2)
+		(q1)	edge	node	{a} (q10)
+		(q10)	edge	node	{a} (q6)
+		(q10)	edge	node	{a} (q5)
+		(q6)	edge	node	{a} (q7)
+		(q2)	edge	node	{a} (q3)
+		(q3)	edge	node	{a} (q4)
+		(q4)	edge	node	{a} (q5)
+		(q4)	edge	node	{a} (q6)
+		(q5)	edge	node	{a} (q8)
+		(q8)	edge	node	{a} (q9);
+	\end{tikzpicture}
+	\caption{Default Glushkov automaton}
+\end{figure}
 
-	\node[state] (q1) [below right=of q0] {$q_1$};
-	\node[state] (q10) [right=of q1] {$q_{10}$};
-	\node[state] (q6) [right=of q10] {$q_6$};
-	\node[state,accepting] (q7) [right=of q6] {$q_7$};
-
-	\path[->]	(q0)	edge	node	{a} (q1)
-						edge	node	{a} (q2)
-				(q1)	edge	node	{a} (q10)
-				(q10)	edge	node	{a} (q6)
-				(q10)	edge	node	{a} (q5)
-				(q6)	edge	node	{a} (q7)
-				(q2)	edge	node	{a} (q3)
-				(q3)	edge	node	{a} (q4)
-				(q4)	edge	node	{a} (q5)
-				(q4)	edge	node	{a} (q6)
-				(q5)	edge	node	{a} (q8)
-				(q8)	edge	node	{a} (q9);
-\end{tikzpicture}
 
 Meanwhile, the modified position automaton for this regular expression can be constructed using the algorithm presented in \ref{alg:nfaPosCount}, resulting in the following:
 
-\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
-	\node[state, initial] (q0) {$q_0$};
-	\node[state] (q2) [above right=of q0] {$q_2$};
-	\node[state] (q3) [right=of q2] {$q_3$};
-	\node[state] (q4) [right=of q3] {$q_4$};
-	\node[state] (q5) [right=of q4] {$q_5$};
-	\node[state] (q8) [right=of q5] {$q_8$};
-	\node[state,accepting] (q9) [right=of q8] {$q_9$};
 
-	\node[state] (q1) [below right=of q0] {$q_1$};
-	\node[state] (q10) [right=of q1] {$q_{10}$};
-	\node[state] (q6) [right=of q10] {$q_6$};
-	\node[state,accepting] (q7) [right=of q6] {$q_7$};
+\begin{figure}[H]
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
+		\node[state, initial] (q0) {$q_0$};
+		\node[state] (q2) [above right=of q0] {$q_2$};
+		\node[state] (q3) [right=of q2] {$q_3$};
+		\node[state] (q4) [right=of q3] {$q_4$};
+		\node[state] (q5) [right=of q4] {$q_5$};
+		\node[state] (q8) [right=of q5] {$q_8$};
+		\node[state,accepting] (q9) [right=of q8] {$q_9$};
+		
+		\node[state] (q1) [below right=of q0] {$q_1$};
+		\node[state] (q10) [right=of q1] {$q_{10}$};
+		\node[state] (q6) [right=of q10] {$q_6$};
+		\node[state,accepting] (q7) [right=of q6] {$q_7$};
+		
+		\node[state] (q11) [below right=of q9,right=of q7] {$q_{11}$};
+		
+		\path[->]	(q0)	edge	node	{a} (q1)
+		edge	node	{a} (q2)
+		edge [loop above] node {$\sigma$} ()
+		(q1)	edge	node	{a} (q10)
+		(q10)	edge	node	{a} (q6)
+		(q10)	edge	node	{a} (q5)
+		(q6)	edge	node	{a} (q7)
+		(q7)	edge	node	{$\sigma$} (q11)
+		(q2)	edge	node	{a} (q3)
+		(q3)	edge	node	{a} (q4)
+		(q4)	edge	node	{a} (q5)
+		(q4)	edge	node	{a} (q6)
+		(q5)	edge	node	{a} (q8)
+		(q8)	edge	node	{a} (q9)
+		(q9)	edge	node	{$\sigma$} (q11)
+		(q11)	edge [loop below] node {$\sigma$} ();
+	\end{tikzpicture}
+	\caption{Modified Glushkov automaton}
+	\label{fig:modified_glushkov_automaton}
+\end{figure}
 
-	\node[state] (q11) [below right=of q9,right=of q7] {$q_{11}$};
 
-	\path[->]	(q0)	edge	node	{a} (q1)
-						edge	node	{a} (q2)
-						edge [loop above] node {$\sigma$} ()
-				(q1)	edge	node	{a} (q10)
-				(q10)	edge	node	{a} (q6)
-				(q10)	edge	node	{a} (q5)
-				(q6)	edge	node	{a} (q7)
-				(q7)	edge	node	{$\sigma$} (q11)
-				(q2)	edge	node	{a} (q3)
-				(q3)	edge	node	{a} (q4)
-				(q4)	edge	node	{a} (q5)
-				(q4)	edge	node	{a} (q6)
-				(q5)	edge	node	{a} (q8)
-				(q8)	edge	node	{a} (q9)
-				(q9)	edge	node	{$\sigma$} (q11)
-				(q11)	edge [loop below] node {$\sigma$} ();
-\end{tikzpicture}
+%One can then apply the matching algorithm (\ref{alg:table-matcher}) to an input string, resulting in the following match table:
 
-One can then apply the matching algorithm (\ref{alg:table-matcher}) to an input string, resulting in the following match table:
+When we apply the matching algorithm (\ref{alg:table-matcher}) to an input string, it will traverse the automaton and record all positions where matches occur. This approach ensures that we can find all possible matches, including those that overlap, without falling into the exponential blowup trap of backtracking.
+
+The result is a table that maps each accepting state to a set of index pairs, each indicating the start and end of a successful match. For instance, applying this process to $R = (aa+aaa)(aaa+aa)$ and $w = aaaaabaaaaa$ will yield the following table:
+
+%\begin{table}[H]
+%	\resizebox{\textwidth}{!}{%
+%	\begin{tabular}{lllllllllllll}
+%		& $q_0$       & $q_1$       & $q_2$       & $q_3$      & $q_4$      & $q_5$                                                       & $q_6$                                                       &  $q_7$                                                       & $q_8$                                                       & $q_9$      & $q_{10}$     & $q_{11}$     \\
+%		$\varepsilon$ & (0,0)   &         &         &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
+%		a                       & (1,1)   & (0,1)   & (0,1)   &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
+%		a                       & (2,2)   & (1,2)   & (1,2)   & (0,2)  &        &                                                         &                                                         &                                                         &                                                         &        & (0,2)  &        \\
+%		a                       & (3,3)   & (2,3)   & (2,3)   & (1,3)  & (0,3)  & (0,3)                                                   & (0,3)                                                   &                                                         &                                                         &        & (1,3)  &        \\
+%		a                       & (4,4)   & (3,4)   & (3,4)   & (2,4)  & (1,4)  & \begin{tabular}[c]{@{}l@{}}(0,4)\\ (1,4)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(0,4)\\ (1,4)\end{tabular}   & (0,4)                                                   & (0,4)                                                   &        & (2,4)  &        \\
+%		a                       & (5,5)   & (4,5)   & (4,5)   & (3,5)  & (2,5)  & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (2,5)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (2,5)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (0,5)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (0,5)\end{tabular}   & (0,5)  & (3,5)  & (0,5)  \\
+%		b                       & (6,6)   &         &         &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
+%		a                       & (7,7)   & (6,7)   & (6,7)   &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
+%		a                       & (8,8)   & (7,8)   & (7,8)   & (6,8)  &        &                                                         &                                                         &                                                         &                                                         &        & (6,8)  &        \\
+%		a                       & (9,9)   & (8,9)   & (8,9)   & (7,9)  & (6,9)  & (6,9)                                                   & (6,9)                                                   &                                                         &                                                         &        & (7,9)  &        \\
+%		a                       & (10,10) & (9,10)  & (9,10)  & (8,10) & (7,10) & \begin{tabular}[c]{@{}l@{}}(6,10)\\ (7,10)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(6,10)\\ (7,10)\end{tabular} & (6,10)                                                  & (6,10)                                                  &        & (8,10) &        \\
+%		a                       & (11,11) & (10,11) & (10,11) & (9,11) & (8,11) & \begin{tabular}[c]{@{}l@{}}(7,11)\\ (8,11)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(7,11)\\ (8,11)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(6,11)\\ (7,11)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(6,11)\\ (7,11)\end{tabular} & (6,11) & (9,11) & (6,11)
+%	\end{tabular}
+%	}
+%	\caption{Match positions table using the regular expression $R$ and input string $w$}
+%	\label{fig:pos_match_tbl}
+%\end{table}
+
+\begin{table}[H]
+	\centering
+	\resizebox{\textwidth}{!}{%
+		\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|l|}
+			\hline
+			& $q_0$   & $q_1$   & $q_2$   & $q_3$   & $q_4$   & $q_5$   & $q_6$   & $q_7$   & $q_8$   & $q_9$   & $q_{10}$ & $q_{11}$ \\ \hline
+			$\varepsilon$ & (0,0)   &         &         &        &        &         &         &         &         &        &          &          \\ \hline
+			a         & (1,1)   & (0,1)   & (0,1)   &        &        &         &         &         &         &        &          &          \\ \hline
+			a         & (2,2)   & (1,2)   & (1,2)   & (0,2)  &        &         &         &         &         &        & (0,2)    &          \\ \hline
+			a         & (3,3)   & (2,3)   & (2,3)   & (1,3)  & (0,3)  & (0,3)   & (0,3)   &         &         &        & (1,3)    &          \\ \hline
+			a         & (4,4)   & (3,4)   & (3,4)   & (2,4)  & (1,4)  & \begin{tabular}[c]{@{}l@{}}(0,4)\\ (1,4)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(0,4)\\ (1,4)\end{tabular}
+			& (0,4)   & (0,4)   &        & (2,4)    &          \\ \hline
+			a         & (5,5)   & (4,5)   & (4,5)   & (3,5)  & (2,5)  & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (2,5)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(1,5)\\ (2,5)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(1,5)\\ (0,5)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(1,5)\\ (0,5)\end{tabular}
+			& (0,5)  & (3,5)  & (0,5)    \\ \hline
+			b         & (6,6)   &         &         &        &        &         &         &         &         &        &          &          \\ \hline
+			a         & (7,7)   & (6,7)   & (6,7)   &        &        &         &         &         &         &        &          &          \\ \hline
+			a         & (8,8)   & (7,8)   & (7,8)   & (6,8)  &        &         &         &         &         &        & (6,8)    &          \\ \hline
+			a         & (9,9)   & (8,9)   & (8,9)   & (7,9)  & (6,9)  & (6,9)   & (6,9)   &         &         &        & (7,9)    &          \\ \hline
+			a         & (10,10) & (9,10)  & (9,10)  & (8,10) & (7,10) & \begin{tabular}[c]{@{}l@{}}(6,10)\\ (7,10)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(6,10)\\ (7,10)\end{tabular}
+			& (6,10)  & (6,10)  &        & (8,10) &          \\ \hline
+			a         & (11,11) & (10,11) & (10,11) & (9,11) & (8,11) & \begin{tabular}[c]{@{}l@{}}(7,11)\\ (8,11)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(7,11)\\ (8,11)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(6,11)\\ (7,11)\end{tabular}
+			& \begin{tabular}[c]{@{}l@{}}(6,11)\\ (7,11)\end{tabular}
+			& (6,11) & (9,11) & (6,11)   \\ \hline
+		\end{tabular}
+	}
+	\caption{Match positions table using the regular expression $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$}
+	\label{fig:pos_match_tbl}
+\end{table}
+
+
+First, we always have to account for $\varepsilon$, since there is the possibility of having the empty word and we also want to match against it.
+After that, every symbol $s \in w$ is processed sequentially.
+
+At each step, the algorithm updates a row that maps the automaton's (represented in \ref{fig:modified_glushkov_automaton}) states to sets of position intervals $(i,j)$, such that the substring $w_{ij}$ corresponds to a valid match, whether it is overlapped or not.\\
+
+Transitions are computed for each input symbol using the automaton's $\delta$ function. When a final state is reached, the interval is stored as a successful match. Furthermore, during this process, only the last symbol's computed transitions and position intervals are preserved because they always carry over to the current symbol's computation.
+
+The automaton on \ref{fig:modified_glushkov_automaton} shows that:
+
+\begin{center}
+	$F = \{q_7, q_9\}$
+\end{center}
+
+For those states, the resulting match table yields the following:
+
+\begin{table}[H]
+	\centering
+	\renewcommand{\arraystretch}{1.2}
+	
+	\begin{minipage}[t]{0.48\textwidth}
+		\centering
+		\begin{tabular}{|c|>{\ttfamily}l|}
+			\hline
+			$w_{0,4}$  & \textbf{\textcolor{green}{aaaa}}\textcolor{gray}{abaaaaa} \\ \hline
+			$w_{0,5}$  & \textbf{\textcolor{green}{aaaaa}}\textcolor{gray}{baaaaa} \\ \hline
+			$w_{1,5}$  & \textcolor{gray}{a}\textbf{\textcolor{green}{aaaa}}\textcolor{gray}{baaaaa} \\ \hline
+			$w_{6,10}$ & \textcolor{gray}{aaaaab}\textbf{\textcolor{green}{aaaa}}\textcolor{gray}{a} \\ \hline
+			$w_{6,11}$ & \textcolor{gray}{aaaaab}\textbf{\textcolor{green}{aaaaa}} \\ \hline
+			$w_{7,11}$ & \textcolor{gray}{aaaaaba}\textbf{\textcolor{green}{aaaa}} \\ \hline
+		\end{tabular}
+		\caption{Highlighted substrings of valid matches for state $q_7$}
+		\label{tab:left-highlights}
+	\end{minipage}\hfill
+	%
+		\begin{minipage}[t]{0.48\textwidth}
+		\centering
+		\begin{tabular}{|c|>{\ttfamily}l|}
+			\hline
+			$w_{0,5}$  & \textbf{\textcolor{green}{aaaaa}}\textcolor{gray}{baaaaa} \\ \hline
+			$w_{6,11}$ & \textcolor{gray}{aaaaab}\textbf{\textcolor{green}{aaaaa}} \\ \hline
+		\end{tabular}
+		\caption{Highlighted substrings of valid matches for state $q_9$}
+		\label{tab:left-highlights1}
+	\end{minipage}
+\end{table}
+
+Recalling the regular expression used $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$, 
+
+%As shown in \ref{fig:pos_match_tbl}, the algorithm parses every input symbol. 
+
+%The highlighted columns are the so called "tracking states".
+%
+%This output demonstrates that the modified automaton not only supports detection of all valid matches for a given regular expression but also accurately identifies overlapping occurrences—something traditional engines either fail to do or achieve with substantial computational overhead.
+%
+%Because this construction is built on a finite automaton and avoids recursive or backtracking search, its runtime remains linear with respect to the input length, multiplied by the number of active states. This provides robust resistance to ReDoS attacks while retaining flexibility in expressiveness and matching semantics.
+%
+%Moreover, by storing match ranges, this method facilitates advanced text analysis tasks such as syntax highlighting, pattern-based replacements, and deep parsing, where knowing the exact span of each match is essential.
+%
+%In the next chapter, we evaluate the performance characteristics of this approach and compare it against classical backtracking and DFA-based engines under different conditions and input patterns.
 
 
 % When we apply the matching algorithm (\ref{alg:table-matcher}) to an input string, it will traverse the automaton and record all positions where matches occur. This approach ensures that we can find all possible matches, including those that overlap, without falling into the exponential blowup trap of backtracking.

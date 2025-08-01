@@ -25,7 +25,10 @@ One such vulnerability is known as \emph{Regular Expression Denial of Service} (
 The root of the ReDoS problem lies not in regular expressions as a theoretical model but in how they are operationalized in software. While deterministic finite automata (DFAs) evaluate regular expressions in linear time, many real-world engines opt for backtracking NFAs due to their flexibility and ease of implementation. Unfortunately, these NFAs are susceptible to exponential blow-up in ambiguous or unguarded patterns.
 
 \section{Case Studies}
+In this section, two case studies are presented. These serve as a form of introduction to getting to know and understand the ReDoS problem.
+
 \subsection{Stack Overflow}
+\label{intro:case_studies:stack_overflow}
 On the 20th of July 2016, a user published an malformed post on the online information exchange forum \textit{Stack Overflow}. A couple minutes after the post, at around 14:44 UTC, the entire website became unavailable for around 34 minutes, after which there was an update that fixed the underlying issue.
 
 On the forum, there is an automatic text formatter that runs every time someone posts something. This tool will trim unicode spaces from the start of a line until its end. The regular expression responsible for matching these spaces was the following:
@@ -61,6 +64,56 @@ For a $20{,}000$ whitespace-character input, the sum of computations is given as
 \end{center}
 
 This means that this matching algorithm ran in $O(n^2)$ complexity, and this blow up was to be expected.
+
+The engineers quickly fixed this issue by switching to a substring replacing method.
+
+\subsection{minimatch}
+\textbf{minimatch} is a minimal matching utility, used internally by the \textbf{Node Package Manager}, better known as \textbf{npm}. \cite{npm_minimatch}
+This utility works by convering glob expressions into JavaScript's \textit{RegExp} objects, supporting the following glob features:
+\begin{itemize}
+	\item Brace Expansion
+	\item Extended glob matching
+	\item "Globstar" (**) matching
+	\item POSIX character classes
+\end{itemize}
+The utility has millions of downloads, as it is an essential component of \textbf{npm}.
+
+On the 18th of October, a new CVE was introduced: \textbf{CVE-2022-3517}.
+The report showed that all of minimatch's versions below 3.0.5 were vulnerable to a ReDoS attack similar to the one described in \ref{intro:case_studies:stack_overflow}.
+The culprit for this was a function called \textit{braceExpand}, which is responsible for expanding brace patterns in glob strings. This is commonly known as brace expansion and is often seen in Unix shells (such as bash). 
+The function contained a regular expression that would match against given patterns and decide if a brace expansion was in order. The expression used was "/\textbackslash\{.*\textbackslash\}/)", which matches any string containing a single pair of curly braces with any characters inside. But this expression poses an issue:
+
+For example, the following text:
+\begin{center}
+	"\{\{\{\{\{\{\{\{\{\{\{\{\{...X"
+\end{center}
+
+with the \{ repeated over 30,000 times and no closing \}, can cause a significant CPU spike or even hang the process due to catastrophic backtracking.
+
+To fix this issue, the developer decided to switch to a safer regular expression: \textbackslash\{(?:(?!\textbackslash\{).)*\textbackslash\}/
+
+
+\section{Reluctance Toward Changing Legacy Matchers}
+
+Despite well-documented vulnerabilities such as ReDoS, there remains significant reluctance in the software engineering community to replace or refactor legacy regex engines—particularly those built into performance-critical or widely adopted tools such as \texttt{grep}, \texttt{sed}, and many scripting languages.
+
+These tools often rely on matching engines that prioritize speed and simplicity of implementation over safety. For example, \texttt{grep} and similar UNIX utilities implement regex matchers using finite automata, but their behavior with extended features (like bounded repetitions) can still lead to performance degradation in edge cases. While these engines are generally immune to the exponential blow-up typical of backtracking matchers, they may suffer from linear but high-cost processing when automata grow excessively large due to poorly constructed patterns.
+
+The situation is more severe in environments that rely on backtracking matchers, such as JavaScript, Java, and many shell-based text processors. In these ecosystems, regular expressions are both expressive and dangerously permissive, allowing patterns that trigger catastrophic backtracking without warning.
+
+Refactoring or replacing these engines is often resisted for several reasons:
+\begin{itemize}
+	\item \textbf{Backwards compatibility}: Legacy codebases and systems expect specific regex semantics, and changing the underlying engine could break existing behavior.
+	\item \textbf{Perceived performance cost}: DFA-based matchers may require significant memory or preprocessing, which is viewed as a performance risk in lightweight tools.
+	\item \textbf{Lack of awareness}: Many developers are unaware that regex matchers can introduce denial-of-service vulnerabilities, especially when ReDoS exploits are subtle or input-driven.
+	\item \textbf{Cultural inertia}: Tools like \texttt{grep} are deeply embedded in developer workflows and scripts, making any modification to their behavior or performance profile controversial.
+\end{itemize}
+
+Even modern matchers that are designed to avoid ReDoS—such as Google’s RE2 or Rust’s regex crate—are often underutilized due to these legacy constraints.
+
+These factors highlight the need for not only technical solutions, such as safer regex engines and static analysis tools, but also a cultural shift in how regular expressions are authored, reviewed, and validated in production systems.
+
+The next chapter will give some more insight into the basics of regular expressions and automata.
 
 %Giv
 %
