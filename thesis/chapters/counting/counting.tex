@@ -3,5 +3,31 @@ In this chapter, we will explore the concept of counting in the context of forma
 
 \section{Counting in Formal Languages}
 In formal language theory, counting refers to the ability of a language or an automaton to enforce numeric constraints over the number of symbols or patterns within strings. Specifically, it deals with the ability to recognize whether certain elements occur a specified number of times—or in a specific numerical relationship to others.
+Current tools are already able to do this, including some non-backtracking matchers.
 
-\section{}
+\section{Derivatives of operations in Extended Regular Expressions}
+In order to be able to match using counting regular expressions, one must first solve the derivatives for fixed and bounded repetition.
+
+\subsection{Fixed Repetition}
+Given $r = ab$ such that $r^2 = abab$, we have:
+\begin{align*}
+	D_a(r^2) &= D_a(r \cdot r) \\
+	&= D_a(abab)  \\
+	&= D_a(a)bab + D_a(bab) \\
+	&= \varepsilon bab + \emptyset \\
+	&= bab
+\end{align*}
+
+
+\subsection{Bounded Repetition}
+Given $r = ab$ such that $r^2 = abab$ and $r^3 = ababab$, we have:
+\begin{align*}
+	D_a(r^{[2,4[}) &= D_a(abab) + D_a(ababab) \\
+	&= D_a(abab) + D_a(ababab) \\
+	&= D_a(a)bab + D_a(bab) + D_a(a)babab + D_a(babab) \\
+	&= \varepsilon bab + \emptyset + babab + \emptyset \\
+	&= bab + babab
+\end{align*}
+
+\section{Extended Regular Expressions in FAdo}
+Recalling back from \ref{chap:prelim:extended_re}, in order to support extended regular expressions, one needs to extend the base class for unary operations in FAdo

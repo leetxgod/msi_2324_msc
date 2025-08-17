@@ -15,9 +15,9 @@ Overlapped matching refers to finding all possible matches of a pattern in an in
 For example, the indexed string $w = a_0 a_1 a_2 a_3$, when matched against using the pattern $aa$, will yield the following matched substrings:
 
 \begin{itemize}
-	\item $w_{[0,2[} = {\color{green}{aa}}aa$
-	\item $w_{[1,3[} = a{\color{green}{aa}}a$
-	\item $w_{[2,4[} = aa{\color{green}{aa}}$
+	\item $w_{[0,2[} = {\color{red}{aa}}aa$
+	\item $w_{[1,3[} = a{\color{red}{aa}}a$
+	\item $w_{[2,4[} = aa{\color{red}{aa}}$
 \end{itemize}
 
 \subsection*{Non-Overlapped Matching}
@@ -26,8 +26,8 @@ Non-overlapped matching (also referred to as \emph{disjoint}, \emph{standard}, o
 Using the same pattern $aa$ on $w = a_0 a_1 a_2 a_3$, a non-overlapped matcher may return:
 
 \begin{itemize}
-	\item $w_{[0,2[} = {\color{green}{aa}}aa$
-	\item $w_{[2,4[} = aa{\color{green}{aa}}$
+	\item $w_{[0,2[} = {\color{red}{aa}}aa$
+	\item $w_{[2,4[} = aa{\color{red}{aa}}$
 \end{itemize}
 
 To summarize, overlapped matching provides a more complete view of potential matches, but at a higher computational cost. It is particularly well-suited to automata-based approaches like the modified position automaton described in this work.
@@ -170,7 +170,7 @@ As an example, consider the following regular expression $R$ and input string $w
 
 We can separate $R$ into two matching groups:
 \begin{itemize}
-	\item The first group $(aa+aaa)$ will match either two or three $a$ symbols (e.g. $aaa$ will yield three overlapped matches: ${\color{green}{aa}}a$, $a{\color{green}{aa}}$ and ${\color{green}{aaa}}$).
+	\item The first group $(aa+aaa)$ will match either two or three $a$ symbols (e.g. $aaa$ will yield three overlapped matches: ${\color{red}{aa}}a$, $a{\color{red}{aa}}$ and ${\color{red}{aaa}}$).
 	\item The second group $(aaa+aa)$ will also match either two or three $a$ symbols, much like the first group.
 \end{itemize}
 
@@ -258,29 +258,8 @@ When we apply the matching algorithm (\ref{alg:table-matcher}) to an input strin
 
 The result is a table that maps each accepting state to a set of index pairs, each indicating the start and end of a successful match. For instance, applying this process to $R = (aa+aaa)(aaa+aa)$ and $w = aaaaabaaaaa$ will yield the following table:
 
-%\begin{table}[H]
-%	\resizebox{\textwidth}{!}{%
-%	\begin{tabular}{lllllllllllll}
-%		& $q_0$       & $q_1$       & $q_2$       & $q_3$      & $q_4$      & $q_5$                                                       & $q_6$                                                       &  $q_7$                                                       & $q_8$                                                       & $q_9$      & $q_{10}$     & $q_{11}$     \\
-%		$\varepsilon$ & (0,0)   &         &         &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
-%		a                       & (1,1)   & (0,1)   & (0,1)   &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
-%		a                       & (2,2)   & (1,2)   & (1,2)   & (0,2)  &        &                                                         &                                                         &                                                         &                                                         &        & (0,2)  &        \\
-%		a                       & (3,3)   & (2,3)   & (2,3)   & (1,3)  & (0,3)  & (0,3)                                                   & (0,3)                                                   &                                                         &                                                         &        & (1,3)  &        \\
-%		a                       & (4,4)   & (3,4)   & (3,4)   & (2,4)  & (1,4)  & \begin{tabular}[c]{@{}l@{}}(0,4)\\ (1,4)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(0,4)\\ (1,4)\end{tabular}   & (0,4)                                                   & (0,4)                                                   &        & (2,4)  &        \\
-%		a                       & (5,5)   & (4,5)   & (4,5)   & (3,5)  & (2,5)  & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (2,5)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (2,5)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (0,5)\end{tabular}   & \begin{tabular}[c]{@{}l@{}}(1,5)\\ (0,5)\end{tabular}   & (0,5)  & (3,5)  & (0,5)  \\
-%		b                       & (6,6)   &         &         &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
-%		a                       & (7,7)   & (6,7)   & (6,7)   &        &        &                                                         &                                                         &                                                         &                                                         &        &        &        \\
-%		a                       & (8,8)   & (7,8)   & (7,8)   & (6,8)  &        &                                                         &                                                         &                                                         &                                                         &        & (6,8)  &        \\
-%		a                       & (9,9)   & (8,9)   & (8,9)   & (7,9)  & (6,9)  & (6,9)                                                   & (6,9)                                                   &                                                         &                                                         &        & (7,9)  &        \\
-%		a                       & (10,10) & (9,10)  & (9,10)  & (8,10) & (7,10) & \begin{tabular}[c]{@{}l@{}}(6,10)\\ (7,10)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(6,10)\\ (7,10)\end{tabular} & (6,10)                                                  & (6,10)                                                  &        & (8,10) &        \\
-%		a                       & (11,11) & (10,11) & (10,11) & (9,11) & (8,11) & \begin{tabular}[c]{@{}l@{}}(7,11)\\ (8,11)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(7,11)\\ (8,11)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(6,11)\\ (7,11)\end{tabular} & \begin{tabular}[c]{@{}l@{}}(6,11)\\ (7,11)\end{tabular} & (6,11) & (9,11) & (6,11)
-%	\end{tabular}
-%	}
-%	\caption{Match positions table using the regular expression $R$ and input string $w$}
-%	\label{fig:pos_match_tbl}
-%\end{table}
-
 \begin{table}[H]
+	\caption{Match positions table using the regular expression $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$}
 	\centering
 	\resizebox{\textwidth}{!}{%
 		\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|l|l|}
@@ -312,7 +291,6 @@ The result is a table that maps each accepting state to a set of index pairs, ea
 			& (6,11) & (9,11) & (6,11)   \\ \hline
 		\end{tabular}
 	}
-	\caption{Match positions table using the regular expression $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$}
 	\label{fig:pos_match_tbl}
 \end{table}
 
@@ -337,28 +315,28 @@ For those states, the resulting match table yields the following:
 	\renewcommand{\arraystretch}{1.2}
 	
 	\begin{minipage}[t]{0.48\textwidth}
+		\caption{Highlighted substrings of valid matches for state $q_7$}
 		\centering
 		\begin{tabular}{|c|>{\ttfamily}l|}
 			\hline
-			$w_{0,4}$  & \textbf{\textcolor{green}{aaaa}}\textcolor{gray}{abaaaaa} \\ \hline
-			$w_{0,5}$  & \textbf{\textcolor{green}{aaaaa}}\textcolor{gray}{baaaaa} \\ \hline
-			$w_{1,5}$  & \textcolor{gray}{a}\textbf{\textcolor{green}{aaaa}}\textcolor{gray}{baaaaa} \\ \hline
-			$w_{6,10}$ & \textcolor{gray}{aaaaab}\textbf{\textcolor{green}{aaaa}}\textcolor{gray}{a} \\ \hline
-			$w_{6,11}$ & \textcolor{gray}{aaaaab}\textbf{\textcolor{green}{aaaaa}} \\ \hline
-			$w_{7,11}$ & \textcolor{gray}{aaaaaba}\textbf{\textcolor{green}{aaaa}} \\ \hline
+			$w_{0,4}$  & \textbf{\textcolor{red}{aaaa}}\textbf{abaaaaa} \\ \hline
+			$w_{0,5}$  & \textbf{\textcolor{red}{aaaaa}}\textbf{baaaaa} \\ \hline
+			$w_{1,5}$  & \textbf{a}\textbf{\textcolor{red}{aaaa}}\textbf{baaaaa} \\ \hline
+			$w_{6,10}$ & \textbf{aaaaab}\textbf{\textcolor{red}{aaaa}}\textbf{a} \\ \hline
+			$w_{6,11}$ & \textbf{aaaaab}\textbf{\textcolor{red}{aaaaa}} \\ \hline
+			$w_{7,11}$ & \textbf{aaaaaba}\textbf{\textcolor{red}{aaaa}} \\ \hline
 		\end{tabular}
-		\caption{Highlighted substrings of valid matches for state $q_7$}
 		\label{tab:left-highlights}
 	\end{minipage}\hfill
 	%
 		\begin{minipage}[t]{0.48\textwidth}
+		\caption{Highlighted substrings of valid matches for state $q_9$}
 		\centering
 		\begin{tabular}{|c|>{\ttfamily}l|}
 			\hline
-			$w_{0,5}$  & \textbf{\textcolor{green}{aaaaa}}\textcolor{gray}{baaaaa} \\ \hline
-			$w_{6,11}$ & \textcolor{gray}{aaaaab}\textbf{\textcolor{green}{aaaaa}} \\ \hline
+			$w_{0,5}$  & \textbf{\textcolor{red}{aaaaa}}\textbf{baaaaa} \\ \hline
+			$w_{6,11}$ & \textbf{aaaaab}\textbf{\textcolor{red}{aaaaa}} \\ \hline
 		\end{tabular}
-		\caption{Highlighted substrings of valid matches for state $q_9$}
 		\label{tab:left-highlights1}
 	\end{minipage}
 \end{table}

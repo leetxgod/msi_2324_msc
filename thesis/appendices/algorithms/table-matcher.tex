@@ -1,0 +1,53 @@
+\begin{algorithm}[H]
+\caption{\textsc{tableMatcher}$(A, s)$: Modified Position Automaton Multi-matcher}
+\label{alg:table-matcher}
+\begin{small}
+\begin{algorithmic}[1]
+\Require $A = (\Sigma, Q, \delta, I, F)$: NFA
+\Require $s$: input string
+\Ensure $M$: mapping from final states to lists of match positions
+
+\State $symbols \gets$ list with $\varepsilon$ prepended to $s$
+\State $currentRow \gets$ empty map from states to list of position pairs
+\State $finalMatches \gets$ empty map from states to list of matches
+\State $position \gets 0$
+
+\ForAll{$sym$ in $symbols$}
+    \If{$sym = \varepsilon$}
+        \ForAll{$q_0 \in I$}
+            \State $currentRow[q_0] \gets [(0, 0)]$
+        \EndFor
+    \Else
+        \State $nextRow \gets$ empty map
+        \If{$sym \in \Sigma$}
+            \ForAll{$q \in$ \textbf{keys}($currentRow$)}
+                % \State $transitions \gets \delta(q, sym)$
+                \If{$|\delta(q, sym)| > 0$}
+                    \ForAll{$q' \in \delta(q, sym)$}
+                        \ForAll{$(start, \_) \in currentRow[q]$}
+                            \If{$q' = q$ and $q' \in I$}
+                                \State append $(position, position)$ to $nextRow[q']$
+                            \Else
+                                \State append $(start, position)$ to $nextRow[q']$
+                                \If{$q' \in F$}
+                                    \State append $(start, position)$ to $finalMatches[q']$
+                                \EndIf
+                            \EndIf
+                        \EndFor
+                    \EndFor
+                \EndIf
+            \EndFor
+        \Else
+            \Comment{Symbol not in $\Sigma$; treat as fresh start}
+            \ForAll{$q_0 \in I$}
+                \State $nextRow[q_0] \gets [(position, position)]$
+            \EndFor
+        \EndIf
+        \State $currentRow \gets nextRow$
+        \State $position \gets position + 1$
+    \EndIf
+\EndFor
+\State \Return $finalMatches$
+\end{algorithmic}
+\end{small}
+\end{algorithm}

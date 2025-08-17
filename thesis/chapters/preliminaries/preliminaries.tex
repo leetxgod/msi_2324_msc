@@ -159,19 +159,38 @@ We write $\text{RegExp}(\Sigma)$ to denote the set of all such syntactic express
 
 Parentheses are used to disambiguate expressions and enforce precedence; by convention, Kleene star binds most tightly ($a^*$), followed by concatenation (e.g. $a \cdot b$, whose operator "$\cdot$" is omitted for convenience), and finally union ($+$).
 
-One can see if the regular expression contains an empty word by utilizing the \textit{empty word property}.
-The property is defined as the function $\varepsilon : RegExp \rightarrow \{\varepsilon, \emptyset\}$. \\
-Given $\alpha,\beta \in \text{RegExp}(\Sigma)$ and $a \in \Sigma$,
-\begin{align*}
-	\varepsilon(\emptyset) &= \emptyset \\
-	\varepsilon(\varepsilon) &= \varepsilon \\
-	\varepsilon(a) &= \emptyset \\
+If the language of a regular expression $\alpha$ contains the empty word, then that regular expression possesses the \textit{empty word property}.
+The empty word property is characterized by the function $\varepsilon : \text{RegExp} \rightarrow \{ \varepsilon, \emptyset \}$ and is defined recursively as follows, given $\alpha$ and $\beta$ regular expressions defined over $\Sigma$:
+\begin{gather*}
+	\varepsilon(\emptyset) = \emptyset \\
+	\varepsilon(\varepsilon) = \varepsilon \\
+	\varepsilon(a) = \emptyset, \: a \in \Sigma \\
+	\varepsilon(\alpha + \beta) = \begin{cases}
+		\emptyset & \text{if $\varepsilon(\alpha) = \varepsilon(\beta) = \emptyset$} \\
+		\varepsilon & \text{if $\varepsilon(\alpha) = \varepsilon$ or $\varepsilon(\beta) = \varepsilon$}
+	\end{cases} \\
+	\varepsilon(\alpha \beta) = \begin{cases}
+		\emptyset & \text{if $\varepsilon(\alpha) = \emptyset$ or $\varepsilon(\beta) = \emptyset$} \\
+		\varepsilon & \text{if $\varepsilon(\alpha) = \varepsilon(\beta) = \varepsilon$}
+	\end{cases} \\
+	\varepsilon(a^*) = \varepsilon
+\end{gather*}
+
+%	\varepsilon(\alpha + \beta) = \begin{cases}
+	%		
+	%	\end{cases}
+
+%	\varepsilon(\alpha + \beta) &= \emptyset \\
 %	\varepsilon(\alpha + \beta), \; \text{if } \varepsilon(\alpha)\text{=}\varepsilon(\beta)\text{=}\emptyset 
-\end{align*}
+
+%One can see if the language of a regular expression contains the empty word by utilizing the \textit{empty word property}, which is defined as the function $\varepsilon : RegExp \rightarrow \{\varepsilon, \emptyset\}$. \\
+%Given $\alpha,\beta \in \text{RegExp}(\Sigma)$ and $a \in \Sigma$,
+
 
 
 	
 \subsection{Extended Regular Expressions}
+\label{chap:prelim:extended_re}
 In addition to the basic operations, some extended operators are often used for convenience. These include:
 
 \begin{itemize}
