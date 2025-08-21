@@ -1,6 +1,24 @@
 % This file was created with JabRef 2.10.
 % Encoding: Cp1252
 
+@article{brzozowski_derivatives,
+	author = {Brzozowski, Janusz A.},
+	title = {Derivatives of Regular Expressions},
+	year = {1964},
+	issue_date = {Oct. 1964},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {11},
+	number = {4},
+	issn = {0004-5411},
+	url = {https://doi.org/10.1145/321239.321249},
+	doi = {10.1145/321239.321249},
+	journal = {J. ACM},
+	month = oct,
+	pages = {481–494},
+	numpages = {14}
+}
+
 @article{mesh-of-automata,
 	title = {{A mesh of automata}},
 	author = {S Broda and M Holzer and E Maia and N Moreira and R Reis},
@@ -59,4 +77,38 @@
 	url = {https://www.usenix.org/conference/nsdi19/presentation/wang-xiang},
 	publisher = {USENIX Association},
 	month = feb
+}
+
+@article{pdregex_antimirov,
+	title = {Partial derivatives of regular expressions and finite automaton constructions},
+	journal = {Theoretical Computer Science},
+	volume = {155},
+	number = {2},
+	pages = {291-319},
+	year = {1996},
+	issn = {0304-3975},
+	doi = {https://doi.org/10.1016/0304-3975(95)00182-4},
+	url = {https://www.sciencedirect.com/science/article/pii/0304397595001824},
+	author = {Valentin Antimirov},
+	abstract = {We introduce a notion of partial derivative of a regular expression and apply it to finite automaton constructions. The notion is a generalization of the known notion of word derivative due to Brzozowski: partial derivatives are related to non-deterministic finite automata (NFA's) in the same natural way as derivatives are related to deterministic ones (DFA's). We give a constructive definition of partial derivatives and prove several facts, in particular: 1.(1) any derivative of a regular expression r can be represented by a finite set of partial derivatives of r;2.(2) the set of all partial derivatives of r is finite and its cardinality is less than or equal to one plus the number of occurrences of letters from A appearing in r;3.(3) any partial derivative of r is either a regular unit, or a subterm of r, or a concatenation of several such subterms. These theoretical results lead us to a new algorithm for turning regular expressions into relatively small NFA's and allow us to provide certain improvements to Brzozowski's algorithm for constructing DFA's. We also report on a prototype implementation of our NFA construction and present several examples.}
+}
+
+@article{thompson_re2nfa,
+	author = {Thompson, Ken},
+	title = {Programming Techniques: Regular expression search algorithm},
+	year = {1968},
+	issue_date = {June 1968},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {11},
+	number = {6},
+	issn = {0001-0782},
+	url = {https://doi.org/10.1145/363347.363387},
+	doi = {10.1145/363347.363387},
+	abstract = {A method for locating specific character strings embedded in character text is described and an implementation of this method in the form of a compiler is discussed. The compiler accepts a regular expression as source language and produces an IBM 7094 program as object language. The object program then accepts the text to be searched as input and produces a signal every time an embedded string in the text matches the given regular expression. Examples, problems, and solutions are also presented.},
+	journal = {Commun. ACM},
+	month = jun,
+	pages = {419–422},
+	numpages = {4},
+	keywords = {match, regular expression, search}
 }

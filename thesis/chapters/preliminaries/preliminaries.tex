@@ -155,9 +155,10 @@ Let $\Sigma$ be a finite alphabet. Let $L \subseteq \Sigma$. The set of \emph{re
 
 We write $\text{RegExp}(\Sigma)$ to denote the set of all such syntactic expressions, and for each $r \in \text{RegExp}(\Sigma)$, the function $L(r)$ yields the language defined by $r$.
 
-\medskip
-
 Parentheses are used to disambiguate expressions and enforce precedence; by convention, Kleene star binds most tightly ($a^*$), followed by concatenation (e.g. $a \cdot b$, whose operator "$\cdot$" is omitted for convenience), and finally union ($+$).
+
+We denote by $\alpha = \beta$ if two regular expressions $\alpha$ and $\beta$, both over $\Sigma$, represent the same language ($L(\alpha) = L(\beta)$).
+Furthermore, if both expressions can be decomposed in a way that they still represent the same language, they are denoted by $\alpha \equiv \beta$.
 
 If the language of a regular expression $\alpha$ contains the empty word, then that regular expression possesses the \textit{empty word property}.
 The empty word property is characterized by the function $\varepsilon : \text{RegExp} \rightarrow \{ \varepsilon, \emptyset \}$ and is defined recursively as follows, given $\alpha$ and $\beta$ regular expressions defined over $\Sigma$:
@@ -239,16 +240,59 @@ The derivative of a regular expression $r$ with respect to $\sigma \in \Sigma$ i
 Brzozowski defined a DFA equivalent to a regular expression with the help of derivatives. With this, it is important to note that, for example, a regular expression $r = a^*$ (matches zero or more 'a' symbols) can be used to construct an equivalent DFA using Brzozowski's construction, even though $d_a(r) = a \cdot d_a(r)$ which can lead to an infinite construction. This example is enough to show that the set of all derivaives of a regular expression may not be finite.
 
 \subsection{Partial Derivatives}
-The notion of \textit{partial derivative} was introduced by Antimirov. Opposite to Brzozowski's derivative, partial derivatives can lead to the construction of an NFA.
+The notion of \textit{partial derivative} was introduced by Antimirov \cite{pdregex_antimirov}. Opposite to Brzozowski's derivatives, \textit{partial derivatives} will lead to the construction of an NFA.
 
 Let $\alpha \in RegExp(\Sigma)$ be a \textit{regular expression} over $\Sigma$. The set of partial derivatives of $\alpha$ with respect to a symbol $b \in \Sigma$, represented as $\partial_b(\alpha)$, is defined as follows:
 
 \begin{align*}
 	\partial_b(\emptyset) &= \emptyset		&	\partial_b(\alpha + \beta) &= \partial_b(\alpha) \cup \partial_b(\beta), \; \beta \neq \alpha \\
-	\partial_b(\varepsilon) &= \emptyset	&	\partial_b(\alpha \beta) &= \partial_b(\alpha)\beta \cup \partial_b(\beta)\\
-	\partial_b(b) &= \varepsilon & \partial_b(\alpha \beta) &= \delta_b(\alpha)\beta \\
+	\partial_b(\varepsilon) &= \emptyset	&	\partial_b(\alpha \beta) &= \partial_b(\alpha)\beta \cup \partial_b(\beta), \; \text { if } \varepsilon(\alpha) = \varepsilon \\
+	\partial_b(b) &= \varepsilon & \partial_b(\alpha \beta) &= \partial_b(\alpha)\beta, \; \text { if } \varepsilon(\alpha) = \emptyset \\
 	\partial_b(c) &= \emptyset, \; b \neq c \text{ and } b \in \Sigma & \partial_b(\alpha^*) &= \partial_b(\alpha)\alpha^*
 \end{align*}
+
+For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = {a,b,d}$, the set of partial derivatives of $r$ for the symbol $d$ is given by
+\begin{align*}
+	\partial_d(r) &= \partial_d((ad + d^*)db) \\
+	&= \partial_d(addb + d^*db) \\
+	&= \partial_d(addb) \, \cup \, \partial_d(d^*db) \\
+	&= \partial_d(a)ddb \, \cup \, \partial_d(d^*)db \, \cup \, \partial_d(db) \\
+	&= \emptyset ddb \, \cup \, \partial_d(d)d^*db \, \cup \, \partial_d(d)b \, \cup \, \partial_d(b) \\
+	&= \emptyset \, \cup \, d^*db \, \cup \, b \, \cup \, \emptyset
+\end{align*}
+resulting in $\partial_d(r) = \{d^*db, b\}$.
+
+\subsubsection{Linear Forms}
+A linear form $lf$ of a regular expression $\alpha$ is a finite set of symbol–continuation pairs.  
+These pairs can encode all the possible one-symbol prefixes of that regular expression.
+
+These pairs are called \textit{monomials}.  
+Formally, given an alphabet $\Sigma$ and the set of all regular expressions over $\Sigma$ denoted $RegExp$, a monomial is an element of $\Sigma \times RegExp$.
+We denote the set of all monomials for a given alphabet $\Sigma$ by $M_\Sigma$.
+  
+A \emph{linear form} is then a finite set of monomials:
+\[
+lf(\alpha) \subseteq {2}^{M_\Sigma}.
+\]
+
+For instance, a linear form $l = \{(a_1,\alpha_1), \ldots, (a_n,\alpha_n)\}$ corresponds to the regular expression
+\[
+\kappa_l \;=\; a_1\cdot\alpha_1 \;+\; \cdots \;+\; a_n\cdot\alpha_n.
+\]
+
+The function $lf : RegExp \to {2}^{M_\Sigma}$ is defined recursively as follows, where $\alpha,\beta \in RegExp$:
+\begin{align*}
+	lf(\emptyset) &= \emptyset \\
+	lf(\varepsilon) &= \emptyset \\
+	lf(a) &= \{(a,\varepsilon)\}, \quad a\in \Sigma \\[4pt]
+	lf(\alpha+\beta) &= lf(\alpha) \cup lf(\beta) \\
+	lf(\alpha\cdot\beta) &= (lf(\alpha)\cdot \beta) \;\cup\; \begin{cases}
+		lf(\beta) & \text{if } \varepsilon \in L(\alpha) \\
+		\emptyset & \text{otherwise}
+	\end{cases} \\
+	lf(\alpha^\ast) &= lf(\alpha)\cdot \alpha^\ast
+\end{align*}
+
 
 
 %& 
@@ -271,14 +315,100 @@ While regular expressions provide a declarative way to specify patterns in strin
 % The resulting NFA may be nondeterministic but is guaranteed to accept the same language as the original regular expression. Once converted into a DFA, the automaton can efficiently recognize the pattern with linear time complexity in the size of the input.
 
 \subsection{Thompson's Algorithm}
-Thompson's construction is a classic algorithm for converting a regular expression into a nondeterministic finite automaton (NFA) with $\varepsilon$-transitions. It was introduced in 1968 by Ken Thompson and is the foundation for many regex engines, including the \texttt{lex} lexical analyzer generator.
 
-The construction proceeds recursively based on the structure of the regular expression. Each base case (such as a single symbol or the  $\varepsilon$) and each operator (`+`, concatenation, `*`) corresponds to a small NFA fragment. These fragments are then joined using $\varepsilon$-transitions.
+In 1968, Thompson provided a method capable of transforming a regular expression into an equivalent nondeterministic finite automaton with $\varepsilon$-transitions (an $\varepsilon$-NFA) \cite{thompson_re2nfa}. The main idea was to associate each regular-expression operator with a small automaton fragment, and then combine these fragments recursively until the entire expression is represented.
 
-Although Thompson's NFA may contain many $\varepsilon$-transitions, it is guaranteed to be of size linear in the length of the regular expression. The resulting NFA can be converted into a deterministic finite automaton (DFA) using the standard powerset construction, typically after removing $\varepsilon$-transitions.
+Each basic symbol $a \in \Sigma$ is represented by two states with a transition labeled $a$ between them. The empty string $\varepsilon$ is represented by two states connected by a single $\varepsilon$-transition.
+
+More complex expressions are built by combining smaller fragments:
+\begin{itemize}
+	\item Concatenation ($\alpha\beta$) is obtained by connecting the accept state of $\alpha$ to the start state of $\beta$ with an $\varepsilon$-transition.
+	\item Union ($\alpha \mid \beta$) is built by adding a new start state with $\varepsilon$-transitions to the start states of $\alpha$ and $\beta$, and a new accept state with $\varepsilon$-transitions from the accept states of $\alpha$ and $\beta$.
+	\item Kleene star ($\alpha^\ast$) is represented by adding a new start and accept state. The new start connects by $\varepsilon$ both to the new accept (for the empty repetition) and to the start of $\alpha$ (for one or more repetitions). The accept state of $\alpha$ connects by $\varepsilon$ back to its own start and to the new accept.
+\end{itemize}
+
+Thompson described this as a compiler-like process: the expression is first parsed into a convenient form (such as reverse Polish notation), and then a stack-based procedure builds the automaton fragment by fragment.
+
+%\begin{algorithm}[H]
+%	\caption{Thompson’s Construction}
+%	\label{alg:thompson}
+%	\begin{algorithmic}[1]
+%		\Require $\alpha \in RegExp$
+%		\Ensure $\varepsilon$-NFA $N$ such that $L(N) = L(\alpha)$
+%		\Function{nfaThompson}{$r$}
+%		\If{$r = \varepsilon$}
+%		\State return new fragment with two states and one $\varepsilon$-transition
+%		\ElsIf{$r = a \in \Sigma$}
+%		\State return new fragment with two states and one $a$-transition
+%		\ElsIf{$r \equiv r_1 r_2$} \Comment{Concatenation}
+%		\State $N_1 \gets$ \Call{nfaThompson}{$r_1$}
+%		\State $N_2 \gets$ \Call{nfaThompson}{$r_2$}
+%		\State connect accept state of $N_1$ to start state of $N_2$ with $\varepsilon$
+%		\State return combined fragment
+%		\ElsIf{$r \equiv r_1 + r_2$} \Comment{Union}
+%		\State $N_1 \gets$ \Call{nfaThompson}{$r_1$}
+%		\State $N_2 \gets$ \Call{nfaThompson}{$r_2$}
+%		\State create new start and new accept states
+%		\State connect new start to starts of $N_1$ and $N_2$ with $\varepsilon$
+%		\State connect accepts of $N_1$ and $N_2$ to new accept with $\varepsilon$
+%		\State return combined fragment
+%		\ElsIf{$r \equiv r_1^*$} \Comment{Kleene star}
+%		\State $N_1 \gets$ \Call{nfaThompson}{$r_1$}
+%		\State create new start and new accept states
+%		\State connect new start to new accept with $\varepsilon$
+%		\State connect new start to start of $N_1$ with $\varepsilon$
+%		\State connect accept of $N_1$ back to its start and to new accept with $\varepsilon$
+%		\State return combined fragment
+%		\EndIf
+%		\EndFunction
+%	\end{algorithmic}
+%\end{algorithm}
+
+In the end, a single fragment represents the entire regular expression. The resulting automaton can be simulated efficiently by maintaining two lists of active states: the current list and the next list. For each input symbol, all $\varepsilon$-reachable states are added to the current list, transitions on the current symbol are followed, and the next list becomes the current list for the following step. A string is accepted if the accept state becomes active at the end of the input. An example of an automaton constructed using Thompson's method is shown in \ref{fig:nfa_thompson_example}.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
+		\node[state,initial]	(q_0)												{$q_0$};
+		
+		\node[state]			(q_2)	[above right=of q_0]						{$q_2$};
+		\node[state]			(q_3)	[above right=of q_2, yshift=-1cm]						{$q_3$};
+		\node[state]			(q_4)	[right=of q_3]								{$q_4$};
+		\node[state]			(q_5)	[below right=of q_4, yshift=1cm]						{$q_5$};
+		\node[state]			(q_8)	[below right=of q_0]						{$q_8$};
+		\node[state]			(q_6)	[above right=of q_8]						{$q_6$};
+		\node[state]			(q_7)	[right=of q_6]								{$q_7$};
+		\node[state]			(q_9)	[below right=of q_7]						{$q_9$};
+		
+		\node[state,accepting]	(q_1)	[above right=of q_9,below right=of q_5]		{$q_1$};
+		
+		\path[->]	(q_0)	edge	node	{$\varepsilon$}	(q_2)
+							edge 	node	{$\varepsilon$} (q_8)
+					(q_2)	edge	node	{a}				(q_3)
+					(q_3)	edge	node	{$\varepsilon$}	(q_4)
+					(q_4)	edge	node	{b}				(q_5)
+					(q_5)	edge	node	{$\varepsilon$}	(q_1)
+					
+					(q_8)	edge	node	{$\varepsilon$}	(q_6)
+							edge [bend right] node	{$\varepsilon$}	(q_9)
+					(q_6)	edge	node	{b}				(q_7)
+					(q_7)	edge	node	{$\varepsilon$}	(q_9)
+					(q_9)	edge	node	{$\varepsilon$}	(q_8)
+							edge	node	{$\varepsilon$}	(q_1);
+	\end{tikzpicture}
+	\caption{Diagram of a $\varepsilon$-NFA built using Thompson's construction for the regular expression $(ab + b^*)$.}
+	\label{fig:nfa_thompson_example}
+\end{figure}
+
+
+%Thompson's construction is a classic algorithm for converting a regular expression into a nondeterministic finite automaton (NFA) with $\varepsilon$-transitions. It was introduced in 1968 by Ken Thompson and is the foundation for many regex engines, including the \texttt{lex} lexical analyzer generator.
+%
+%The construction proceeds recursively based on the structure of the regular expression. Each base case (such as a single symbol or the  $\varepsilon$) and each operator (`+`, concatenation, `*`) corresponds to a small NFA fragment. These fragments are then joined using $\varepsilon$-transitions.
+%
+%Although Thompson's NFA may contain many $\varepsilon$-transitions, it is guaranteed to be of size linear in the length of the regular expression. The resulting NFA can be converted into a deterministic finite automaton (DFA) using the standard powerset construction, typically after removing $\varepsilon$-transitions.
 
 \subsection{Brzozowski's Derivatives}
-Through the definition of \emph{derivatives} mentioned in \ref{chap:prelim:derivatives}, one can compute the derivatives for all symbols, memoize the results and build a DFA that represents the same language as the intended regular expression.
+In 1964, Brzozowski \cite{brzozowski_derivatives} proposed a method of constructing deterministic finite automata using derivatives, where consequent derivations of a regular expression would result in the states and their transitions with respect to the symbol derived.
 
 This method can, however, lead to an exponential number of distinct derivatives in the worst case. Therefore, simplification rules and expression equivalences are critical to making the approach practical.
 

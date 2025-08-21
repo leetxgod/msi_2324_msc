@@ -6,9 +6,16 @@ In formal language theory, counting refers to the ability of a language or an au
 Current tools are already able to do this, including some non-backtracking matchers.
 
 \section{Derivatives of operations in Extended Regular Expressions}
-In order to be able to match using counting regular expressions, one must first solve the derivatives for fixed and bounded repetition.
+Given a word $w = xyz$ and a regular expression $\alpha$, $w \in L(\alpha)$ if $\varepsilon(D_w(\alpha)) = \varepsilon$.
+In order to match with fixed and bounded repetition, one must first solve the derivatives for those operations.
+
+%So, in order to match regular expressions, one must first solve the derivatives for fixed and bounded repetition.
+
+\break
 
 \subsection{Fixed Repetition}
+For a fixed repetition, we need $r$ to occur $n$ times, resulting in the notion $r^n$.
+
 Given $r = ab$ such that $r^2 = abab$, we have:
 \begin{align*}
 	D_a(r^2) &= D_a(r \cdot r) \\
@@ -20,6 +27,8 @@ Given $r = ab$ such that $r^2 = abab$, we have:
 
 
 \subsection{Bounded Repetition}
+Supplementing the fixed repetition notion, we now add a maximum bound so that $r$ can occur at least $n$ times and at maximum $m-1$ times: $r^{[n,m[}$.
+
 Given $r = ab$ such that $r^2 = abab$ and $r^3 = ababab$, we have:
 \begin{align*}
 	D_a(r^{[2,4[}) &= D_a(abab) + D_a(ababab) \\
@@ -28,6 +37,79 @@ Given $r = ab$ such that $r^2 = abab$ and $r^3 = ababab$, we have:
 	&= \varepsilon bab + \emptyset + babab + \emptyset \\
 	&= bab + babab
 \end{align*}
+
+This also extends for $r^{[m, \inf[}$, which is the same as having $r^m \cdot r^*$:
+
+\begin{align*}
+	D_a(r^{[2,\inf[}) &= D_a(abab) + D_a((ab)^*) \\
+	&= D_a(a)bab + D_a(bab) + D_a(ab)\cdot(ab)^* \\
+	&= \varepsilon bab + \emptyset + (D_a(a)b + D_a(b)) \cdot (ab)^* \\
+	&= bab + (\varepsilon b + \emptyset) \cdot (ab)^* \\
+	&= bab + b(ab)^*
+\end{align*}
+
+%For instance, if $m = 2$, we have that $r^{[2, \inf[}$
+
+The regular expression $r^{[2, \inf[}$ will match any $(ab)^k$ with $k \geq 2$.
+
+%Given $w = abababab$ and $m = 2$,  will match 
+
+%The string $abababab$ can be matched by $r^{[2, \inf[}$
+
+
+\section{Class implementation in FAdo}
+In order to implement these new syntactic constructs of extended regular expressions in FAdo, we added exact-power and counted-repetition nodes to the regular expression abstract syntax tree and define their derivatives, partial derivatives and linear form cases.
+
+\subsection{CPower}
+\textit{CPower} is the class responsible for the construction of regular expressions using the fixed repetition operator.
+
+\begin{lstlisting}[language=Python]
+class CPower(Unary):
+	def __init__(self, arg, n, sigma=None):
+	self.arg = arg
+	self.n = n
+	self.Sigma = sigma
+	self._ewp = False if self.n > 0 else True
+	
+	...
+\end{lstlisting}
+
+As shown above, the class inherits from the \textit{Unary}, which only defines the \textit{Unary.Sigma} and \textit{Unary.arg} properties, letting the class hold a alphabet set (representing $\Sigma$) and the symbol used to construct this operator.
+
+In order to integrate the class fully with \textit{FAdo}, some more methods had to be implemented.
+
+\begin{lstlisting}[language=Python]
+	def linearForm(self):
+		arg_lf = self.arg.linearForm()
+		lf = dict()
+		for head in arg_lf:
+			lf[head] = set()
+			for tail in arg_lf[head]:
+				if self.n == 0:
+					lf[head].add(CEmptySet(self.Sigma))
+				elif self.n == 1:
+					lf[head].add(CEpsilon(self.Sigma))
+				else:
+					lf[head].add(CPower(self.arg, self.n-1, self.Sigma))
+	
+		return lf
+
+	def partialDerivatives(self, sigma):
+		return self.arg.partialDerivatives(sigma)
+	
+	def derivative(self, sigma):
+		if str(sigma) in str(self.arg):
+			if self.n == 0:
+				return CEmptySet(sigma)
+			elif self.n == 1:
+				return self.arg.derivative(sigma)
+			else:
+				return CConcat(self.arg.derivative(sigma), CPower(self.arg, self.n-1, self.Sigma))
+		else:
+			return CEmptySet(sigma)
+\end{lstlisting}
+
+
 
 \section{Extended Regular Expressions in FAdo}
 Recalling back from \ref{chap:prelim:extended_re}, in order to support extended regular expressions, one needs to extend the base class for unary operations in FAdo
