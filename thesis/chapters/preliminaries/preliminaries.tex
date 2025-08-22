@@ -273,6 +273,8 @@ Let $\alpha \in RegExp(\Sigma)$ be a \textit{regular expression} over $\Sigma$. 
 	\partial_b(c) &= \emptyset, \; b \neq c \text{ and } b \in \Sigma & \partial_b(\alpha^*) &= \partial_b(\alpha)\alpha^*
 \end{align*}
 
+The set of partial derivatives by a word $w \in \Sigma^*$ 
+
 For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = \{a,b,d\}$, the set of partial derivatives of $r$ for the symbol $d$ is given by
 \begin{align*}
 	\partial_d(r) &= \partial_d((ad + d^*)db) \\
@@ -285,6 +287,7 @@ For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = \
 resulting in $\partial_d(r) = \{d^*db, b\}$.
 
 \subsubsection{Linear Form}
+\label{chap:prelim:linear_form}
 It is possible to calculate the partial derivatives for every symbol $a \in \Sigma$ of a regular expression $r$ over $\Sigma$ in a single pass. To do this, Antimirov \cite{pdregex_antimirov} defined the \emph{linear form}.
 
 A linear form $lf$ of a regular expression $\alpha$ is a finite set of symbol–continuation pairs.  
@@ -531,20 +534,81 @@ For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transitio
 	&= \emptyset
 \end{align*}
 
-Finally, the set of states for $\mathcal{D}$ is $Q = \{ ddb, d^*db + b, db, b, \varepsilon \}$ and the set of final states is $F = \{ d^*db + b \}$.
+Finally, the set of states for $\mathcal{D}$ is $Q = \{ (ad+d^*)db, ddb, d^*db + b, db, b, \varepsilon, \emptyset \}$ and the set of final states is $F = \{ \varepsilon \}$. The diagram for this automaton is shown in \ref{fig:brzozowski_derivatives_example}.
 
-
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
+		\node[state,initial]	(q_0)												{$(ad+d^*)db$};
+		\node[state]			(q_1)	[above right=of q_0]						{$ddb$};
+		
+		\node[state]			(q_3)	[right=of q_1]								{$db$};
+		\node[state]			(q_4)	[below right=of q_3]						{$b$};
+		\node[state]			(q_5)	[below right=of q_1]						{$\emptyset$};
+		\node[state, accepting]	(q_6)	[below right=of q_5]						{$\varepsilon$};
+		
+		\node[state]			(q_2)	[below=30mm of q_0]							{$d^*db + b$};
+		
+		\path[->]	(q_0)	edge	node				{$a$}	(q_1)
+							edge	node				{$d$}	(q_2)
+							edge	node				{$b$}	(q_5)
+					(q_1)	edge	node				{$d$}	(q_3)
+							edge	node				{$a,b$}	(q_5)
+					(q_2)	edge	node				{$a$}	(q_5)
+							edge 	[loop below]	node	{$d$}	()
+							edge	node				{$b$}	(q_6)
+					(q_3)	edge	node				{$d$}	(q_4)
+							edge	node				{$a,b$}	(q_5)
+							edge	node				{$d$}	(q_4)
+					(q_4)	edge	node				{$b$}	(q_6)
+							edge	node				{$a,d$}	(q_5)
+					(q_5)	edge	[loop below]	node	{$a,b,d$} ();
+	\end{tikzpicture}
+	\caption{Diagram of a Brzozowki DFA for the regular expression $(ad+d^*)db$.}
+	\label{fig:brzozowski_derivatives_example}
+\end{figure}
 
 %This method can, however, lead to an exponential number of distinct derivatives in the worst case. Therefore, simplification rules and expression equivalences are critical to making the approach practical.
 
-\subsection{Antimirov's Partial Dertivatives}
+%\subsection{Antimirov's Partial Dertivatives}
+%Proposed by Valery Antimirov in 1996 \cite{pdregex_antimirov}, the partial derivatives construction generalizes Brzozowski's derivatives to build an NFA rather than a DFA. Instead of producing a single derivative for each symbol, Antimirov's method produces a \emph{set} of partial derivatives, reflecting the inherent nondeterminism of the regular expression.
+%
+%This construction avoids $\varepsilon$-transitions and yields a compact $\varepsilon$-free NFA. Each partial derivative corresponds to a transition in the automaton, and the process naturally handles alternation and repetition.
+%
+%\begin{defn}[Partial Derivatives Automaton]
+%	Let $\alpha \in RegExp$ over $\Sigma$. The partial derivatives automaton for $\alpha$ is defined as the non-deterministic finite automaton $\mathcal{N} = (Q_{\mathcal{PD}}, \Sigma, q_0, \delta, F)$. $q_0$ is the initial state and belongs to the set of states $Q_{\mathcal{PD}}$. It is important to note that $q_0 = \alpha$. The transition function is defined as $\delta(q,a) = \partial_a(q)$ for all symbols $a \in \Sigma$ and states $q \in Q_{\mathcal{PD}}$. The set of final states is defined as $F = \{ q \in Q_{\mathcal{PD}} \, | \, \varepsilon(q) = \varepsilon \}$.
+%\end{defn}
+%
+%Recalling from \ref{chap:prelim:linear_form}, the linear form can be used as an efficient way to compute partial derivatives.
+%Let $\alpha \in RegExp$ over $\Sigma$ and $a \in \Sigma$:
+%\begin{centering}
+%	$\delta(\alpha, a) = \{  \}$
+%\end{centering}
+
+\subsection{Antimirov's Partial Derivatives}
 Proposed by Valery Antimirov in 1996 \cite{pdregex_antimirov}, the partial derivatives construction generalizes Brzozowski's derivatives to build an NFA rather than a DFA. Instead of producing a single derivative for each symbol, Antimirov's method produces a \emph{set} of partial derivatives, reflecting the inherent nondeterminism of the regular expression.
 
 This construction avoids $\varepsilon$-transitions and yields a compact $\varepsilon$-free NFA. Each partial derivative corresponds to a transition in the automaton, and the process naturally handles alternation and repetition.
 
+
 \begin{defn}[Partial Derivatives Automaton]
 	Let $\alpha \in RegExp$ over $\Sigma$. The partial derivatives automaton for $\alpha$ is defined as the non-deterministic finite automaton $\mathcal{N} = (Q_{\mathcal{PD}}, \Sigma, q_0, \delta, F)$. $q_0$ is the initial state and belongs to the set of states $Q_{\mathcal{PD}}$. It is important to note that $q_0 = \alpha$. The transition function is defined as $\delta(q,a) = \partial_a(q)$ for all symbols $a \in \Sigma$ and states $q \in Q_{\mathcal{PD}}$. The set of final states is defined as $F = \{ q \in Q_{\mathcal{PD}} \, | \, \varepsilon(q) = \varepsilon \}$.
 \end{defn}
+
+Recalling from \ref{chap:prelim:linear_form}, the linear form can be used as an efficient way to compute partial derivatives.
+Let $\alpha \in RegExp$ over $\Sigma$ and $a \in \Sigma$:
+\[
+\delta(\alpha, a) = \partial_a(\alpha) = \{ \beta \mid (a,\beta) \in lf(\alpha) \}.
+\]
+
+That is, to compute the set of partial derivatives of $\alpha$ with respect to a symbol $a$, one inspects the linear form of $\alpha$ and collects all continuations $\beta$ that follow an $a$ in the prefix position. This characterization is not only concise but also algorithmically useful: it gives a direct recipe for building the transition relation of the partial derivatives automaton.
+
+\begin{thm}[\cite{pdregex_antimirov}]
+	For every regular expression $\alpha$, the partial derivatives automaton $\mathcal{N}_\alpha$ accepts exactly the language $L(\alpha)$. Moreover, the number of states of $\mathcal{N}_\alpha$ is bounded by $|\alpha|+1$.
+\end{thm}
+
+%For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The set of 
+
 
 \subsection{Position Automata}
 %https://www.dcc.fc.up.pt/~nam/resources/publica/dlt16.pdf
@@ -587,6 +651,49 @@ An important property of the Glushkov automaton is its relationship to unambigui
 \section{FAdo}
 The FAdo \cite{fado_paper} project is an open-source implementation of several sets of tools for formal languages manipulation. In order to allow quick prototyping and testing of algorithms, these tools were developed in Python. Regular languages can be represented by regular expressions which are defined in \texttt{reex.py} - or by finite automata which are defined in \texttt{fa.py}.
 
+\subsection{Finite Automata}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[node distance=5mm,
+		terminal/.style={
+			% The shape:
+			rectangle,minimum size=6mm,rounded corners=3mm,
+			% The rest
+			very thick,draw=black!50,
+			top color=white,bottom color=black!20,
+			font=\ttfamily}]
+		\node (c_dwble)		[terminal]                {Drawable};
+		\node (c_fa)		[terminal, below=of c_dwble]   {FA};
+		\node (c_ofa)		[terminal, below=of c_fa] {OFA};
+		\node (c_nfa)		[terminal, below right=of c_ofa] {NFA};
+		\node (c_dfa)		[terminal, below left=of c_ofa]{DFA};
+		
+		\path	(c_dwble)	edge[->]	(c_fa)
+				(c_fa)		edge[->]	(c_ofa)
+				(c_ofa)		edge[->]	(c_dfa)
+							edge[->]	(c_nfa);
+	\end{tikzpicture}
+	\caption{Class inheritance organization in FAdo's finite automata code file, \texttt{fa.py} (excluding the \texttt{SemiDFA} class)}
+	\label{fig:fado_fa_diag}
+\end{figure}
+
+%As shown in \ref{fig:fado_fa_diag}, \texttt{FAdo}'s FA implementation utilizes the base class \texttt{Drawable} all the other children classes. The \texttt{Drawable} class will only set up some basic methods and properties used to draw the automata with the help of the \texttt{graphviz} library.
+%The \textt{}
+
+
+As shown in Figure~\ref{fig:fado_fa_diag}, FAdo organizes its implementation of finite automata as an inheritance hierarchy. At the top level, the class \texttt{Drawable} provides only drawing functionality, relying on the \texttt{graphviz} backend to visualize automata.
+
+On top of this, the class \texttt{FA} defines the abstract interface for finite automata, introducing the fundamental components: the set of states, the alphabet, the transition function, the initial state(s), and the set of final states. This class also establishes common methods for manipulating these elements and for interoperability between automata.
+
+The class \texttt{OFA} (``one-way finite automaton'') specializes \texttt{FA} and serves as the immediate superclass for concrete models. It defines abstract operations such as evaluation of symbols, addition of transitions, and access to useful states, ensuring a consistent contract across different automaton types.
+
+Two subclasses will then inherit from \texttt{OFA}:
+\begin{itemize}
+	\item \texttt{NFA} --- implements nondeterministic finite automata, possibly with $\varepsilon$-transitions. It provides methods for epsilon-closure, elimination of $\varepsilon$-moves, subset construction into a DFA, and regular operations such as union, concatenation, and Kleene star.
+	\item \texttt{DFA} --- implements deterministic finite automata. It enforces determinism by construction and provides efficient word evaluation and minimization routines.
+\end{itemize}
+
 \subsection{Regular Expressions}
 In \texttt{reex.py}, FAdo defines the \texttt{RegExp} base class for all regular expressions, declaring therein a class variable \texttt{sigma}, formally known as the set of symbols ($\Sigma$).
 To represent any and all base constructions of a regular expressions, FAdo defines base classes for each of them:
@@ -604,7 +711,3 @@ In order to parse expressions into FAdo's classes and types, \emph{lark} was use
 
 
 
-\subsection{Finite Automata}
-
-
-\subsection{Extended Regular Expressions}
