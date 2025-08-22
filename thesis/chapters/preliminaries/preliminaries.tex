@@ -161,21 +161,27 @@ We denote by $\alpha = \beta$ if two regular expressions $\alpha$ and $\beta$, b
 Furthermore, if both expressions can be decomposed in a way that they still represent the same language, they are denoted by $\alpha \equiv \beta$.
 
 If the language of a regular expression $\alpha$ contains the empty word, then that regular expression possesses the \textit{empty word property}.
-The empty word property is characterized by the function $\varepsilon : \text{RegExp} \rightarrow \{ \varepsilon, \emptyset \}$ and is defined recursively as follows, given $\alpha$ and $\beta$ regular expressions defined over $\Sigma$:
-\begin{gather*}
-	\varepsilon(\emptyset) = \emptyset \\
-	\varepsilon(\varepsilon) = \varepsilon \\
-	\varepsilon(a) = \emptyset, \: a \in \Sigma \\
-	\varepsilon(\alpha + \beta) = \begin{cases}
-		\emptyset & \text{if $\varepsilon(\alpha) = \varepsilon(\beta) = \emptyset$} \\
-		\varepsilon & \text{if $\varepsilon(\alpha) = \varepsilon$ or $\varepsilon(\beta) = \varepsilon$}
-	\end{cases} \\
-	\varepsilon(\alpha \beta) = \begin{cases}
-		\emptyset & \text{if $\varepsilon(\alpha) = \emptyset$ or $\varepsilon(\beta) = \emptyset$} \\
-		\varepsilon & \text{if $\varepsilon(\alpha) = \varepsilon(\beta) = \varepsilon$}
-	\end{cases} \\
-	\varepsilon(a^*) = \varepsilon
-\end{gather*}
+
+\begin{defn}[Empty Word Property]
+	The empty word property is characterized by the function $\varepsilon : \text{RegExp} \rightarrow \{ \varepsilon, \emptyset \}$ and is defined recursively as follows, given $\alpha$ and $\beta$ regular expressions defined over $\Sigma$:
+	\begin{gather*}
+		\varepsilon(\emptyset) = \emptyset \\
+		\varepsilon(\varepsilon) = \varepsilon \\
+		\varepsilon(a) = \emptyset, \: a \in \Sigma \\
+		\varepsilon(\alpha + \beta) = \begin{cases}
+			\emptyset & \text{if $\varepsilon(\alpha) = \varepsilon(\beta) = \emptyset$} \\
+			\varepsilon & \text{if $\varepsilon(\alpha) = \varepsilon$ or $\varepsilon(\beta) = \varepsilon$}
+		\end{cases} \\
+		\varepsilon(\alpha \beta) = \begin{cases}
+			\emptyset & \text{if $\varepsilon(\alpha) = \emptyset$ or $\varepsilon(\beta) = \emptyset$} \\
+			\varepsilon & \text{if $\varepsilon(\alpha) = \varepsilon(\beta) = \varepsilon$}
+		\end{cases} \\
+		\varepsilon(a^*) = \varepsilon
+	\end{gather*}
+\end{defn}
+
+
+
 
 %	\varepsilon(\alpha + \beta) = \begin{cases}
 	%		
@@ -218,26 +224,42 @@ These extended forms do not increase the expressive power of regular expressions
 % Need 1962 Janusz Brzozowski's paper for this section
 The \emph{derivative of a regular expression} was first introduced in 1962 by Janusz Brzozowski. It is a powerful concept used to define the behavior of regular expressions in a more operational manner. They can be used as a means of verifying equivalence of regular expressions, for example. The derivative of a regular expression $r$ with respect to a symbol $a$ is another regular expression $D_a(r)$ that describes the set of strings that can be obtained by taking the derivative of $r$ with respect to $a$.
 
-The derivative of a regular expression $r$ with respect to $\sigma \in \Sigma$ is itself a regular expression $d_\sigma(r)$ such that $\mathcal{L}(d_\sigma(r)) = \{w \ \vert \ \sigma w \in \mathcal{L}(r)\}$ is defined as:
+\begin{defn}[Derivative of a Regular Expression \cite{brzozowski_derivatives}]
+	The derivative of a regular expression $r$ with respect to $\sigma \in \Sigma$ is itself a regular expression $d_\sigma(r)$ such that $\mathcal{L}(d_\sigma(r)) = \{w \ \vert \ \sigma w \in \mathcal{L}(r)\}$ is defined as:
+	\begin{align*}
+		& d_\sigma(\emptyset) = \emptyset \\
+		& d_\sigma(\varepsilon) = \emptyset \\
+		& d_\varepsilon(r) = r \\
+		& d_\sigma(r') = \begin{cases}
+			\varepsilon & \text{if $\sigma' = \sigma$} \\
+			\emptyset & \text{otherwise,}
+		\end{cases} \\
+		& d_\sigma(r+r') = d_\sigma(r)+d_\sigma(r') \\
+		& d_\sigma(rr') = \begin{cases}
+			d_\sigma(r)r' & \text{if $\varepsilon(r) = \emptyset$} \\
+			d_\sigma(r)r' + d_\sigma(r') & \text{otherwise,}
+		\end{cases} \\
+		& d_\sigma(r^*) = d_\sigma(r)r^* \\
+		& d_\sigma(r^+) = d_\sigma(r)r^*
+	\end{align*}
+\end{defn}
 
-\begin{gather*}
-    d_\sigma(\emptyset) = \emptyset \\
-    d_\sigma(\varepsilon) = \emptyset \\
-    d_\varepsilon(r) = r \\
-    d_\sigma(r') = \begin{cases}
-        \varepsilon & \text{if $\sigma' = \sigma$} \\
-        \emptyset & \text{otherwise,}
-    \end{cases} \\
-    d_\sigma(r+r') = d_\sigma(r)+d_\sigma(r') \\
-    d_\sigma(rr') = \begin{cases}
-        d_\sigma(r)r' & \text{if $\varepsilon(r) = \emptyset$} \\
-        d_\sigma(r)r' + d_\sigma(r') & \text{otherwise,}
-    \end{cases} \\
-    d_\sigma(r^*) = d_\sigma(r)r^* \\
-    d_\sigma(r^+) = d_\sigma(r)r^*
-\end{gather*}
 
-Brzozowski defined a DFA equivalent to a regular expression with the help of derivatives. With this, it is important to note that, for example, a regular expression $r = a^*$ (matches zero or more 'a' symbols) can be used to construct an equivalent DFA using Brzozowski's construction, even though $d_a(r) = a \cdot d_a(r)$ which can lead to an infinite construction. This example is enough to show that the set of all derivaives of a regular expression may not be finite.
+Brzozowski defined a DFA equivalent to a regular expression with the help of derivatives. With this, it is important to note that, for example, a regular expression $r = a^*$ (matches zero or more 'a' symbols) can be used to construct an equivalent DFA using Brzozowski's construction, even though $d_a(r) = a \cdot d_a(r)$ may look like it can lead to an infinite construction.
+
+\begin{defn} [\cite{brzozowski_derivatives}]
+	Two regular expressions are similar if one can be transformed to the other using only the identities:
+	
+	\begin{align*}
+		& R + R = R, \\
+		& P + Q = Q + P, \\
+		& (P + Q) + R = P + (Q + R).
+	\end{align*}
+	
+	Two regular expressions are dissimilar if and only if they are not similar.
+\end{defn}
+
+With this, Brzozowski proved in \cite[Theorem 5.2]{brzozowski_derivatives} that every regular expression has only a finite number of dissimilar derivatives. The big disadvantage is that, as he stated, the resulting automaton is far from minimal.
 
 \subsection{Partial Derivatives}
 The notion of \textit{partial derivative} was introduced by Antimirov \cite{pdregex_antimirov}. Opposite to Brzozowski's derivatives, \textit{partial derivatives} will lead to the construction of an NFA.
@@ -251,7 +273,7 @@ Let $\alpha \in RegExp(\Sigma)$ be a \textit{regular expression} over $\Sigma$. 
 	\partial_b(c) &= \emptyset, \; b \neq c \text{ and } b \in \Sigma & \partial_b(\alpha^*) &= \partial_b(\alpha)\alpha^*
 \end{align*}
 
-For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = {a,b,d}$, the set of partial derivatives of $r$ for the symbol $d$ is given by
+For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = \{a,b,d\}$, the set of partial derivatives of $r$ for the symbol $d$ is given by
 \begin{align*}
 	\partial_d(r) &= \partial_d((ad + d^*)db) \\
 	&= \partial_d(addb + d^*db) \\
@@ -262,11 +284,12 @@ For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = {
 \end{align*}
 resulting in $\partial_d(r) = \{d^*db, b\}$.
 
-\subsubsection{Linear Forms}
-A linear form $lf$ of a regular expression $\alpha$ is a finite set of symbol–continuation pairs.  
-These pairs can encode all the possible one-symbol prefixes of that regular expression.
+\subsubsection{Linear Form}
+It is possible to calculate the partial derivatives for every symbol $a \in \Sigma$ of a regular expression $r$ over $\Sigma$ in a single pass. To do this, Antimirov \cite{pdregex_antimirov} defined the \emph{linear form}.
 
-These pairs are called \textit{monomials}.  
+A linear form $lf$ of a regular expression $\alpha$ is a finite set of symbol–continuation pairs.  
+These pairs are called \textit{monomials} and they can encode all the possible one-symbol prefixes of that regular expression.
+
 Formally, given an alphabet $\Sigma$ and the set of all regular expressions over $\Sigma$ denoted $RegExp$, a monomial is an element of $\Sigma \times RegExp$.
 We denote the set of all monomials for a given alphabet $\Sigma$ by $M_\Sigma$.
   
@@ -410,14 +433,118 @@ In the end, a single fragment represents the entire regular expression. The resu
 \subsection{Brzozowski's Derivatives}
 In 1964, Brzozowski \cite{brzozowski_derivatives} proposed a method of constructing deterministic finite automata using derivatives, where consequent derivations of a regular expression would result in the states and their transitions with respect to the symbol derived.
 
-This method can, however, lead to an exponential number of distinct derivatives in the worst case. Therefore, simplification rules and expression equivalences are critical to making the approach practical.
+\begin{defn}[Brzozowski's Automaton \cite{brzozowski_derivatives}]
+	Let $\alpha \in \textbf{RegExp}$ be a regular expression defined over $\Sigma$. Brzozowski's automaton for the regular expression $\alpha$ is defined as the deterministic finite automaton $\mathcal{D} = (Q, \Sigma, q_0, \delta, F)$. $Q$ is the set of all dissimilar derivatives of $\alpha$, $q_0$ is the initial state ($q_0 \in Q$), $\delta$ is the transition function defined by $\delta: Q \times \Sigma \rightarrow Q$ such that $\delta (q,a) = d_a(q)$ for all $a \in \Sigma$ and $q \in Q$, and the set of final states is $F = \{q \in Q \, | \, \varepsilon(q) = \varepsilon\}$.
+\end{defn}
+
+For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transition function $\delta$ is defined for a Brzozowski's automaton $\mathcal{D}$ of $\alpha$ as:
+
+\medspace $\alpha = (ad+d^*)db$:
+\begin{align*}
+	\delta((ad + d^*)db, a) &= d_a((ad + d^*)db) \\
+	&= d_a(addb + d^*db) \\
+	&= d_a(addb) + d_a(d^*db) \\
+	&= d_a(a)ddb + \emptyset + \emptyset \\
+	&= \varepsilon ddb
+\end{align*}
+\begin{align*}
+	\delta((ad + d^*)db, b) &= d_b((ad + d^*)db) \\
+	&= d_b(addb + d^*db) \\
+	&= d_b(addb) + d_b(d^*db) \\
+	&= \emptyset + \emptyset = \emptyset
+\end{align*}
+\begin{align*}
+	\delta((ad + d^*)db, d) &= d_d((ad + d^*)db) \\
+	&= d_d(addb + d^*db) \\
+	&= d_d(addb) + d_d(d^*db) \\
+	&= \emptyset + d_d(d^*)db + d_d(db) \\
+	&= d_d(d)d^*db + d_d(d)b + d_d(b) \\
+	&= \varepsilon d^*db + \varepsilon b + \emptyset \\
+	&= d^*db + b
+\end{align*}
+
+\medspace $\alpha = ddb$:
+\begin{align*}
+	\delta(ddb, a) &= d_a(ddb) \\
+	&= d_a(d)db \\
+	&= \emptyset
+\end{align*}
+\begin{align*}
+	\delta(ddb, b) &= d_b(ddb) \\
+	&= d_b(d)db \\
+	&= \emptyset
+\end{align*}
+\begin{align*}
+	\delta(ddb, d) &= d_d(ddb) \\
+	&= d_d(d)db\\
+	&= \varepsilon db \\
+	&= db
+\end{align*}
+
+\medspace $\alpha = d^*db + b$:
+\begin{align*}
+	\delta(d^*db + b, a) &= d_a(d^*db + b) \\
+	&= d_a(d^*db) + d_a(b) \\
+	&= \emptyset + \emptyset = \emptyset
+\end{align*}
+\begin{align*}
+	\delta(d^*db + b, b) &= d_b(d^*db + b) \\
+	&= d_b(d^*db) + d_b(b) \\
+	&= \emptyset + \varepsilon = \varepsilon
+\end{align*}
+\begin{align*}
+	\delta(d^*db + b, d) &= d_d(d^*db + b) \\
+	&= d_d(d^*db) + d_d(b) \\
+	&= d_d(d^*)db + d_d(db) + \emptyset \\
+	&= d_d(d)d^*db + d_d(d)b + d_d(b) \\
+	&= \varepsilon d^*db + \varepsilon b + \emptyset = d^*db + b
+\end{align*}
+
+\medspace $\alpha = db$:
+\begin{align*}
+	\delta(db, a) &= d_a(db) \\
+	&= d_a(d)b \\
+	&= \emptyset
+\end{align*}
+\begin{align*}
+	\delta(db, b) &= d_b(db) \\
+	&= d_b(d)b \\
+	&= \emptyset
+\end{align*}
+\begin{align*}
+	\delta(db, d) &= d_d(db) \\
+	&= d_d(d)b \\
+	&= \varepsilon b = b
+\end{align*}
+
+\medspace $\alpha = b$
+\begin{align*}
+	\delta(b, a) &= d_a(b) \\
+	&= \emptyset
+\end{align*}
+\begin{align*}
+	\delta(b, b) &= d_b(b) \\
+	&= \varepsilon
+\end{align*}
+\begin{align*}
+	\delta(b, d) &= d_d(b) \\
+	&= \emptyset
+\end{align*}
+
+Finally, the set of states for $\mathcal{D}$ is $Q = \{ ddb, d^*db + b, db, b, \varepsilon \}$ and the set of final states is $F = \{ d^*db + b \}$.
+
+
+
+%This method can, however, lead to an exponential number of distinct derivatives in the worst case. Therefore, simplification rules and expression equivalences are critical to making the approach practical.
 
 \subsection{Antimirov's Partial Dertivatives}
-Proposed by Valery Antimirov in 1996, the partial derivatives construction generalizes Brzozowski's derivatives to build an NFA rather than a DFA. Instead of producing a single derivative for each symbol, Antimirov's method produces a \emph{set} of partial derivatives, reflecting the inherent nondeterminism of the regular expression.
+Proposed by Valery Antimirov in 1996 \cite{pdregex_antimirov}, the partial derivatives construction generalizes Brzozowski's derivatives to build an NFA rather than a DFA. Instead of producing a single derivative for each symbol, Antimirov's method produces a \emph{set} of partial derivatives, reflecting the inherent nondeterminism of the regular expression.
 
 This construction avoids $\varepsilon$-transitions and yields a compact $\varepsilon$-free NFA. Each partial derivative corresponds to a transition in the automaton, and the process naturally handles alternation and repetition.
 
-Antimirov's approach is especially efficient for regex evaluation and analysis tasks, and forms the basis for several modern regex matchers and formal verification tools.
+\begin{defn}[Partial Derivatives Automaton]
+	Let $\alpha \in RegExp$ over $\Sigma$. The partial derivatives automaton for $\alpha$ is defined as the non-deterministic finite automaton $\mathcal{N} = (Q_{\mathcal{PD}}, \Sigma, q_0, \delta, F)$. $q_0$ is the initial state and belongs to the set of states $Q_{\mathcal{PD}}$. It is important to note that $q_0 = \alpha$. The transition function is defined as $\delta(q,a) = \partial_a(q)$ for all symbols $a \in \Sigma$ and states $q \in Q_{\mathcal{PD}}$. The set of final states is defined as $F = \{ q \in Q_{\mathcal{PD}} \, | \, \varepsilon(q) = \varepsilon \}$.
+\end{defn}
 
 \subsection{Position Automata}
 %https://www.dcc.fc.up.pt/~nam/resources/publica/dlt16.pdf
