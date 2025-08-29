@@ -20,9 +20,9 @@ A regular expression $R$ is used (along with an input $W$) in regex matching eng
 % \end{itemize}
 
 \section{Regular Expression Denial of Service}
-One such vulnerability is known as \emph{Regular Expression Denial of Service} (ReDoS). ReDoS exploits the pathological worst-case behavior of certain regular expressions, causing exponential time complexity during matching. In typical backtracking matchers---such as those found in JavaScript, Java, and many scripting environments---ambiguous or nested expressions (especially involving repetition, such as \texttt{(a+)+}) can lead the engine to explore an exponential number of paths for certain crafted inputs. This behavior allows an attacker to intentionally supply inputs that force excessive computation, effectively rendering a service unavailable or degraded.
+One such vulnerability is known as \emph{Regular Expression Denial of Service} (ReDoS). ReDoS exploits the pathological worst-case behavior of certain regular expressions, causing exponential running time complexity during matching. In typical backtracking matchers---such as those found in JavaScript, Java, and many scripting environments---ambiguous or nested expressions (especially involving repetition, such as \texttt{(a+)+}) can lead the engine to explore an exponential number of paths for certain crafted inputs. This behavior allows an attacker to intentionally supply inputs that force excessive computation, effectively rendering a service unavailable or degraded.
 
-The root of the ReDoS problem lies not in regular expressions as a theoretical model but in how they are operationalized in software. While deterministic finite automata (DFAs) evaluate regular expressions in linear time, many real-world engines opt for backtracking NFAs due to their flexibility and ease of implementation. Unfortunately, these NFAs are susceptible to exponential blow-up in ambiguous or unguarded patterns.
+The root of the ReDoS problem lies not only in regular expressions as a theoretical model but also in how they are operationalized in software. While deterministic finite automata (DFAs) evaluate regular expressions in linear time, many real-world engines opt for backtracking NFAs due to their flexibility and ease of implementation. Unfortunately, these NFAs are susceptible to exponential blow-up in ambiguous or unguarded patterns.
 
 \section{Case Studies}
 In this section, two case studies are presented. These serve as a form of introduction to getting to know and understand the ReDoS problem.
@@ -31,7 +31,7 @@ In this section, two case studies are presented. These serve as a form of introd
 \label{intro:case_studies:stack_overflow}
 On the 20th of July 2016, a user published an malformed post on the online information exchange forum \textit{Stack Overflow}. A couple minutes after the post, at around 14:44 UTC, the entire website became unavailable for around 34 minutes, after which there was an update that fixed the underlying issue.
 
-On the forum, there is an automatic text formatter that runs every time someone posts something. This tool will trim unicode spaces from the start of a line until its end. The regular expression responsible for matching these spaces was the following:
+On the forum, there is an automatic text formatter that runs every time someone posts something. This tool will trim any group of leading whitespace or invisible characters at both the beginning and end of a post. The regular expression that does so is the following:
 
 \begin{center}
 	$\textasciicircum [ \textbackslash s \textbackslash u200c]+|[ \textbackslash s \textbackslash u200c]+\$$
@@ -39,31 +39,30 @@ On the forum, there is an automatic text formatter that runs every time someone 
 
 \begin{itemize}
 	\item \textbf{$\textasciicircum$} will anchor the following expression to the start of a string
-	\item \textbf{$[ \textbackslash s \textbackslash u200c]+$} will match either one whitespace character (space, tab, newline, etc..) or the unicode character U+200C, also known as the \textit{Zero Width Non-Joiner}
-	\textit \textbf{$|$} is the union operator, meaning that the expression will match either the left or right side expressions (relative to this operator)
+	\item \textbf{$[ \textbackslash s \textbackslash u200c]+$} will match one or more of either whitespace characters (space, tab, newline, etc..) or the unicode characters U+200C (zero-width non-joiner)
 	\item \textbf{$\$$} will anchor the match to the end of that string
 \end{itemize}
 
 
-The automatic text formatter contains a matcher that tried to match the regular expression described above against an input that contained around 20,000 consecutive whitespace characters on one line that started with $--$.
+The aforementioned tool was an automatic text formatter which containined a matcher that tried to match the regular expression described above against an input that contained around 20,000 consecutive whitespace characters on one line that started with $--$.
 The backtracking matcher in place worked as follows:
 
 Given an input string $M$ of length $\text{len}(M)$, let $n_k$ denote the character at position $k$, where $0 \leq k < \text{len}(M)$. For each possible starting position $p$ such that $0 \leq p < \text{len}(M)$, perform the following steps:
 
 \begin{enumerate}
-	\item Check whether the character $n_k$ (for $k \geq p$) belongs to either the character class \verb|\s| (whitespace) or the Unicode character \verb|\u200c| (zero-width non-joiner).
-	\item Continue checking characters until a character not in the above classes is encountered or the end of the string is reached.
+	\item Check whether the character $n_k$ (for $k \geq p$) is either a whitespace or a zero-width non-joiner (U+200C).
+	\item Continue checking characters until it reaches a character that is neither a whitespace nor a zero-width non-joiner.
 	\item If the end of the string is reached and all characters from position $p$ onward matched, the pattern succeeds.
 	\item If a non-matching character is encountered before the end of the string, the match fails at this position; increment $p$ and repeat from step 1.
 \end{enumerate}
 
-For a $20{,}000$ whitespace-character input, the sum of computations is given as follows:
+For a $20{,}000$ whitespace-character (both whitespace and zero-width non-joiner characters) input, the sum of computations is given as follows:
 
 \begin{center}
 	\[ \sum_{k=1}^{20,000} k = \frac{20,000 \cdot (20,000) + 1}{2} = 200,010,000 \]
 \end{center}
 
-This means that this matching algorithm ran in $O(n^2)$ complexity, and this blow up was to be expected.
+This means that the matching algorithm ran in $O(n^2)$ complexity, and this blow up was to be expected.
 
 The engineers quickly fixed this issue by switching to a substring replacing method.
 
@@ -78,7 +77,7 @@ This utility works by convering glob expressions into JavaScript's \textit{RegEx
 \end{itemize}
 The utility has millions of downloads, as it is an essential component of \textbf{npm}.
 
-On the 18th of October, a new CVE was introduced: \textbf{CVE-2022-3517}.
+On the 18th of October 2022, a new CVE was introduced: \textbf{CVE-2022-3517}.
 The report showed that all of minimatch's versions below 3.0.5 were vulnerable to a ReDoS attack similar to the one described in \ref{intro:case_studies:stack_overflow}.
 The culprit for this was a function called \textit{braceExpand}, which is responsible for expanding brace patterns in glob strings. This is commonly known as brace expansion and is often seen in Unix shells (such as bash). 
 The function contained a regular expression that would match against given patterns and decide if a brace expansion was in order. The expression used was "/\textbackslash\{.*\textbackslash\}/)", which matches any string containing a single pair of curly braces with any characters inside. But this expression poses an issue:
