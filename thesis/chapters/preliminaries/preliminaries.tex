@@ -33,6 +33,18 @@ For example, if $\Sigma = \{ 0, 1 \}$, then we have that:
 
 Where the empty string is, as mentioned above, denoted by $\varepsilon$ and also belongs to $\Sigma^*$.
 
+The concatenation of two strings $w$ and $v$ over $\Sigma$ is denoted by $wv$ (or, more explicitely, $w \cdot v$) and results in a separate string composed by the singular string $v$ right after $w$. For instance, let $w = ab$ and $v = cd$, the concatenation $wv$ is $abcd$. We can define the concatenation of two words $w, v \in \Sigma^*$ as follows:
+\begin{gather*}
+	w \cdot \varepsilon = \varepsilon \cdot w = w, \\
+	(wa) \cdot v = w \cdot (av), a \in \Sigma.
+\end{gather*}
+
+Given a string $w = a_1, a_2, ..., a_n$, the reversal of $w$, denoted by $w^R$, is the word formed by reversing the order of its characters such that $w^R = a_n, a_{n-1}, ..., a_1$. We can define the reversal of a string recursively like so:
+\begin{gather*}
+	w^R = v^Ra, \quad \text{where} \; w=av, a \in \Sigma \; \text{and} \; v \in \Sigma^*, \\
+	\varepsilon^R = \varepsilon.
+\end{gather*}
+
 \subsection*{Languages}
 
 A \emph{language} over an alphabet $\Sigma$ is a set of strings over $\Sigma$.
@@ -55,11 +67,14 @@ Furthermore, we can also operate specifically over languages with the following 
 \begin{itemize}
 	\item \emph{Concatenation}: $L_1 \cdot L_2 = \{ xy \mid x \in L_1 \text{ and } y \in L_2 \}$
 	\item \emph{Kleene Star}: $L^* = \bigcup_{n=0}^{\infty} L^n$, where $L^0 = \{\varepsilon\}$ and $L^n = L \cdot L^{n-1}$ for $n > 0$.
-	\item \emph{Reversal}: $L^R = \{ x^R \mid x \in L \}$, where $x^R$ denotes the reversal of string $x$.
+	\item \emph{Reversal}: $L^R = \{ x^R \mid x \in L \}$, where $x^R$ denotes the reversal of a string $x$.
 	\item \emph{Complement}: $\overline{L} = \Sigma^* - L$, i.e., the set of all strings over $\Sigma$ that are not in $L$.
 \end{itemize}
 
-These operations form the basis for reasoning about the expressiveness and closure properties of language classes such as regular, context-free, and context-sensitive languages. In particular, regular languages are closed under all the operations listed above, including union, intersection, concatenation, and Kleene star. This robustness makes them especially amenable to algorithmic manipulation, as seen in finite automata and regular expression engines.
+These operations form the basis for reasoning about the expressiveness and closure properties of language classes such as regular, context-free, and context-sensitive languages.
+%In particular, regular languages are closed under all the operations listed above, including union, intersection, concatenation, and Kleene star. 
+In this instance, the class of regular languages over an alphabet $\Sigma$ is closed under union ($\bigcup$), concatenation ($\cdot$) and Kleene star ($^*$).
+This robustness makes them especially amenable to algorithmic manipulation, as seen in finite automata and regular expression engines.
 
 \section{Finite Automata}
 A \emph{finite automaton} is a model of computation used to recognize regular languages. It processes input strings symbol by symbol and determines whether the string belongs to the language defined by the automaton. There are two main types of finite automata:
@@ -147,7 +162,7 @@ Let $\Sigma$ be a finite alphabet. Let $L \subseteq \Sigma$. The set of \emph{re
     \item For each symbol $a \in \Sigma$, $a$ is a regular expression denoting the singleton language: $L(a) = \{ a \}$.
     \item If $r_1$ and $r_2$ are regular expressions, then so are:
     \begin{itemize}
-        \item $(r_1 \mid r_2)$, denoting the union: $L(r_1 \mid r_2) = L(r_1) \cup L(r_2)$.
+        \item $(r_1 \mid r_2)$ or $(r_1 + r_2)$, denoting the union: $L(r_1 \mid r_2) = L(r_1) \cup L(r_2)$.
         \item $(r_1 \cdot r_2)$, denoting concatenation: $L(r_1 \cdot r_2) = L(r_1) \cdot L(r_2)$.
         \item $(r_1)^*$, denoting Kleene star: $L(r_1^*) = (L(r_1))^*$.
     \end{itemize}
@@ -158,7 +173,6 @@ For each $r \in \text{RegExp}(\Sigma)$, the function $L(r)$ yields the language 
 Parentheses are used to disambiguate expressions and enforce precedence; by convention, Kleene star binds most tightly ($a^*$), followed by concatenation (e.g. $a \cdot b$, whose operator "$\cdot$" is omitted for convenience), and finally union ($+$).
 
 We denote by $\alpha = \beta$ if two regular expressions $\alpha$ and $\beta$, both over $\Sigma$, represent the same language ($L(\alpha) = L(\beta)$).
-Furthermore, if both expressions can be decomposed in a way that they still represent the same language, they are denoted by $\alpha \equiv \beta$.
 
 If the language of a regular expression $\alpha$ contains the empty word, then that regular expression possesses the \textit{empty word property}.
 
