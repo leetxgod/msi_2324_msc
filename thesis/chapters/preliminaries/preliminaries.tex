@@ -194,7 +194,20 @@ If the language of a regular expression $\alpha$ contains the empty word, then t
 	\end{gather*}
 \end{defn}
 
-
+To effectively compare regular expressions and discuss their equivalence in automata construction, it is useful to define a notion of similarity based on basic algebraic properties. The following definition, adapted from Brzozowski's work in \cite{brzozowski_derivatives}, formalizes this concept:
+\begin{defn} [\cite{brzozowski_derivatives}]
+	Two regular expressions are considered similar if one can be transformed into the other using only the following rules:
+	
+	\begin{align*}
+		& r + r = r, \\
+		& p + q = q + p, \\
+		& (p + q) + r = p + (q + r) \\
+		& \varepsilon r = r \varepsilon = r \\
+		& \emptyset r = r \emptyset = \emptyset
+	\end{align*}
+	
+	Two regular expressions are dissimilar if and only if they are not similar.
+\end{defn}
 
 
 %	\varepsilon(\alpha + \beta) = \begin{cases}
@@ -236,10 +249,12 @@ These forms do not increase the expressive power of regular expressions but are 
 \subsection{Derivatives}
 \label{chap:prelim:derivatives}
 % Need 1962 Janusz Brzozowski's paper for this section
-The \emph{derivative of a regular expression} was first introduced in 1962 by Janusz Brzozowski. It is a powerful concept used to define the behavior of regular expressions in a more operational manner. They can be used as a means of verifying equivalence of regular expressions, for example. The derivative of a regular expression $r$ with respect to a symbol $a$ is another regular expression $d_a(r)$ that describes the set of strings that can be obtained by taking the derivative of $r$ with respect to $a$.
+The \emph{derivative of a regular expression} was first introduced in 1962 by Janusz Brzozowski. It is a powerful concept used to define the behavior of regular expressions in a more operational manner. They can be used as a means of verifying equivalence of regular expressions, for example.
+%The derivative of a regular expression $r$ with respect to a symbol $a$ is another regular expression $d_a(r)$ that describes the set of strings that can be obtained by taking the derivative of $r$ with respect to $a$.
 
 \begin{defn}[Derivative of a Regular Expression \cite{brzozowski_derivatives}]
-	The derivative of a regular expression $r$ with respect to $\sigma \in \Sigma$ is itself a regular expression $d_\sigma(r)$ such that $\mathcal{L}(d_\sigma(r)) = \{w \ \vert \ \sigma w \in \mathcal{L}(r)\}$ and is defined as:
+	\label{defn:re_derivatives}
+	The derivative of a regular expression $r$ with respect to $\sigma \in \Sigma$ is itself a regular expression $d_\sigma(r)$ such that $L(d_\sigma(r)) = \{w \ \vert \ \sigma w \in L(r)\}$ and is defined as:
 	\begin{align*}
 		& d_\sigma(\emptyset) = \emptyset \\
 		& d_\sigma(\varepsilon) = \emptyset \\
@@ -255,49 +270,87 @@ The \emph{derivative of a regular expression} was first introduced in 1962 by Ja
 		& d_\sigma(r^*) = d_\sigma(r)r^* \\
 		& d_\sigma(r^+) = d_\sigma(r)r^*
 	\end{align*}
+	
 \end{defn}
 
+This definition can be extended to a word $w \in \Sigma^*$ like so:
+\begin{align*}
+	& d_\varepsilon(r) = r, \\
+	& d_{wa}(r) = d_a(d_w(r)), \quad a \in \Sigma
+\end{align*}
 
-Brzozowski defined a DFA equivalent to a regular expression with the help of derivatives. With this, it is important to note that, for example, a regular expression $r = a^*$ (matches zero or more 'a' symbols) can be used to construct an equivalent DFA using Brzozowski's construction, even though $d_a(r) = a \cdot d_a(r)$ may look like it can lead to an infinite construction.
+With this extension:
+\begin{align*}
+	& L(d_x(r) = \{ w \ \vert \ xw \in L(r) \}), \quad x \in \Sigma^*
+\end{align*}
 
-\begin{defn} [\cite{brzozowski_derivatives}]
-	Two regular expressions are similar if one can be transformed to the other using only the identities:
-	
-	\begin{align*}
-		& R + R = R, \\
-		& P + Q = Q + P, \\
-		& (P + Q) + R = P + (Q + R) \\
-		& \varepsilon R = R \varepsilon= R \\
-		& \emptyset R = R \emptyset = \emptyset
-	\end{align*}
-	
-	Two regular expressions are dissimilar if and only if they are not similar.
-\end{defn}
+Originally, Brzozowski defined the derivative for a concatenation of two regular expressions $r$ and $r'$:
+\begin{align*}
+	& d_\sigma(rr') = d_\sigma(r)r' + \varepsilon(r)d_\sigma(r'),
+\end{align*}
 
-With this, Brzozowski proved in \cite[Theorem 5.2]{brzozowski_derivatives} that every regular expression has only a finite number of dissimilar derivatives. The big disadvantage is that, as he stated, the resulting automaton is far from minimal.
+This definition will lead to an infinite number of derivatives for a regular expression. For instance, let $r = a^*$ and $x \in \Sigma^*$:
+\begin{align*}
+	\intertext{If $x = a$:}
+	d_{x}(r) &= d_{a}(a^*) \\
+	&= \varepsilon a^*
+	\intertext{If $x = aa$:}
+	d_{x}(r) &= d_{aa}(a^*) \\
+	&= \varepsilon \varepsilon a^*
+\end{align*}
+
+As seen, each of these derivatives is syntactically different and dissimilar.
+This pattern repeats, meaning that the derivative set is infinite.
+The derivatives related to the concatenation of two different regular expressions, defined in Definition \ref{defn:re_derivatives}, were proposed by Antimirov \cite{pdregex_antimirov} and they were introduced as a way to address this issue. This modification avoids explicit multiplication by multiple $\varepsilon$ terms, ensuring that only a finite number of dissimilar derivatives are generated.
+Consequently, this modified definition guarantees the termination of derivative-based automaton constructions, such as Brzozowski's.
+
+%Brzozowski defined a DFA equivalent to a regular expression with the help of derivatives. With this, it is important to note that, for example, a regular expression $r = a^*$ (matches zero or more '$a$' symbols) can be used to construct an equivalent DFA using Brzozowski's construction, even though $d_a(r) = a \cdot d_a(r)$ may look like it can lead to an infinite construction.
+
+
+
+%With this, Brzozowski proved in \cite[Theorem 5.2]{brzozowski_derivatives} that every regular expression has only a finite number of dissimilar derivatives. The big disadvantage is that, as he stated, the resulting automaton is far from minimal.
 
 \subsection{Partial Derivatives}
 The notion of \textit{partial derivative} was introduced by Antimirov \cite{pdregex_antimirov}. Opposite to Brzozowski's derivatives, \textit{partial derivatives} will lead to the construction of an NFA.
 
-Let $\alpha \in RegExp(\Sigma)$ be a \textit{regular expression} over $\Sigma$. The set of partial derivatives of $\alpha$ with respect to a symbol $b \in \Sigma$, represented as $\partial_b(\alpha)$, is defined as follows:
+Before defining partial derivatives, we extend the notion of concatenation to sets of regular expressions. Let $\cdot : 2^{RegExp(\Sigma)} \times RegExp(\Sigma) \rightarrow 2^{RegExp(\Sigma)}$ be a binary operation for an alphabet $\Sigma$ defined recursively as follows:
 
 \begin{align*}
-	\partial_b(\emptyset) &= \emptyset		&	\partial_b(\alpha + \beta) &= \partial_b(\alpha) \cup \partial_b(\beta), \; \beta \neq \alpha \\
-	\partial_b(\varepsilon) &= \emptyset	&	\partial_b(\alpha \beta) &= \partial_b(\alpha)\beta \cup \partial_b(\beta), \; \text { if } \varepsilon(\alpha) = \varepsilon \\
-	\partial_b(b) &= \varepsilon & \partial_b(\alpha \beta) &= \partial_b(\alpha)\beta, \; \text { if } \varepsilon(\alpha) = \emptyset \\
-	\partial_b(c) &= \emptyset, \; b \neq c \text{ and } b \in \Sigma & \partial_b(\alpha^*) &= \partial_b(\alpha)\alpha^*
+	S \cdot \emptyset &= \emptyset, \\
+	S \cdot \varepsilon &= S, \\
+	\emptyset \cdot r' &= \emptyset, \\
+	\{ \varepsilon \} \cdot r' &= \{ r' \}, \\
+	\{ r \} \cdot r' &= \{rr'\}, \\
+	(S \cup S') \cdot r' &= (S \cdot r') \cup (S' \cdot r'),
+\end{align*}
+where $S, S' \subseteq RegExp(\Sigma), r \in RegExp(\Sigma) \setminus \{\emptyset\}$, and $r' \in RegExp(\Sigma) \setminus \{\emptyset, \varepsilon\}$.
+
+Let $r \in RegExp(\Sigma)$ be a \textit{regular expression} over $\Sigma$. The set of partial derivatives of $r$ with respect to a symbol $b \in \Sigma$, represented as $\partial_b(r)$, is defined as follows:
+
+\begin{align*}
+	\partial_b(\emptyset) &= \emptyset		&	\partial_b(r + r') &= \partial_b(r) \cup \partial_b(r'), \; r' \neq r \\
+	\partial_b(\varepsilon) &= \emptyset	&	\partial_b(r r') &= \partial_b(r)r' \cup \partial_b(r'), \; \text { if } \varepsilon(r) = \varepsilon \\
+	\partial_b(b) &= \varepsilon & \partial_b(r r') &= \partial_b(r)r', \; \text { if } \varepsilon(r) = \emptyset \\
+	\partial_b(c) &= \emptyset, \; b \neq c \text{ and } b \in \Sigma & \partial_b(r^*) &= \partial_b(r)r^*
 \end{align*}
 
-The set of partial derivatives by a word $w \in \Sigma^*$ 
+The set of partial derivatives of $r$ with respect to a word $w \in \Sigma^*$, denoted by $\partial_w(r)$, is defined recursively as:
+\begin{align*}
+	\partial_{\varepsilon}(r) &= \{r\}, \\
+	\partial_{wa}(r) &= \bigcup_{r' \in \partial_w(r)} \partial_a(r'), \quad \text{for $a \in \Sigma, w \in \Sigma^*$}
+\end{align*}
 
 For instance, given the regular expression $r = (ad + d^*)db$, where $\Sigma = \{a,b,d\}$, the set of partial derivatives of $r$ for the symbol $d$ is given by
 \begin{align*}
 	\partial_d(r) &= \partial_d((ad + d^*)db) \\
-	&= \partial_d(addb + d^*db) \\
-	&= \partial_d(addb) \, \cup \, \partial_d(d^*db) \\
-	&= \partial_d(a)ddb \, \cup \, \partial_d(d^*)db \, \cup \, \partial_d(db) \\
-	&= \emptyset ddb \, \cup \, \partial_d(d)d^*db \, \cup \, \partial_d(d)b \, \cup \, \partial_d(b) \\
-	&= \emptyset \, \cup \, d^*db \, \cup \, b \, \cup \, \emptyset
+	&= \partial_d(ad+d^*)db \cup \partial_d(db) \\
+	&= (\partial_d(ad) \cup \partial_d(d^*))db \cup \{b\} \\
+	&= (\partial_d(a)d) \cup \partial_d(d)d^*)db \cup \{b\} \\
+	&= (\emptyset \cup \{d^*\})db \cup \{b\} \\
+	&= \{d^*db\} \cup \{b\}
+	%	&= \partial_d(a)ddb \, \cup \, \partial_d(d^*)db \, \cup \, \partial_d(db) \\
+	%	&= \emptyset ddb \, \cup \, \partial_d(d)d^*db \, \cup \, \partial_d(d)b \, \cup \, \partial_d(b) \\
+	%	&= \emptyset \, \cup \, d^*db \, \cup \, b \, \cup \, \emptyset
 \end{align*}
 resulting in $\partial_d(r) = \{d^*db, b\}$.
 
@@ -305,7 +358,7 @@ resulting in $\partial_d(r) = \{d^*db, b\}$.
 \label{chap:prelim:linear_form}
 It is possible to calculate the partial derivatives for every symbol $a \in \Sigma$ of a regular expression $r$ over $\Sigma$ in a single pass. To do this, Antimirov \cite{pdregex_antimirov} defined the \emph{linear form}.
 
-A linear form $lf$ of a regular expression $\alpha$ is a finite set of symbol–continuation pairs.  
+A linear form $lf$ of a regular expression $r$ is a finite set of symbol–continuation pairs.  
 These pairs are called \textit{monomials} and they can encode all the possible one-symbol prefixes of that regular expression.
 
 Formally, given an alphabet $\Sigma$ and the set of all regular expressions over $\Sigma$ denoted $RegExp$, a monomial is an element of $\Sigma \times RegExp$.
@@ -313,7 +366,7 @@ We denote the set of all monomials for a given alphabet $\Sigma$ by $M_\Sigma$.
   
 A \emph{linear form} is then a finite set of monomials:
 \[
-lf(\alpha) \subseteq {2}^{M_\Sigma}.
+lf(r) \subseteq {2}^{M_\Sigma}.
 \]
 
 For instance, a linear form $l = \{(a_1,\alpha_1), \ldots, (a_n,\alpha_n)\}$ corresponds to the regular expression
@@ -331,9 +384,16 @@ The function $lf : RegExp \to {2}^{M_\Sigma}$ is defined recursively as follows,
 		lf(\beta) & \text{if } \varepsilon \in L(\alpha) \\
 		\emptyset & \text{otherwise}
 	\end{cases} \\
-	lf(\alpha^\ast) &= lf(\alpha)\cdot \alpha^\ast
+	lf(\alpha^\ast) &= lf(\alpha)\cdot \alpha^* \\
+	lf(\alpha) &= \{ (a, \alpha') \; | \; \alpha' \in \partial_a(\alpha), \; a \in \Sigma \}
 \end{align*}
 
+Antimirov proved in \cite[Proposition 2.5]{pdregex_antimirov} through induction that one can decompose a regular expression into all of its one-symbol branches plus the possible empty-word case. For any regular expression $\alpha$ over $\Sigma$, the following holds:
+\begin{align*}
+	\alpha &= \sum_{(a,\alpha') \in lf(\alpha)} a \alpha' + \varepsilon(\alpha)
+	\intertext{Equivalently,}
+	\partial_a(\alpha) &= \{\alpha' \; | \; (a, \alpha') \in lf(\alpha)\}
+\end{align*}
 
 
 %& 
@@ -422,7 +482,6 @@ In the end, a single fragment represents the entire regular expression. The resu
 		\node[state]			(q_9)	[below right=of q_7]						{$q_9$};
 		
 		\node[state,accepting]	(q_1)	[above right=of q_9,below right=of q_5]		{$q_1$};
-		
 		\path[->]	(q_0)	edge	node	{$\varepsilon$}	(q_2)
 							edge 	node	{$\varepsilon$} (q_8)
 					(q_2)	edge	node	{a}				(q_3)
@@ -456,8 +515,7 @@ In 1964, Brzozowski \cite{brzozowski_derivatives} proposed a method of construct
 \end{defn}
 
 For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transition function $\delta$ is defined for a Brzozowski's automaton $\mathcal{D}$ of $\alpha$ as:
-
-\medspace $\alpha = (ad+d^*)db$:
+%\medspace $\alpha = (ad+d^*)db$:
 \begin{align*}
 	\delta((ad + d^*)db, a) &= d_a((ad + d^*)db) \\
 	&= d_a(addb + d^*db) \\
@@ -481,7 +539,7 @@ For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transitio
 	&= d^*db + b
 \end{align*}
 
-\medspace $\alpha = ddb$:
+%\medspace $\alpha = ddb$:
 \begin{align*}
 	\delta(ddb, a) &= d_a(ddb) \\
 	&= d_a(d)db \\
@@ -499,7 +557,7 @@ For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transitio
 	&= db
 \end{align*}
 
-\medspace $\alpha = d^*db + b$:
+%\medspace $\alpha = d^*db + b$:
 \begin{align*}
 	\delta(d^*db + b, a) &= d_a(d^*db + b) \\
 	&= d_a(d^*db) + d_a(b) \\
@@ -518,7 +576,7 @@ For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transitio
 	&= \varepsilon d^*db + \varepsilon b + \emptyset = d^*db + b
 \end{align*}
 
-\medspace $\alpha = db$:
+%\medspace $\alpha = db$:
 \begin{align*}
 	\delta(db, a) &= d_a(db) \\
 	&= d_a(d)b \\
@@ -535,7 +593,7 @@ For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transitio
 	&= \varepsilon b = b
 \end{align*}
 
-\medspace $\alpha = b$
+%\medspace $\alpha = b$
 \begin{align*}
 	\delta(b, a) &= d_a(b) \\
 	&= \emptyset
@@ -630,28 +688,28 @@ That is, to compute the set of partial derivatives of $\alpha$ with respect to a
 
 % To first recall the notion of \emph{position automata} (also known as \emph{Glushkov automata}), one must first understand the idea of marking each occurrence of a symbol in a regular expression with a unique position. This transforms a regular expression into a \emph{marked regular expression}, where each letter is indexed according to its position in the expression when read left to right. The position automaton is then constructed from this marked version by associating each position with a distinct state, and defining transitions based on the structural analysis of the expression.
 
-The \emph{position automaton}, also known as the \emph{Glushkov automaton}, is a type of $\varepsilon$-free nondeterministic finite automaton (NFA) constructed directly from a regular expression. Unlike the standard Thompson construction, which introduces $\varepsilon$-transitions that must later be eliminated, the Glushkov construction yields an automaton in which each state corresponds uniquely to a symbol occurrence---or \emph{position}---in the expression. \cite{mesh-of-automata}
+The \emph{position automaton}, also known as the \emph{Glushkov automaton}, is a $\varepsilon$-free nondeterministic finite automaton (NFA) constructed directly from a regular expression. Unlike the standard Thompson construction, which introduces $\varepsilon$-transitions that must later be eliminated, the Glushkov construction yields an automaton in which each state corresponds uniquely to a symbol occurrence---or \emph{position}---in the expression. \cite{mesh-of-automata}
 
-Given a regular expression $E$, the Glushkov automaton $M_E$ is defined based on three key position-based functions:
+Given a regular expression $r$, the Glushkov automaton $M_r$ is defined based on four key position-based functions:
 
 \begin{itemize}
-    \item \textbf{first$(E)$}: the set of positions that can appear first in some word of the language $\mathcal{L}(E)$.
-    \item \textbf{last$(E)$}: the set of positions that can appear last in some word of $\mathcal{L}(E)$.
-    \item \textbf{follow$(E, x)$}: for each position $x$, the set of positions that can immediately follow $x$ in some word of $\mathcal{L}(E)$.
+    \item \textbf{first$(r)$}: the set of positions that can appear first in some word of the language $\mathcal{L}(r)$.
+    \item \textbf{last$(r)$}: the set of positions that can appear last in some word of $\mathcal{L}(r)$.
+    \item \textbf{follow$(r, x)$}: for each position $x$, the set of positions that can immediately follow $x$ in some word of $\mathcal{L}(r)$.
+    \item \textbf{symbol$(x)$}: for each position $x$, symbol$(x)$ represents the symbol on that position.
 \end{itemize}
 
-To distinguish different occurrences of the same symbol, the construction introduces marked symbols. For example, the expression $(a + b)^*a(b + a)^*$ is rewritten as $(a_1 + b_2)^*a_3(b_4 + a_5)^*$. Each marked symbol corresponds to a unique position and becomes a distinct state in the automaton.
+To distinguish different occurrences of the same symbol, the construction introduces marked symbols. For example, the expression $(a + b)^*a(b + a)^*$ is rewritten as $(a_1 + b_2)^*a_3(b_4 + a_5)^*$, where the positions are $\{1,2,3,4,5\}$. Each marked symbol corresponds to a unique position and becomes a distinct state in the automaton.
 
-The Glushkov automaton $M_E = (Q, \Sigma, \delta, q_0, F)$ is constructed as follows:
-
+The Glushkov automaton $M_r = (Q, \Sigma, \delta, q_0, F)$ is constructed as follows:
 \begin{itemize}
-    \item $Q$ is the set of positions in $E$ (i.e., the marked symbols), plus an initial state $q_0$.
+    \item $Q$ is the set of positions in $r$ (i.e., the marked symbols), plus an initial state $q_0$.
     \item For each symbol $a \in \Sigma$:
     \begin{itemize}
-        \item $\delta(q_0, a) = \{ x \in \text{first}(E) \mid \text{symbol}(x) = a \}$
-        \item $\delta(x, a) = \{ y \in \text{follow}(E, x) \mid \text{symbol}(y) = a \}$
+        \item $\delta(q_0, a) = \{ x \in \text{first}(r) \mid \text{symbol}(x) = a \}$
+        \item $\delta(x, a) = \{ y \in \text{follow}(r, x) \mid \text{symbol}(y) = a \}$
     \end{itemize}
-    \item The set of final states $F$ is $\text{last}(E)$; if $\varepsilon \in \mathcal{L}(E)$, then $q_0$ is also final.
+    \item The set of final states $F$ is $\text{last}(r)$; if $\varepsilon \in \mathcal{L}(r)$, then $q_0$ is also final.
 \end{itemize}
 
 This automaton captures the structural flow of $E$ by tracing symbol sequences as state transitions. It is $\varepsilon$-free and has one state per symbol occurrence, which results in at most a quadratic number of transitions with respect to the size of $E$.
@@ -714,11 +772,11 @@ In \texttt{reex.py}, FAdo defines the \texttt{RegExp} base class for all regular
 To represent any and all base constructions of a regular expressions, FAdo defines base classes for each of them:
 \begin{itemize}
     \item \textbf{CEmptySet}: The empty symbol set. ($\emptyset$)
-    \item \textbf{CEpsilon}: The empty string. ($\varsigma$)
+    \item \textbf{CEpsilon}: The empty string. ($\varepsilon$)
     \item \textbf{CAtom}: A simple symbol. (e.g. $'a'$)
-    \item \textbf{CDisj}: The $+$ operation between symbols. (e.g. \texttt{CDisj(CAtom(a),CAtom(b))} represents the regular expression $R=a+b$ where $a,b \in \Sigma_R$)
+    \item \textbf{CDisj}: The $+$ operation between symbols. (e.g. \texttt{CDisj(CAtom(a),CAtom(b))} represents the regular expression $r=a+b$ where $a,b \in \Sigma_r$)
     \item \textbf{CConcat}: The $\cdot$ operation 
-    \item \textbf{CStar}: The Kleene closure over a set of symbols (e.g. \texttt{CStar(CDisj(CAtom(a),CAtom(b)))} representes the regular expression $R=(a+b)^*$ where $a,b \in \Sigma_R$)
+    \item \textbf{CStar}: The Kleene closure over a set of symbols (e.g. \texttt{CStar(CDisj(CAtom(a),CAtom(b)))} represents the regular expression $r=(a+b)^*$ where $a,b \in \Sigma_r$)
 
 \end{itemize}
 

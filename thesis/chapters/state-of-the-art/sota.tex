@@ -4,27 +4,36 @@
 Regular expressions (regex) remain one of the most powerful and widely adopted tools for string pattern matching across programming languages, search tools, and data processing pipelines. While their theoretical foundation lies in formal language theory, the practical implementation of regex engines often diverges from the idealized models. This chapter mentions the state of the art in regex engine designs and regex language features, with a particular focus on performance trade-offs, security concerns, and evolving capabilities.
 
 \section{Engine Architectures}
-Regex engines are typically implemented using one of the following architectures:
+%Regex engines are typically implemented using one of the following architectures:
+Regular expressions are most commonly used to look for patterns of strings, known as matching. The basis for this operation are the regular expression engines.
+At a high level, regex engines can be grouped by how they traverse the implicit nondeterministic automaton of a pattern. Backtracking engines explore one path at a time, pushing alternative choices on a stack; NFA simulation engines keep all active states in parallel; DFA and hybrid engines trade memory for predictable time; and high-throughput engines emphasize vectorization and streaming.
 
-\subsection{Deterministic Finite Automata (DFA)}
-DFA-based engines compile a regular expression into a finite-state machine that reads each input character exactly once, guaranteeing linear-time performance. 
+\subsection{Classic NFA}
+The classic backtracking NFA matcher is driven by the pattern: the regular expression acts like a small procedural program that dictates how the engine explores matches and handles failure. The engine begins at the start of the text and attempts to match the pattern from that position; if it fails, it “bumps along,” advancing one character and trying again. Once the first tokens of the pattern match the text, the engine proceeds through the regex. At any choice point—such as an alternation, an optional, or a quantifier—it selects one alternative to try and records the others, together with the current input position. If the chosen path later fails, the engine backtracks to the most recent choice point and resumes with a saved alternative. If all saved alternatives are exhausted, the attempt from that starting position fails and the engine bumps along to the next character.
 
-\subsection{Backtracking Engines}
-Backtracking engines simulate nondeterministic finite automata (NFA) and recursively explore different matching paths. They are expressive but can suffer from exponential worst-case behavior.
+If the engine reaches the end of the pattern with all constraints satisfied, it declares success and discards any remaining, unexplored alternatives. A key consequence is that the order of alternatives matters: typical backtracking engines implement leftmost-first semantics rather than leftmost-longest, so the first workable alternative can win even if a longer match exists.
 
-For example, .NET's regex engine uses a traditional nondeterministic finite automaton that is also used in Perl, Python, Emacs and Tcl.
+Because the engine literally follows the structure of the regex, you control its search by how you write the pattern: place safer or more selective alternatives first, avoid ambiguous constructs under repetition, and structure patterns to minimize backtracking and to fail fast when appropriate.
 
+\subsection{POSIX NFA}
+Similarly to the classic NFA engine, the POSIX NFA engine will match in the same way but memorize and continue when a successfull match is found. This is done to see if a longer, leftmost match can be found later on.
 
-\subsection{Hybrid Engines}
-Modern engines often combine DFA and backtracking strategies. For example, they may use a DFA to fast-forward through non-ambiguous parts and switch to backtracking only when needed.
+\subsection{DFA}
+A DFA-based matcher is driven by the input text rather than by the pattern. After compiling the pattern into a deterministic automaton, the engine scans the input once, advancing a single current state per character with no need to branch or revisit earlier positions. Intuitively, each DFA state encodes all viable continuations of the match; this removes the need for backtracking and yields predictable, linear-time behavior in the length of the input (and proportional to the automaton size). In search mode, DFA-style engines are typically implemented to report the leftmost match, and many implementations further return the leftmost-longest match by continuing to advance while remembering the last accepting position. Because the traversal is deterministic, there is no notion of “trying one alternative before another”: the match policy is fixed by the automaton, not by the syntactic order of subexpressions.
 
-%%% Mention hybrid engine
+This approach is efficient, but it comes with trade-offs. First, you cannot influence the exploration order to emulate backtracking behaviors; the engine will not “prefer” one branch over another, and constructs like atomic groups or possessive quantifiers are largely moot because there is no backtracking to prune. Second, features that go beyond regular languages—most notably backreferences—are not supported in a pure DFA framework, and general look-around assertions are often unavailable or only supported in restricted, regular cases. Third, while matching is fast, precompilation can be more expensive in time and memory due to determinization; in the worst case, the number of DFA states may grow exponentially, which practical systems mitigate with lazy or hybrid techniques. Finally, although some DFA-centric libraries provide submatch extraction using taged automata or similar mechanisms, rich capturing semantics are more limited than in backtracking engines.
+
+\subsection{Hybrid}
+Hybrid engines try to take the best of both worlds in both NFAs and DFAs. They perform a depth-first search through the space of matches. At each point of nondeterminism—due to alternation, optional constructs, or unbounded quantifiers—they choose one option to continue and save the others as choice points on an internal stack. If a later step fails, the engine pops a choice point and resumes from there. This approach yields intuitive behavior and supports rich features, including capturing groups, backreferences, and look-around. However, in the presence of ambiguous subpatterns under repetition, the number of explored paths can grow exponentially, making these engines particularly susceptible to ReDoS.
+
+Spencer’s classic backtracking implementation is perhaps the best known and most used, embodying closely the architecture described above. Conceptually, its state comprises the current regex node, the current input index, and a stack of saved alternatives. Consider the pattern \texttt{(a|aa)+\$} against the input \texttt{aaaa\ldots a} without a trailing \texttt{b}. The matcher repeatedly chooses the left alternative \texttt{a}, consuming a single character while saving a choice point for the \texttt{aa} branch at each iteration. At the end of input it fails to satisfy the end anchor, so it begins to backtrack, popping choice points and trying to repartition the run of \texttt{a}s using \texttt{aa} segments. The number of such partitions grows exponentially with the length of the input, and the engine must examine many of them before determining there is no match. This example illustrates how overlapping alternatives inside a quantifier, combined with a terminal failure, can lead directly to catastrophic backtracking.
+Great examples of this engine being used widely are the tools GNU egrep and awk.
 
 \section{Feature Sets of Regex Languages}
-Regex languages have evolved far beyond classical regular expressions as defined in formal language theory. The following extensions are now standard in most industrial-strength engines:
+Regex languages have evolved far beyond classical regular expressions as defined in formal language theory and in general do not correspond to regular languages. The following extensions are now standard in most industrial-strength engines:
 
 \subsection{Backreferences}
-Backreferences allow the engine to refer to previously captured groups. This enables matching non-regular patterns (e.g., repeated substrings) but breaks the regular language model.
+Backreferences allow the engine to refer to previously captured groups. This enables matching non-regular patterns (e.g., repeated substrings) and breaks the regular language model.
 
 \subsection{Lookahead and Lookbehind}
 These zero-width assertions check what follows or precedes a pattern without consuming input. They are useful for complex validations but add significant complexity.
@@ -58,7 +67,10 @@ However, as also noted in \cite{hyperscan}, Hyperscan will also enforce syntacti
 \subsection{Rust's \texttt{regex} Crate}
 Implements a hybrid DFA/NFA model and guarantees linear-time performance by excluding features like backreferences.
 
-\section{Prevalency of ReDoS}
+\section{Prevalency of ReDoS and solutions}
 \subsection{Revealer}
 Mention the revealer paper here!
 %https://seclab.cse.cuhk.edu.hk/papers/sp21_redos.pdf
+
+\section{Reluctance}
+If it works...
