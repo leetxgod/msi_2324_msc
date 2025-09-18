@@ -3,57 +3,135 @@
 \section{Introduction}
 Regular expressions (regex) remain one of the most powerful and widely adopted tools for string pattern matching across programming languages, search tools, and data processing pipelines. While their theoretical foundation lies in formal language theory, the practical implementation of regex engines often diverges from the idealized models. This chapter mentions the state of the art in regex engine designs and regex language features, with a particular focus on performance trade-offs, security concerns, and evolving capabilities.
 
+\section{Regex Syntax Variants}
+\label{sec:regex_syntax}
+
+Beyond the theoretical framework of regular expressions lies a diverse set of practical syntax variants. Different tools, programming languages, and libraries adopt different interpretations and extensions of regex syntax, leading to a rich but inconsistent ecosystem. Two of the most influential and widely adopted syntax families are POSIX and PCRE.
+
+%\subsection{POSIX Regular Expressions}
+
+%The POSIX (Portable Operating System Interface) standard defines a family of regular expression syntaxes intended to promote consistency across UNIX-like systems. POSIX defines two primary levels of syntax: Basic Regular Expressions (BRE) and Extended Regular Expressions (ERE). These are used in many command-line utilities such as \texttt{grep} \cite{sw_grep}, \texttt{sed} \cite{sw_sed}, and \texttt{awk} \cite{sw_gawk}.
+%
+%In BRE, several metacharacters such as parentheses, braces, and the plus sign require escaping to be interpreted as operators. ERE, in contrast, relaxes this requirement and provides a more convenient syntax, allowing characters like \texttt{+}, \texttt{?}, \texttt{|}, and parentheses to act as operators without escaping. \cite{regex_opengroup}
+%
+%A defining feature of POSIX regular expressions is their leftmost-longest match semantics. When multiple matches are possible, the engine must return the one that starts at the earliest position in the input and is the longest among those starting at that position. This requirement ensures deterministic behavior but can increase the complexity of the matching algorithm. \cite{regex_opengroup}
+%
+%POSIX regular expressions do not support many advanced features common in other regex dialects. For example, they lack support for backreferences, lookahead/lookbehind assertions, non-greedy quantifiers, and conditional expressions. This makes POSIX regexes more limited in expressiveness but often easier to reason about and implement efficiently.
+
+\subsection{PCRE: Perl-Compatible Regular Expressions}
+
+PCRE (Perl-Compatible Regular Expressions) define an expressive and flexible regex syntax, modeled after the pattern language used in the Perl programming language. It has become the standard for regular expression syntax in many modern programming environments, including PHP, Python, JavaScript, and others.
+
+PCRE introduces a wide range of features that go far beyond the capabilities of POSIX regexes. These include:
+
+\begin{itemize}
+	\item \textbf{Backreferences}, allowing a pattern to refer to previously matched groups.\\
+	Example: \texttt{(a)b\textbackslash1} matches \texttt{aba} (the \texttt{\textbackslash1} refers to the first captured \texttt{a}).
+	
+	\item \textbf{Lookahead and lookbehind assertions}, enabling matches based on surrounding context without consuming it.\\
+	Examples:
+	\begin{itemize}
+		\item Lookahead: \texttt{foo(?=bar)} matches \texttt{foo} only if followed by \texttt{bar}.
+		\item Lookbehind: \texttt{(?<=foo)bar} matches \texttt{bar} only if preceded by \texttt{foo}.
+	\end{itemize}
+	
+	\item \textbf{Non-greedy quantifiers}, which match as little as possible.\\
+	Example: \texttt{<.*?>} matches the shortest HTML-like tag, such as \texttt{<b>} in \texttt{<b>bold</b>}, instead of greedily matching the entire string.
+	
+	\item \textbf{Named capture groups}, for improved readability and maintainability.\\
+	Example: \texttt{(?<year>\textbackslash d\{4\})-(?<month>\textbackslash d\{2\})} captures \texttt{2025-09} with named groups \texttt{year} and \texttt{month}.
+	
+	\item \textbf{Conditional expressions}, recursion, atomic groups, and other advanced constructs.\\
+	Examples:
+	\begin{itemize}
+		\item Conditional: \texttt{(a)?b(?(1)c|d)} matches \texttt{abc} if \texttt{a} is present, \texttt{bd} otherwise.
+		\item Recursion: \texttt{(a|b(?1))*} matches balanced nested patterns using self-reference.
+		\item Atomic group: \texttt{(?>a+)} prevents backtracking inside the group.
+	\end{itemize}
+\end{itemize}
+
+The added power of PCRE comes at the cost of increased complexity in both the syntax and the engine. To support these features, most PCRE-compatible engines rely on backtracking-based evaluation, which explores all potential matching paths through a pattern. While this approach enables support for advanced constructs, it also introduces the risk of exponential-time behavior in certain patterns—especially those involving nested quantifiers or ambiguous alternations.
+
+\subsection{POSIX Regular Expressions}
+
+The POSIX (Portable Operating System Interface) standard defines a family of regular expression syntaxes intended to promote consistency across UNIX-like systems. POSIX defines two primary levels of syntax: \textit{Basic Regular Expressions} (BRE) and \textit{Extended Regular Expressions} (ERE). These are used in many command-line utilities such as \texttt{grep} \cite{sw_grep}, \texttt{sed} \cite{sw_sed}, and \texttt{awk} \cite{sw_gawk}.
+
+In BRE, several metacharacters — such as parentheses, curly braces, and the plus sign — must be escaped to be interpreted as operators. For example:
+\begin{itemize}
+	\item \texttt{a\textbackslash\{3\textbackslash\}} matches exactly three consecutive \texttt{a}'s (\texttt{aaa}, for instance).
+	\item \texttt{\textbackslash(a\textbar b\textbackslash)} matches either \texttt{a} or \texttt{b} using grouping and alternation.
+\end{itemize}
+
+In contrast, ERE relaxes these constraints and allows a more expressive and readable syntax without requiring escapes for most metacharacters. For example:
+\begin{itemize}
+	\item \texttt{a\{3\}} matches \texttt{aaa} (three consecutive \texttt{a}'s).
+	\item \texttt{a+} matches one or more \texttt{a}'s.
+	\item \texttt{a|b} matches either \texttt{a} or \texttt{b}.
+	\item \texttt{(abc)?} matches either \texttt{abc} or $\varepsilon$.
+\end{itemize}
+
+A defining feature of POSIX regular expressions is their \textit{leftmost-longest match} semantics. When multiple matches are possible, the engine must return the one that starts at the earliest position in the input and is the longest among those starting at that position. This requirement ensures deterministic behavior but can increase the complexity of the matching algorithm. \cite{regex_opengroup}
+
+%As seen, the POSIX standard does not support many advanced features common in other regex dialects. For instance, they lack support for backreferences. When these are introduced, the resulting languages are non-regular, meaning that they cannot be recognized by finite automata.
+
+POSIX regular expressions do not support many advanced features common in other regex dialects. For example, they lack support for backreferences, lookahead/lookbehind assertions, non-greedy quantifiers, and conditional expressions. This makes POSIX regexes more limited in expressiveness but often easier to reason about and implement efficiently.
+
 \section{Engine Architectures}
 %Regex engines are typically implemented using one of the following architectures:
 Regular expressions are most commonly used to look for patterns of strings, known as matching. The basis for this operation are the regular expression engines.
 At a high level, regex engines can be grouped by how they traverse the implicit nondeterministic automaton of a pattern. Backtracking engines explore one path at a time, pushing alternative choices on a stack; NFA simulation engines keep all active states in parallel; DFA and hybrid engines trade memory for predictable time; and high-throughput engines emphasize vectorization and streaming.
 
-\subsection{Classic NFA}
+\subsection{Backtracking NFA}
 The classic backtracking NFA matcher is driven by the pattern: the regular expression acts like a small procedural program that dictates how the engine explores matches and handles failure. The engine begins at the start of the text and attempts to match the pattern from that position; if it fails, it “bumps along,” advancing one character and trying again. Once the first tokens of the pattern match the text, the engine proceeds through the regex. At any choice point—such as an alternation, an optional, or a quantifier—it selects one alternative to try and records the others, together with the current input position. If the chosen path later fails, the engine backtracks to the most recent choice point and resumes with a saved alternative. If all saved alternatives are exhausted, the attempt from that starting position fails and the engine bumps along to the next character.
 
 If the engine reaches the end of the pattern with all constraints satisfied, it declares success and discards any remaining, unexplored alternatives. A key consequence is that the order of alternatives matters: typical backtracking engines implement leftmost-first semantics rather than leftmost-longest, so the first workable alternative can win even if a longer match exists.
 
 Because the engine literally follows the structure of the regex, you control its search by how you write the pattern: place safer or more selective alternatives first, avoid ambiguous constructs under repetition, and structure patterns to minimize backtracking and to fail fast when appropriate.
 
+Despite the name, a backtracking NFA engine is not an NFA in the formal sense used in automata theory. Theoretical NFAs are memoryless machines that recognize only regular languages, whereas real-world backtracking engines—such as those used in PCRE, Java, and Python—go beyond regularity (Câmpeanu et al. proved this using a pumping lemma in \cite{campeanu_reg_ereg}). They simulate nondeterministic behavior by exploring multiple paths through the pattern, but they do so using a stack and internal memory to track backtracking points, group captures, and even previous input matches. This allows them to support powerful features like backreferences and conditional expressions, which cannot be recognized by finite automata. The term “NFA” here refers to the engine’s matching strategy, inspired by the branching behavior of NFAs, rather than to its computational limitations.
+
+
 \subsection{POSIX NFA}
-Similarly to the classic NFA engine, the POSIX NFA engine will match in the same way but memorize and continue when a successfull match is found. This is done to see if a longer, leftmost match can be found later on.
+Similarly to the classic NFA engine, the POSIX NFA engine will match in the same way but memorize and continue when a successful match is found. This is done to see if a longer, leftmost match can be found later on.
 
 \subsection{DFA}
-A DFA-based matcher is driven by the input text rather than by the pattern. After compiling the pattern into a deterministic automaton, the engine scans the input once, advancing a single current state per character with no need to branch or revisit earlier positions. Intuitively, each DFA state encodes all viable continuations of the match; this removes the need for backtracking and yields predictable, linear-time behavior in the length of the input (and proportional to the automaton size). In search mode, DFA-style engines are typically implemented to report the leftmost match, and many implementations further return the leftmost-longest match by continuing to advance while remembering the last accepting position. Because the traversal is deterministic, there is no notion of “trying one alternative before another”: the match policy is fixed by the automaton, not by the syntactic order of subexpressions.
+A DFA-based matcher is driven by the input text rather than the structure of the regular expression. The pattern is first compiled into a deterministic finite automaton (DFA), which enables the engine to scan the input in a single pass. As each character is read, the engine transitions deterministically from one state to another, maintaining only a single active state at any point during execution.
 
-This approach is efficient, but it comes with trade-offs. First, you cannot influence the exploration order to emulate backtracking behaviors; the engine will not “prefer” one branch over another, and constructs like atomic groups or possessive quantifiers are largely moot because there is no backtracking to prune. Second, features that go beyond regular languages—most notably backreferences—are not supported in a pure DFA framework, and general look-around assertions are often unavailable or only supported in restricted, regular cases. Third, while matching is fast, precompilation can be more expensive in time and memory due to determinization; in the worst case, the number of DFA states may grow exponentially, which practical systems mitigate with lazy or hybrid techniques. Finally, although some DFA-centric libraries provide submatch extraction using taged automata or similar mechanisms, rich capturing semantics are more limited than in backtracking engines.
+Each DFA state represents a set of possible continuations in the pattern, allowing the matcher to recognize valid strings without the need for backtracking. This results in highly predictable performance, with matching taking linear time in the length of the input.
+
+In search mode, DFA-based engines typically return the leftmost match. Many implementations are also designed to return the leftmost-longest match by continuing the scan while remembering the last encountered accepting state. Because the DFA encodes all matching possibilities in advance, the matching process is entirely deterministic and independent of the syntactic order of alternatives in the pattern.
+
+One practical consideration in DFA-based matching is the potential growth of the automaton during the compilation phase. In the worst case, the number of DFA states can grow exponentially with respect to the size of the regular expression, particularly for patterns involving complex nesting or alternation. While this does not affect runtime performance during matching — which remains linear — the memory and time costs of building the DFA can be significant. To address this, many modern implementations adopt strategies such as lazy DFA construction or hybrid evaluation models that balance determinism with scalability.
+
+
+%A DFA-based matcher is driven by the input text rather than by the pattern. After compiling the pattern into a deterministic automaton, the engine scans the input once, advancing a single current state per character with no need to branch or revisit earlier positions. Intuitively, each DFA state encodes all viable continuations of the match; this removes the need for backtracking and yields predictable, linear-time behavior in the length of the input. In search mode, DFA-style engines are typically implemented to report the leftmost match, and many implementations further return the leftmost-longest match by continuing to advance while remembering the last accepting position. Because the traversal is deterministic, there is no notion of “trying one alternative before another”: the match policy is fixed by the automaton, not by the syntactic order of subexpressions.
+%
+%This approach is efficient, but it comes with trade-offs. First, you cannot influence the exploration order to emulate backtracking behaviors; the engine will not “prefer” one branch over another, and constructs like atomic groups or possessive quantifiers are largely moot because there is no backtracking to prune. Second, features that go beyond regular languages—most notably backreferences—are not supported in a pure DFA framework, and general look-around assertions are often unavailable or only supported in restricted, regular cases. Third, while matching is fast, precompilation can be more expensive in time and memory due to determinization; in the worst case, the number of DFA states may grow exponentially with the size of the expression, which practical systems mitigate with lazy or hybrid techniques. Finally, although some DFA-centric libraries provide submatch extraction using taged automata or similar mechanisms, rich capturing semantics are more limited than in backtracking engines.
 
 \subsection{Hybrid}
-Hybrid engines try to take the best of both worlds in both NFAs and DFAs. They perform a depth-first search through the space of matches. At each point of nondeterminism—due to alternation, optional constructs, or unbounded quantifiers—they choose one option to continue and save the others as choice points on an internal stack. If a later step fails, the engine pops a choice point and resumes from there. This approach yields intuitive behavior and supports rich features, including capturing groups, backreferences, and look-around. However, in the presence of ambiguous subpatterns under repetition, the number of explored paths can grow exponentially, making these engines particularly susceptible to ReDoS.
+Hybrid engines try to take the best of both worlds in both NFAs and DFAs. They perform a depth-first search through the space of matches. At each point of nondeterminism—due to alternation, optional constructs, or unbounded quantifiers — they choose one option to continue and save the others as choice points on an internal stack. If a later step fails, the engine pops a choice point and resumes from there. This approach yields intuitive behavior and supports rich features, including capturing groups, backreferences, and look-around. However, in the presence of ambiguous subpatterns under repetition, the number of explored paths can grow exponentially, making these engines particularly susceptible to ReDoS.
 
 Spencer’s classic backtracking implementation is perhaps the best known and most used, embodying closely the architecture described above. Conceptually, its state comprises the current regex node, the current input index, and a stack of saved alternatives. Consider the pattern \texttt{(a|aa)+\$} against the input \texttt{aaaa\ldots a} without a trailing \texttt{b}. The matcher repeatedly chooses the left alternative \texttt{a}, consuming a single character while saving a choice point for the \texttt{aa} branch at each iteration. At the end of input it fails to satisfy the end anchor, so it begins to backtrack, popping choice points and trying to repartition the run of \texttt{a}s using \texttt{aa} segments. The number of such partitions grows exponentially with the length of the input, and the engine must examine many of them before determining there is no match. This example illustrates how overlapping alternatives inside a quantifier, combined with a terminal failure, can lead directly to catastrophic backtracking.
-Great examples of this engine being used widely are the tools GNU egrep and awk.
-
-\section{Feature Sets of Regex Languages}
-Regex languages have evolved far beyond classical regular expressions as defined in formal language theory and in general do not correspond to regular languages. The following extensions are now standard in most industrial-strength engines:
-
-\subsection{Backreferences}
-Backreferences allow the engine to refer to previously captured groups. This enables matching non-regular patterns (e.g., repeated substrings) and breaks the regular language model.
-
-\subsection{Lookahead and Lookbehind}
-These zero-width assertions check what follows or precedes a pattern without consuming input. They are useful for complex validations but add significant complexity.
-
-\subsection{Unicode and Multilingual Support}
-Modern engines increasingly support Unicode properties (e.g., \verb|\p{L}| for letters) and normalization, essential for multilingual applications.
-
-\subsection{Named Capture Groups and Subroutines}
-Named groups (\verb|(?<name>...)|) and recursive subpatterns (e.g., \verb|(?R)|) have become essential for advanced pattern extraction.
-
-\subsection{Flags and Modes}
-Regex engines support flags for case insensitivity, multiline matching, dot-all mode (where \verb|.| matches newlines), and others.
+%Great examples of this engine being used widely are the tools GNU egrep and awk.
+The tools GNU egrep and awk use a hybrid approach for this. They choose
 
 \section{Engines and Libraries}
 \subsection{RE2}
-Developed by Google, RE2 is a DFA-based engine designed to never exceed linear time or memory. It disallows features like backreferences for safety and predictability. 
+RE2 is a regular expression engine developed by Russ Cox at Google, designed to provide predictable performance and strong safety guarantees. Unlike backtracking engines, RE2 avoids features that lead to exponential-time behavior, such as backreferences and arbitrary lookbehinds. By restricting itself to regular languages, RE2 ensures that all matches can be performed in linear time. \cite{russ_cox_regexp3}
+
+The engine compiles patterns into automata using a combination of DFA and NFA techniques. For simple match queries, RE2 prefers deterministic finite automata (DFA) for their speed and predictability. When submatch extraction is needed, it may fall back to an NFA simulation, provided the regex satisfies certain properties (e.g., being one-pass). \cite{russ_cox_regexp3}
+
+By trading off advanced features like backreferences for performance and safety, RE2 provides a robust alternative to PCRE-style engines, especially in environments where worst-case behavior must be avoided.
+
+RE2 can also operate in either POSIX mode (accepting POSIX syntax regular expressions) or Perl mode (accepting PCRE syntax regular expressions). \cite{russ_cox_re2}
 %https://swtch.com/~rsc/regexp/regexp1.html
 
 \subsection{PCRE2}
-An industry-standard library used in PHP and many scripting tools. It supports extensive features including backtracking control verbs and recursive patterns. %https://github.com/PCRE2Project/pcre2
+PCRE2 is a modern and widely adopted regular expression library that implements the rich, feature-complete syntax mentioned above (PCRE). \cite{sw_pcre2}
+
+At its core, PCRE2 relies on a backtracking-based matcher, which simulates nondeterminism by exploring alternative execution paths through the pattern. Although this resembles the behavior of nondeterministic finite automata (NFAs), it does not correspond to an NFA in the theoretical sense. Instead, the engine maintains an explicit control stack and memory for backtracking, enabling it to handle features like backreferences and complex group captures. This matching strategy enables high expressiveness but comes with the risk of exponential time complexity in certain pathological cases, particularly when ambiguous repetition and nested alternations are involved. \cite{sw_pcre2}
+
+PCRE2 also offers an alternative, limited matching mode based on deterministic finite automata (DFA), which guarantees linear-time performance but does not support the full range of Perl-compatible features. Despite these limitations, PCRE2 remains widely used in scripting languages and developer tools due to its flexibility and familiar syntax. \cite{sw_pcre2}
 
 \subsection{Hyperscan}
 Hyperscan is Intel’s regular expression matching engine, designed specifically for high-throughput and low-latency applications. It serves as a core component in several security and networking tools, including intrusion detection systems like Suricata and firewalls.
@@ -62,7 +140,7 @@ Traditional regex engines (e.g., backtracking-based ones like PCRE) often strugg
 
 According to Wang et al. (\cite{hyperscan}), Hyperscan divides regexes into multiple subgraphs, such as anchored DFAs for simple patterns and NFAs for complex constructs. This hybrid approach enables it to process large volumes of data streams efficiently without the exponential-time risks associated with backtracking engines.
 
-However, as also noted in \cite{hyperscan}, Hyperscan will also enforce syntactic restrictions when compiling. Regexes that are deemed vulnerable or ambiguous are rejected, therefore limiting expressiveness and versatility, especially when the user is looking for nested repetition (e.g. $(a+)+$, looking to match one or more of one or more $a$'s) or greedy alternation (e.g. $(a|aa)+$, matching a sequence of $a$ or $aa$, repeated, resulting in three matches for a string such as $aa$).
+However, as noted in \cite{hyperscan}, Hyperscan will also enforce syntactic restrictions when compiling. Regexes that are deemed vulnerable or considered ambiguous, therefore limiting expressiveness and versatility, especially when the user is looking for nested repetition (e.g. $(a+)+$, looking to match one or more of one or more $a$'s) or greedy alternation (e.g. $(a|aa)+$, matching a sequence of $a$ or $aa$, repeated, resulting in three matches for a string such as $aa$).
 
 \subsection{Rust's \texttt{regex} Crate}
 Implements a hybrid DFA/NFA model and guarantees linear-time performance by excluding features like backreferences.

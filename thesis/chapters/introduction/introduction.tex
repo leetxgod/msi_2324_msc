@@ -4,7 +4,9 @@
 %https://arxiv.org/abs/2407.20479
 %https://www.regular-expressions.info/catastrophic.html
 
-In this chapter, the problem is overviewed, the study's importance is explained along with goals for the proposed solution. 
+Regular expressions are a powerful and ubiquitous tool in software development, enabling concise and expressive definitions of complex text patterns. However, their utility comes with a hidden cost: when implemented naively or misused, certain regular expression constructs can expose systems to catastrophic performance degradation. This vulnerability, known as Regular Expression Denial of Service (ReDoS), arises particularly in backtracking-based matching engines and has been responsible for real-world outages across major platforms. 
+
+This chapter introduces the ReDoS problem by first providing foundational background on regular expression engines and their operational behavior. It then outlines the nature of ReDoS vulnerabilities, illustrating their practical impact through two real-world case studies. Finally, it discusses the reasons for continued reliance on legacy engines despite known risks. By establishing the technical and practical motivations behind this research, this chapter sets the stage for the proposed approach introduced in the subsequent chapters.
 
 \section{Background}
 Regular expressions are a foundational tool in computer science, widely used in pattern matching, lexical analysis, input validation, and string processing. Their expressiveness and concise syntax make them a powerful language for describing regular languages.
@@ -20,9 +22,12 @@ A regular expression $R$ is used (along with an input $W$) in regex matching eng
 % \end{itemize}
 
 \section{Regular Expression Denial of Service}
-One such vulnerability is known as \emph{Regular Expression Denial of Service} (ReDoS). ReDoS exploits the pathological worst-case behavior of certain regular expressions, causing exponential running time complexity during matching. In typical backtracking matchers---such as those found in JavaScript, Java, and many scripting environments---ambiguous or nested expressions (especially involving repetition, such as \texttt{(a+)+}) can lead the engine to explore an exponential number of paths for certain crafted inputs. This behavior allows an attacker to intentionally supply inputs that force excessive computation, effectively rendering a service unavailable or degraded.
+One such vulnerability is known as \emph{Regular Expression Denial of Service} (ReDoS). ReDoS exploits the pathological worst-case behavior of certain regular expressions, causing exponential running time complexity during matching.
+% NAO ME LEMBRO DO QUE METER AQUI
 
-The root of the ReDoS problem lies not only in regular expressions as a theoretical model but also in how they are operationalized in software. While deterministic finite automata (DFAs) evaluate regular expressions in linear time, many real-world engines opt for backtracking NFAs due to their flexibility and ease of implementation. Unfortunately, these NFAs are susceptible to exponential blow-up in ambiguous or unguarded patterns.
+Commonly used backtracking matchers---such as those found in JavaScript, Java, and many scripting environments---ambiguous or nested expressions (such as '\texttt{(a+)+}', which involves repetition) can lead the engine to explore an exponential number of paths for certain crafted inputs. This behavior allows an attacker to intentionally supply inputs that force excessive computation, effectively rendering a service unavailable or degraded.
+
+The root of the ReDoS problem lies not in regular expressions as a theoretical model, but in how they are implemented in many real-world software systems—particularly through backtracking-based matchers. While deterministic finite automata (DFAs) evaluate regular expressions in linear time, backtracking matchers explore multiple paths through the input, making them susceptible to exponential blow-up in the presence of ambiguous or nested patterns.
 
 \section{Case Studies}
 In this section, two case studies are presented. These serve as a form of introduction to getting to know and understand the ReDoS problem.

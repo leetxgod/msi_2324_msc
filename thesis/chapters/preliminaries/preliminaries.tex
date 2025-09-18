@@ -3,7 +3,7 @@ Theory builds upon theory, therefore it is essential to establish a solid founda
 In this chapter we begin by formally defining what a language is and then move on to describe the class of languages known as regular languages.
 Along the way, we will also introduce various concepts such as finite automata (DFA, NFA) and regular expressions.
 
-\section{Alphabets, Strings, and Languages}
+\section{Alphabets, Words, and Languages}
 \subsection*{Alphabets}
 
 An \emph{alphabet} is a finite, non-empty set of symbols, typically denoted by the Greek letter $\Sigma$. That is,
@@ -15,15 +15,25 @@ An \emph{alphabet} is a finite, non-empty set of symbols, typically denoted by t
 
 For example, one can represent the binary alphabet as $\Sigma = \{ 0, 1 \}$, or the English alphabet as $\Sigma = \{ a, b, c, \ldots, z \}$.
 
-\subsection*{Strings}
-A \emph{string} over an alphabet $\Sigma$ is a finite sequence of symbols from $\Sigma$. Strings are typically denoted by $w$, and the \emph{length} of a string $w$ is denoted by $|w|$.
+\subsection*{Words}
+%The set of all words over the alphabet $\Sigma$ is denoted by $\Sigma^*$ and defined as:
+%\[
+%\Sigma^* = \{ w \mid w \text{ is a finite sequence of symbols from } \Sigma \}
+%\]
 
-The set of all strings over the alphabet $\Sigma$ is denoted by $\Sigma^*$ and defined as:
-\[
-\Sigma^* = \{ w \mid w \text{ is a finite sequence of symbols from } \Sigma \}
-\]
+A \emph{word} over an alphabet $\Sigma$ is a finite sequence of symbols from $\Sigma$. Words are typically denoted by $w$, and the \emph{length} of a word $w$ is denoted by $|w|$.
+The unique word of length zero is called the \emph{empty word}, denoted by $\varepsilon$.
+The concatenation of two words $w$ and $v$ over $\Sigma$ is denoted by $wv$ (or, more explicitely, $w \cdot v$) and results in a separate word composed by the singular word $v$ right after $w$. For instance, let $w = ab$ and $v = cd$, the concatenation $wv$ is $abcd$. We can define the concatenation of two words $w$ and $v$ (which are composed of any amount of symbols) as follows: %\in \Sigma^{\star}
+\begin{gather*}
+	w \cdot \varepsilon = \varepsilon \cdot w = w, \\
+	(wa) \cdot v = w \cdot (av), a \in \Sigma.
+\end{gather*}
+The set of all words over $\Sigma$ is denoted by $\Sigma^{\star}$ and is defined as:
+\begin{gather*}
+	\varepsilon \in \Sigma^\star, \\
+	\forall_{r \in \Sigma}, \forall_{w \in \Sigma^{\star}} \; aw \in \Sigma^\star
+\end{gather*}
 
-The unique string of length zero is called the \emph{empty string}, denoted by $\varepsilon$.
 It is important to note that $\varepsilon \in \Sigma^*$.
 
 For example, if $\Sigma = \{ 0, 1 \}$, then we have that:
@@ -31,15 +41,11 @@ For example, if $\Sigma = \{ 0, 1 \}$, then we have that:
 	$\Sigma^* = \{ \varepsilon, 0, 1, 00, 01, 10, 11, 000, 001, 010, 011, 100, 101, 110, 111, \ldots \}$
 \end{center}
 
-Where the empty string is, as mentioned above, denoted by $\varepsilon$ and also belongs to $\Sigma^*$.
+Where the empty word is, as mentioned above, denoted by $\varepsilon$ and also belongs to $\Sigma^*$.
 
-The concatenation of two strings $w$ and $v$ over $\Sigma$ is denoted by $wv$ (or, more explicitely, $w \cdot v$) and results in a separate string composed by the singular string $v$ right after $w$. For instance, let $w = ab$ and $v = cd$, the concatenation $wv$ is $abcd$. We can define the concatenation of two words $w, v \in \Sigma^*$ as follows:
-\begin{gather*}
-	w \cdot \varepsilon = \varepsilon \cdot w = w, \\
-	(wa) \cdot v = w \cdot (av), a \in \Sigma.
-\end{gather*}
 
-Given a string $w = a_1, a_2, ..., a_n$, the reversal of $w$, denoted by $w^R$, is the word formed by reversing the order of its characters such that $w^R = a_n, a_{n-1}, ..., a_1$. We can define the reversal of a string recursively like so:
+
+Given a word $w = a_1, a_2, ..., a_n$, the reversal of $w$, denoted by $w^R$, is the word formed by reversing the order of its characters such that $w^R = a_n, a_{n-1}, ..., a_1$. We can define the reversal of a word recursively like so:
 \begin{gather*}
 	w^R = v^Ra, \quad \text{where} \; w=av, a \in \Sigma \; \text{and} \; v \in \Sigma^*, \\
 	\varepsilon^R = \varepsilon.
@@ -47,14 +53,14 @@ Given a string $w = a_1, a_2, ..., a_n$, the reversal of $w$, denoted by $w^R$, 
 
 \subsection*{Languages}
 
-A \emph{language} over an alphabet $\Sigma$ is a set of strings over $\Sigma$.
+A \emph{language} over an alphabet $\Sigma$ is a set of words over $\Sigma$.
 
 \[
 L \subseteq \Sigma^*
 \]
 
-That is, a language is any subset of $\Sigma^*$, possibly infinite, finite, or even empty. \newline
-Since a language is a set of strings, the following standard set operations can be applied (assuming $A$ and $B$ are languages over the same alphabet $\Sigma$):
+That is, a language is any subset of $\Sigma^*$, and can be either finite or infinite. \newline
+Since a language is a set of words, the following standard set operations can be applied (assuming $A$ and $B$ are languages over the same alphabet $\Sigma$):
 
 \begin{itemize}
 	\item \emph{Intersection}: $A \cap B = \{ x \mid x \in A \text{ and } x \in B \}$
@@ -67,8 +73,8 @@ Furthermore, we can also operate specifically over languages with the following 
 \begin{itemize}
 	\item \emph{Concatenation}: $L_1 \cdot L_2 = \{ xy \mid x \in L_1 \text{ and } y \in L_2 \}$
 	\item \emph{Kleene Star}: $L^* = \bigcup_{n=0}^{\infty} L^n$, where $L^0 = \{\varepsilon\}$ and $L^n = L \cdot L^{n-1}$ for $n > 0$.
-	\item \emph{Reversal}: $L^R = \{ x^R \mid x \in L \}$, where $x^R$ denotes the reversal of a string $x$.
-	\item \emph{Complement}: $\overline{L} = \Sigma^* - L$, i.e., the set of all strings over $\Sigma$ that are not in $L$.
+	\item \emph{Reversal}: $L^R = \{ x^R \mid x \in L \}$, where $x^R$ denotes the reversal of a word $x$.
+	\item \emph{Complement}: $\overline{L} = \Sigma^* - L$, i.e., the set of all words over $\Sigma$ that are not in $L$.
 \end{itemize}
 
 These operations form the basis for reasoning about the expressiveness and closure properties of language classes such as regular, context-free, and context-sensitive languages.
@@ -77,7 +83,7 @@ In this instance, the class of regular languages over an alphabet $\Sigma$ is cl
 This robustness makes them especially amenable to algorithmic manipulation, as seen in finite automata and regular expression engines.
 
 \section{Finite Automata}
-A \emph{finite automaton} is a model of computation used to recognize regular languages. It processes input strings symbol by symbol and determines whether the string belongs to the language defined by the automaton. There are two main types of finite automata:
+A \emph{finite automaton} is a model of computation used to recognize regular languages. It processes input words symbol by symbol and determines whether the word belongs to the language defined by the automaton. There are two main types of finite automata:
 
 \begin{itemize}
     \item \textbf{Deterministic Finite Automaton (DFA)}: An automaton where, for each state and input symbol, there is exactly one possible next state.
@@ -158,7 +164,7 @@ Let $\Sigma$ be a finite alphabet. Let $L \subseteq \Sigma$. The set of \emph{re
 
 \begin{itemize}
     \item $\emptyset$ is a regular expression denoting the empty language: $L(\emptyset) = \emptyset$.
-    \item $\varepsilon$ is a regular expression denoting the language containing only the empty string: $L(\varepsilon) = \{ \varepsilon \}$.
+    \item $\varepsilon$ is a regular expression denoting the language containing only the empty word: $L(\varepsilon) = \{ \varepsilon \}$.
     \item For each symbol $a \in \Sigma$, $a$ is a regular expression denoting the singleton language: $L(a) = \{ a \}$.
     \item If $r_1$ and $r_2$ are regular expressions, then so are:
     \begin{itemize}
@@ -196,7 +202,7 @@ If the language of a regular expression $\alpha$ contains the empty word, then t
 
 To effectively compare regular expressions and discuss their equivalence in automata construction, it is useful to define a notion of similarity based on basic algebraic properties. The following definition, adapted from Brzozowski's work in \cite{brzozowski_derivatives}, formalizes this concept:
 \begin{defn} [\cite{brzozowski_derivatives}]
-	Two regular expressions are considered similar if one can be transformed into the other using only the following rules:
+	Two regular expressions are similar if one can be transformed into the other using only the following rules:
 	
 	\begin{align*}
 		& r + r = r, \\
@@ -206,7 +212,7 @@ To effectively compare regular expressions and discuss their equivalence in auto
 		& \emptyset r = r \emptyset = \emptyset
 	\end{align*}
 	
-	Two regular expressions are dissimilar if and only if they are not similar.
+	Two regular expressions are dissimilar if they are not similar.
 \end{defn}
 
 
@@ -238,7 +244,7 @@ In addition to the basic operations, some other operators are often used for con
     L(r^0) = \{ \varepsilon \}, \quad L(r^n) = L(r) \cdot L(r^{n-1}) \text{ for } n > 0.
     \]
 
-	 \item \textbf{Bounded repetition}: For a regular expression $r$ and integers $m, n$ with $0 \leq m \leq n-1$, the bounded repetition $r^{[m,n]}$ denotes the language containing all strings formed by concatenating between $m$ and $n-1$ copies of strings from $L(r)$:
+	 \item \textbf{Bounded repetition}: For a regular expression $r$ and integers $m, n$ with $0 \leq m \leq n-1$, the bounded repetition $r^{[m,n]}$ denotes the language containing all words formed by concatenating between $m$ and $n-1$ copies of strings from $L(r)$:
     \[
     L(r^{[m,n]}) = \bigcup_{k=m}^{n-1} L(r^k).
     \]
@@ -311,7 +317,7 @@ Consequently, this modified definition guarantees the termination of derivative-
 %With this, Brzozowski proved in \cite[Theorem 5.2]{brzozowski_derivatives} that every regular expression has only a finite number of dissimilar derivatives. The big disadvantage is that, as he stated, the resulting automaton is far from minimal.
 
 \subsection{Partial Derivatives}
-The notion of \textit{partial derivative} was introduced by Antimirov \cite{pdregex_antimirov}. Opposite to Brzozowski's derivatives, \textit{partial derivatives} will lead to the construction of an NFA.
+The notion of \textit{partial derivative} was introduced by Antimirov \cite{pdregex_antimirov}. Contrary to Brzozowski's derivatives, \textit{partial derivatives} will lead to the construction of an NFA.
 
 Before defining partial derivatives, we extend the notion of concatenation to sets of regular expressions. Let $\cdot : 2^{RegExp(\Sigma)} \times RegExp(\Sigma) \rightarrow 2^{RegExp(\Sigma)}$ be a binary operation for an alphabet $\Sigma$ defined recursively as follows:
 
@@ -402,7 +408,7 @@ Antimirov proved in \cite[Proposition 2.5]{pdregex_antimirov} through induction 
 %\partial_b(\alpha + \beta) = \partial_b(\alpha) \cup \partial_b(\beta), where \beta \neq \alpha
 
 \section{From Regular Expressions to Automata}
-While regular expressions provide a declarative way to specify patterns in strings, finite automata offer an operational model for recognizing such patterns.
+While regular expressions provide a declarative way to specify patterns in words, finite automata offer an operational model for recognizing such patterns.
 % The equivalence between regular expressions and finite automata is not merely theoretical---it is constructive. Algorithms exist to convert any regular expression into an equivalent NFA, typically using Thompson's construction. This NFA can then be transformed into a DFA using the powerset construction, and further minimized for efficiency.
 
 % Thompson's construction creates an NFA by recursively building automata for each component of the regular expression:
@@ -419,7 +425,7 @@ While regular expressions provide a declarative way to specify patterns in strin
 
 In 1968, Thompson provided a method capable of transforming a regular expression into an equivalent nondeterministic finite automaton with $\varepsilon$-transitions (an $\varepsilon$-NFA) \cite{thompson_re2nfa}. The main idea was to associate each regular-expression operator with a small automaton fragment, and then combine these fragments recursively until the entire expression is represented.
 
-Each basic symbol $a \in \Sigma$ is represented by two states with a transition labeled $a$ between them. The empty string $\varepsilon$ is represented by two states connected by a single $\varepsilon$-transition.
+Each basic symbol $a \in \Sigma$ is represented by two states with a transition labeled $a$ between them. The empty word $\varepsilon$ is represented by two states connected by a single $\varepsilon$-transition.
 
 More complex expressions are built by combining smaller fragments:
 \begin{itemize}
@@ -736,18 +742,14 @@ The FAdo \cite{fado_paper} project is an open-source implementation of several s
 			very thick,draw=black!50,
 			top color=white,bottom color=black!20,
 			font=\ttfamily}]
-		\node (c_dwble)		[terminal]                {Drawable};
-		\node (c_fa)		[terminal, below=of c_dwble]   {FA};
-		\node (c_ofa)		[terminal, below=of c_fa] {OFA};
-		\node (c_nfa)		[terminal, below right=of c_ofa] {NFA};
-		\node (c_dfa)		[terminal, below left=of c_ofa]{DFA};
+		\node (c_fa)		[terminal]   {FA};
+		\node (c_nfa)		[terminal, below right=of c_fa] {NFA};
+		\node (c_dfa)		[terminal, below left=of c_fa]{DFA};
 		
-		\path	(c_dwble)	edge[->]	(c_fa)
-				(c_fa)		edge[->]	(c_ofa)
-				(c_ofa)		edge[->]	(c_dfa)
+		\path	(c_fa)		edge[->]	(c_dfa)
 							edge[->]	(c_nfa);
 	\end{tikzpicture}
-	\caption{Class inheritance organization in FAdo's finite automata code file, \texttt{fa.py} (excluding the \texttt{SemiDFA} class)}
+	\caption{Class inheritance organization in FAdo's finite automata code file, \texttt{fa.py}.}
 	\label{fig:fado_fa_diag}
 \end{figure}
 
@@ -755,13 +757,11 @@ The FAdo \cite{fado_paper} project is an open-source implementation of several s
 %The \textt{}
 
 
-As shown in Figure~\ref{fig:fado_fa_diag}, FAdo organizes its implementation of finite automata as an inheritance hierarchy. At the top level, the class \texttt{Drawable} provides only drawing functionality, relying on the \texttt{graphviz} backend to visualize automata.
+%As shown in Figure~\ref{fig:fado_fa_diag}, FAdo organizes its implementation of finite automata as an inheritance hierarchy. At the top level, the class \texttt{Drawable} provides only drawing functionality, relying on the \texttt{graphviz} backend to visualize automata.
 
-On top of this, the class \texttt{FA} defines the abstract interface for finite automata, introducing the fundamental components: the set of states, the alphabet, the transition function, the initial state(s), and the set of final states. This class also establishes common methods for manipulating these elements and for interoperability between automata.
+The class \texttt{FA} defines the abstract interface for finite automata, introducing the fundamental components: the set of states, the alphabet, the transition function, the initial state(s), and the set of final states. This class also establishes common methods for manipulating these elements and for interoperability between automata.
 
-The class \texttt{OFA} (``one-way finite automaton'') specializes \texttt{FA} and serves as the immediate superclass for concrete models. It defines abstract operations such as evaluation of symbols, addition of transitions, and access to useful states, ensuring a consistent contract across different automaton types.
-
-Two subclasses will then inherit from \texttt{OFA}:
+Two subclasses will then inherit from \texttt{FA}:
 \begin{itemize}
 	\item \texttt{NFA} --- implements nondeterministic finite automata, possibly with $\varepsilon$-transitions. It provides methods for epsilon-closure, elimination of $\varepsilon$-moves, subset construction into a DFA, and regular operations such as union, concatenation, and Kleene star.
 	\item \texttt{DFA} --- implements deterministic finite automata. It enforces determinism by construction and provides efficient word evaluation and minimization routines.
@@ -772,7 +772,7 @@ In \texttt{reex.py}, FAdo defines the \texttt{RegExp} base class for all regular
 To represent any and all base constructions of a regular expressions, FAdo defines base classes for each of them:
 \begin{itemize}
     \item \textbf{CEmptySet}: The empty symbol set. ($\emptyset$)
-    \item \textbf{CEpsilon}: The empty string. ($\varepsilon$)
+    \item \textbf{CEpsilon}: The empty word. ($\varepsilon$)
     \item \textbf{CAtom}: A simple symbol. (e.g. $'a'$)
     \item \textbf{CDisj}: The $+$ operation between symbols. (e.g. \texttt{CDisj(CAtom(a),CAtom(b))} represents the regular expression $r=a+b$ where $a,b \in \Sigma_r$)
     \item \textbf{CConcat}: The $\cdot$ operation 
