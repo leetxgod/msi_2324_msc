@@ -56,7 +56,7 @@ The added power of PCRE comes at the cost of increased complexity in both the sy
 
 The POSIX (Portable Operating System Interface) standard defines a family of regular expression syntaxes intended to promote consistency across UNIX-like systems. POSIX defines two primary levels of syntax: \textit{Basic Regular Expressions} (BRE) and \textit{Extended Regular Expressions} (ERE). These are used in many command-line utilities such as \texttt{grep} \cite{sw_grep}, \texttt{sed} \cite{sw_sed}, and \texttt{awk} \cite{sw_gawk}.
 
-In BRE, several metacharacters — such as parentheses, curly braces, and the plus sign — must be escaped to be interpreted as operators. For example:
+In BRE, several metacharacters (such as parentheses, curly braces, and the plus sign) must be escaped to be interpreted as operators. For example:
 \begin{itemize}
 	\item \texttt{a\textbackslash\{3\textbackslash\}} matches exactly three consecutive \texttt{a}'s (\texttt{aaa}, for instance).
 	\item \texttt{\textbackslash(a\textbar b\textbackslash)} matches either \texttt{a} or \texttt{b} using grouping and alternation.
@@ -79,7 +79,8 @@ POSIX regular expressions do not support many advanced features common in other 
 \section{Engine Architectures}
 %Regex engines are typically implemented using one of the following architectures:
 Regular expressions are most commonly used to look for patterns of strings, known as matching. The basis for this operation are the regular expression engines.
-At a high level, regex engines can be grouped by how they traverse the implicit nondeterministic automaton of a pattern. Backtracking engines explore one path at a time, pushing alternative choices on a stack; NFA simulation engines keep all active states in parallel; DFA and hybrid engines trade memory for predictable time; and high-throughput engines emphasize vectorization and streaming.
+At a high level, regex engines can be grouped by how they traverse the implicit nondeterministic automaton of a pattern.
+%Backtracking engines explore one path at a time, pushing alternative choices on a stack; NFA simulation engines keep all active states in parallel; DFA and hybrid engines trade memory for predictable time; and high-throughput engines emphasize vectorization and streaming.
 
 \subsection{Backtracking NFA}
 The classic backtracking NFA matcher is driven by the pattern: the regular expression acts like a small procedural program that dictates how the engine explores matches and handles failure. The engine begins at the start of the text and attempts to match the pattern from that position; if it fails, it “bumps along,” advancing one character and trying again. Once the first tokens of the pattern match the text, the engine proceeds through the regex. At any choice point—such as an alternation, an optional, or a quantifier—it selects one alternative to try and records the others, together with the current input position. If the chosen path later fails, the engine backtracks to the most recent choice point and resumes with a saved alternative. If all saved alternatives are exhausted, the attempt from that starting position fails and the engine bumps along to the next character.
@@ -116,6 +117,9 @@ Spencer’s classic backtracking implementation is perhaps the best known and mo
 The tools GNU egrep and awk use a hybrid approach for this. They choose
 
 \section{Engines and Libraries}
+Modern regular expression engines vary widely in their design goals, trade-offs, and supported features. While traditional engines prioritize expressiveness (often at the cost of performance guarantees) there has been a growing interest in implementations that prioritize safety, predictability, and efficiency, especially in systems that process untrusted or large-scale input. This section presents a selection of such libraries and engines.
+
+
 \subsection{RE2}
 RE2 is a regular expression engine developed by Russ Cox at Google, designed to provide predictable performance and strong safety guarantees. Unlike backtracking engines, RE2 avoids features that lead to exponential-time behavior, such as backreferences and arbitrary lookbehinds. By restricting itself to regular languages, RE2 ensures that all matches can be performed in linear time. \cite{russ_cox_regexp3}
 
@@ -142,13 +146,54 @@ According to Wang et al. (\cite{hyperscan}), Hyperscan divides regexes into mult
 
 However, as noted in \cite{hyperscan}, Hyperscan will also enforce syntactic restrictions when compiling. Regexes that are deemed vulnerable or considered ambiguous, therefore limiting expressiveness and versatility, especially when the user is looking for nested repetition (e.g. $(a+)+$, looking to match one or more of one or more $a$'s) or greedy alternation (e.g. $(a|aa)+$, matching a sequence of $a$ or $aa$, repeated, resulting in three matches for a string such as $aa$).
 
-\subsection{Rust's \texttt{regex} Crate}
-Implements a hybrid DFA/NFA model and guarantees linear-time performance by excluding features like backreferences.
+\subsection{Rust's \texttt{regex} library}
+Rust is a systems programming language focused on safety, concurrency, and performance, offering memory safety without garbage collection through its unique ownership model. The \texttt{regex} crate implements a hybrid DFA/NFA model and guarantees linear-time performance. All regex searches in Rust's \texttt{regex} library have worst case $O(m * n)$ time complexity, where $m$ is the size of the regular expression and $n$ is the size of the input string. \cite{sw_rustregex}
 
-\section{Prevalency of ReDoS and solutions}
+To uphold this guarantee, the pattern syntax is intentionally restricted: features that are not known to admit efficient matching—most notably \emph{backreferences} and general \emph{look‑around assertions}—are omitted. The engine’s design combines automata techniques: a lazy DFA is used to accelerate finding overall matches, while a PikeVM/Thompson‑NFA simulation recovers submatch boundaries when needed; these strategies avoid recursive backtracking and keep stack usage bounded. The crate provides first‑class Unicode support (including Unicode character classes and word boundaries) and exposes its parser and automata components as reusable libraries (\texttt{regex\_syntax}, \texttt{regex-automata}). In practice, this places \texttt{regex} in the same family as RE2‑style engines: it favors regular‑language constructs and predictable performance over Perl‑style expressiveness.
+
+\section{Tools for ReDoS Detection and Exploitation}
 \subsection{Revealer}
-Mention the revealer paper here!
+REVEALER is a hybrid static–dynamic analysis tool designed to detect and exploit ReDoS vulnerabilities, particularly in regex engines that support extended, non-regular features such as backreferences and lookahead assertions. Unlike traditional ReDoS analyzers that operate under the assumption that regular expressions conform to classical finite automata semantics, REVEALER targets the realities of modern backtracking-based engines like Java’s regex library, where non-regular constructs are common and matching behavior is often implementation-specific \cite{revealer_paper}.
+The tool begins with a static analysis phase, modeling regexes as extended nondeterministic finite automata. It detects vulnerable structural patterns (such as nested loops or ambiguous branching) by analyzing the internal state graph used by the Java regex engine. These structures are known to induce exponential or polynomial backtracking behavior under certain input conditions. To confirm whether a suspected pattern can cause denial-of-service, REVEALER proceeds with a dynamic validation phase that simulates matching and attempts to synthesize concrete attack strings. This dual-phase approach minimizes false positives and ensures that reported vulnerabilities are exploitable in practice.
+REVEALER was evaluated on over 29,000 Java regexes and successfully identified all previously known vulnerabilities while discovering 213 new ones \cite{revealer_paper}.
+
+%Mention the revealer paper here!
 %https://seclab.cse.cuhk.edu.hk/papers/sp21_redos.pdf
+%Revealer is a hybrid tool designed to detect and exploit ReDoS vulnerabilities, especially in
+
+\subsection{ReScue}
+%ReScue is a technique for detecting ReDoS vulnerabilities in modern regex engines. Unlike traditional static or black-box fuzzing approaches, ReScue leverages the structure of extended nondeterministic finite automata used internally by engines such as Java’s \texttt{java.util.regex}. The tool operates in three stages: a seeding phase that uses a genetic algorithm to generate diverse input strings covering as many e-NFA states as possible; an incubating phase that evolves those seeds toward strings with high cost-effectiveness (i.e., many matching steps per character); and a pumping phase that trims and expands the most promising strings to maximize backtracking behavior. This combination allows ReScue to discover complex vulnerabilities hidden in deep, non-regular constructs such as lookarounds and backreferences.
+
+ReScue is a technique for detecting ReDoS vulnerabilities in modern regex engines. It can generate special input strings that, when submitted as an input to a pre-defined regex engine, will lead to ReDoS. To do this, it starts by exploring the regex engine's behaviors under various inputs, which is called the \textit{seeding phase}. These inputs are selected and evaluated on how many of the e-NFA states they reach, regardless of the time it takes to reach them. After that, it will use the selected strings from the seeding phase and apply "mutations" to them, this phase is called the \textit{incubating phase}. Lastly, the \textit{pumping phase} will enhance the strings by finding which parts of the string take the longest to process, and copy and paste them one after the other. Parallel to this, it will also trim unnecessary parts of the string in order to retain the attack core (the minimal input responsible for the performance hit). \cite{rescue_paper}
+
+ReScue was evaluated on 29088 real-world regexes and outperformed prior tools including RXXR2, Rexploiter, and SlowFuzz, finding 49\% more exploitable inputs and uncovering ten previously unknown vulnerabilities in popular open-source projects \cite{rescue_paper}.
+
+\subsection{ReDoSHunter}
+ReDoSHunter is a vulnerability detection framework that combines static analysis with dynamic validation to identify ReDoS vulnerabilities in modern regex engines. Unlike prior approaches that suffer from a trade-off between precision and recall, ReDoSHunter is designed to achieve both high accuracy and coverage.
+The framework begins by transforming real-world regexes into a simplified form (standardized regex) while preserving ReDoS-relevant semantics. It then uses pattern-specific static diagnosis algorithms to identify potential vulnerabilities and synthesize attack strings. Each candidate is subsequently validated dynamically against real regex engines to ensure the vulnerability is exploitable in practice. ReDoSHunter also detects multiple vulnerabilities in a single regex, a feature lacking in most prior tools.
+Empirically, ReDoSHunter outperforms seven state-of-the-art detection tools in both precision and recall. It achieved 100\% precision and 100\% recall across multiple large-scale datasets containing over 37,000 regexes and discovered 28 previously unknown vulnerabilities in widely used software projects, 26 of which were assigned CVEs \cite{redoshunter_paper}.
+This level of precision and recall mean that the tool triggers very few false alarms, and misses very few real vulnerabilities.
 
 \section{Reluctance}
-If it works...
+Theory for automata has been around for very long, and its theory has been checked and developed by many. However, software is often built from demand. Most of the time, someone builds something because it could be useful. Regular expressions entered practical programming through Ken Thompson's implementation in the QED text editor on CTSS (and later, in Dennis Ritchie's version for GE-TSS). When Thompson and Ritchie developed Unix, they carried regular expressions with them to the new ecosystem, adding them to tools such as \texttt{awk} and \texttt{sed}.
+By the end of the 1970s, regular expressions were a fundamental part of Unix. Nowadays, regular expressions illustrate the risks of straying from theoretical principles. Contemporary regex engines (like backtracking, for example) are often far less efficient than the real automata-based implementations used in the early Unix tools.
+Despite known limitations and security risks associated with traditional backtracking-based regular expression engines, there remains significant resistance to replacing them in many modern and legacy systems. This reluctance doesn't stem only from the fact that people don't want to change stuff if it "works", especially when it is so embedded into a trustworthy system:
+\begin{itemize}
+	\item \textbf{Backwards compatibility}: Changing old code could break countless projects, many of them supporting running projects today
+	\item \textbf{Pattern rewritting}: While tools like RE2 offer guaranteed linear-time matching, they lack features such as backreferences or lookaround assertions, which make them unsuitable for existing expressions that depend on those features
+	\item \textbf{The risk}: Many organizations fear regressions or downtime, and often ponder if changing this old code is worth it
+\end{itemize}
+
+For instance, Irani et. al (\cite{reluctance_study}) performed a study within the public administration domain but it can be applied here. They found that there are multiple layers of complexity that prevent modernization, ranging from outdated architectures to deep interdependencies across institutions. The systems they studied were often tied to statutory processes, policy constraints and siloed governance, making them difficult to refactor or retire.
+Irani et. al found that overcoming a legacy system's inertia to change often requires more than just technical solutions. It demands stakeholder buy-in, incremental migration strategies, semantic data interoperability and, most importantly, alignment between policy ambitions and organizational capacity.
+
+
+
+
+
+
+
+
+
+
+

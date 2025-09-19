@@ -1,6 +1,12 @@
 % This file was created with JabRef 2.10.
 % Encoding: Cp1252
 
+@manual{sw_rustregex,
+	title  = {regex — Rust crate documentation},
+	note   = {\url{https://docs.rs/regex/latest/regex/}},
+	year   = {2025}
+}
+
 @software{sw_pcre2,
 	author = {University of Cambridge},
 	title = {pcre2},
@@ -206,4 +212,79 @@
 	url = {https://www.usenix.org/conference/nsdi19/presentation/wang-xiang},
 	publisher = {USENIX Association},
 	month = feb
+}
+
+@INPROCEEDINGS{revealer_paper,
+	author={Liu, Yinxi and Zhang, Mingxue and Meng, Wei},
+	booktitle={2021 IEEE Symposium on Security and Privacy (SP)}, 
+	title={Revealer: Detecting and Exploiting Regular Expression Denial-of-Service Vulnerabilities}, 
+	year={2021},
+	volume={},
+	number={},
+	pages={1468-1484},
+	keywords={Privacy;Java;Computer languages;Prototypes;Static analysis;Tools;Feature extraction},
+	doi={10.1109/SP40001.2021.00062}
+}
+
+@inproceedings{rescue_paper,
+	author = {Shen, Yuju and Jiang, Yanyan and Xu, Chang and Yu, Ping and Ma, Xiaoxing and Lu, Jian},
+	title = {ReScue: crafting regular expression DoS attacks},
+	year = {2018},
+	isbn = {9781450359375},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3238147.3238159},
+	doi = {10.1145/3238147.3238159},
+	abstract = {Regular expression (regex) with modern extensions is one of the most popular string processing tools. However, poorly-designed regexes can yield exponentially many matching steps, and lead to regex Denial-of-Service (ReDoS) attacks under well-conceived string inputs. This paper presents Rescue, a three-phase gray-box analytical technique, to automatically generate ReDoS strings to highlight vulnerabilities of given regexes. Rescue systematically seeds (by a genetic search), incubates (by another genetic search), and finally pumps (by a regex-dedicated algorithm) for generating strings with maximized search time. We implemenmted the Rescue tool and evaluated it against 29,088 practical regexes in real-world projects. The evaluation results show that Rescue found 49\% more attack strings compared with the best existing technique, and applying Rescue to popular GitHub projects discovered ten previously unknown ReDoS vulnerabilities.},
+	booktitle = {Proceedings of the 33rd ACM/IEEE International Conference on Automated Software Engineering},
+	pages = {225–235},
+	numpages = {11},
+	keywords = {ReDoS, denial of service, egular expression, genetic algorithm},
+	location = {Montpellier, France},
+	series = {ASE '18}
+}
+
+@inproceedings {redoshunter_paper,
+	author = {Yeting Li and Zixuan Chen and Jialun Cao and Zhiwu Xu and Qiancheng Peng and Haiming Chen and Liyuan Chen and Shing-Chi Cheung},
+	title = {{ReDoSHunter}: A Combined Static and Dynamic Approach for Regular Expression {DoS} Detection},
+	booktitle = {30th USENIX Security Symposium (USENIX Security 21)},
+	year = {2021},
+	isbn = {978-1-939133-24-3},
+	pages = {3847--3864},
+	url = {https://www.usenix.org/conference/usenixsecurity21/presentation/li-yeting},
+	publisher = {USENIX Association},
+	month = aug
+}
+
+@inproceedings{turning_evil_regexps_harmless,
+	author = {van der Merwe, Brink and Weideman, Nicolaas and Berglund, Martin},
+	title = {Turning evil regexes harmless},
+	year = {2017},
+	isbn = {9781450352505},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	url = {https://doi.org/10.1145/3129416.3129440},
+	doi = {10.1145/3129416.3129440},
+	abstract = {We explore the relationship between ambiguity in automata and regular expressions on the one hand, and the matching time of backtracking regular expression matchers on the other. We focus in particular on the extreme cases where we have either an exponential amount of ambiguity or no ambiguity at all. We also investigate techniques to reduce or remove ambiguity from regular expressions, which can then be used to transform regular expressions which might be exploited by using algorithmic complexity, into harmless equivalent expressions.},
+	booktitle = {Proceedings of the South African Institute of Computer Scientists and Information Technologists},
+	articleno = {38},
+	numpages = {10},
+	keywords = {ReDoS, algorithmic complexity attack, ambiguity, backtracking matcher, regular expression},
+	location = {Thaba 'Nchu, South Africa},
+	series = {SAICSIT '17}
+}
+
+@article{reluctance_study,
+	title = {The impact of legacy systems on digital transformation in European public administration: Lesson learned from a multi case analysis},
+	journal = {Government Information Quarterly},
+	volume = {40},
+	number = {1},
+	pages = {101784},
+	year = {2023},
+	issn = {0740-624X},
+	doi = {https://doi.org/10.1016/j.giq.2022.101784},
+	url = {https://www.sciencedirect.com/science/article/pii/S0740624X22001204},
+	author = {Zahir Irani and Raul M. Abril and Vishanth Weerakkody and Amizan Omar and Uthayasankar Sivarajah},
+	keywords = {Legacy system, Digital transformation, Public administration, E-government, European, Public sector},
+	abstract = {Legacy systems have continued to pose a major challenge to digital transformation efforts in public administration. A comprehensive review of literature suggests seven levels of complexity in transforming legacy systems, including, being a stand-alone system, being part of a larger system, and data incompatibility, each depicting unique criteria and challenges. Nonetheless, very little is known as to what degree these complexities implicate the implementation of digital transformation efforts in public administration (PA). To address this gap, this research conducted an analysis on four cases of digital transformation in three European PA settings (i.e., Denmark, the Netherlands, and the UK). The findings revealed complexities that pose the key challenges to systems interoperability and integrability, which are crucial in any digital transformation project. In addition, a comprehensive understanding of the systems to be transformed, the policies which they are serving, and the broader PA setting in which they are implemented were deemed central to succeeding in digital transformation efforts.}
 }
