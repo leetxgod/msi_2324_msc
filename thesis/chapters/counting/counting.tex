@@ -54,7 +54,7 @@ For a fixed repetition, we need $r$ to occur $n$ times, resulting in the notion 
 % ADD e^n results for n=0, n=1 and n>1
 
 \subsection{Bounded Repetition}
-Supplementing the fixed repetition notion, we now add a maximum bound so that $r$ can occur at least $n$ times and at maximum $m-1$ times: $r^{[n,m[}$.
+Supplementing the fixed repetition notion, we now add a maximum bound so that $r$ can occur at least $n$ times and at maximum $m-1$ times: $r^{n,m}$.
 
 Given $r = ab$ such that $r^2 = abab$ and $r^3 = ababab$, we have:
 \begin{align*}
@@ -75,8 +75,23 @@ This also extends for $r^{[m, \inf[}$, which is the same as having $r^m \cdot r^
 	&= bab + b(ab)^*
 \end{align*}
 
+\noindent Given $e \in RegExp(\Sigma)$, $n>=1$ and $m>n$ we want to show that
 \begin{align*}
-	D_a(e^{n,m})
+	D_a(e^{n,m}) &= \sum_{i=n}^{m} D_a(e^i) \\
+	&= \sum_{i=n}^{m} (D_a(e))e^{i-1} \\
+	&= D_a(e) \sum_{j=n-1}^{m-1} e^j \\
+	&= D_a(e) e^{n-1,m-1}
+\end{align*}
+
+\noindent So, for $n=1$ we have that
+\begin{align*}
+	D_a(e^{n,m}) &= D_a(e)e^{0,m-1} \\
+	&= D_a(e) + (D_a(e))e^{1,m-1}
+\end{align*}
+
+\noindent And, for $n>=1$ we have that
+\begin{align*}
+	D_a(e^{n,m}) &= (D_a(e))e^{n-1,m-1}
 \end{align*}
 %For instance, if $m = 2$, we have that $r^{[2, \inf[}$
 
