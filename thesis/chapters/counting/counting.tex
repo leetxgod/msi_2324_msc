@@ -1,5 +1,5 @@
 \chapter{Counting}\label{chap:counting}
-In this chapter, we will explore the concept of counting in the context of formal languages and automata theory as well as explain an attempt that was made towards match counting using a partial derivative automaton construction and why it didn't work.
+In this chapter, we will explore the concept of counting in the context of formal languages and automata theory as well as explain the implementation for fixed and bounded repetition in FAdo.
 
 \section{Counting in Formal Languages}
 In formal language theory, counting refers to the ability of a language or an automaton to enforce numeric constraints over the number of symbols or patterns within strings. Specifically, it deals with the ability to recognize whether certain elements occur a specified number of times—or in a specific numerical relationship to others.
@@ -16,15 +16,42 @@ In order to match with fixed and bounded repetition, one must first solve the de
 \subsection{Fixed Repetition}
 For a fixed repetition, we need $r$ to occur $n$ times, resulting in the notion $r^n$.
 
-Given $r = ab$ such that $r^2 = abab$, we have:
+%\noindent Given $r = ab$ such that $r^2 = abab$, we have:
+%\begin{align*}
+%	D_a(r^2) &= D_a(r \cdot r) \\
+%	&= D_a(abab)  \\
+%	&= D_a(a)bab + D_a(bab) \\
+%	&= \varepsilon bab + \emptyset \\
+%	&= bab
+%\end{align*}
+
+% PROOF
+\noindent Given $e \in RegExp(\Sigma)$, we want to show that
 \begin{align*}
-	D_a(r^2) &= D_a(r \cdot r) \\
-	&= D_a(abab)  \\
-	&= D_a(a)bab + D_a(bab) \\
-	&= \varepsilon bab + \emptyset \\
-	&= bab
+	D_a(e^n) &= D_a(e)e^{n-1}, \quad n>1.
 \end{align*}
 
+\noindent It is true that
+\begin{align*}
+	D_a(e) = D_a(e)e^0 = D_a(e). 
+\end{align*}
+
+\noindent We can also suppose that
+\begin{align*}
+	D_a(e^{n-1}) = D_a(e)e^{n-2}.
+\end{align*}
+
+\noindent We have that
+\begin{align*}
+	D_a(e^n) &= D_a(ee^{n-1}) \\
+	&= D_a(e)e^{n-1} + \varepsilon(e)D_a(e^{n-1}) \\
+	&= D_a(e)e^{n-1} + \varepsilon(e)D_a(e)e^{n-2} \\
+	&= (D_a(e)e + \varepsilon(e)D_a(e))e^{n-2} \\
+	&= (D_a(e)(e+\varepsilon(e)))e^{n-2} \\
+	&= D_a(e)e^{n-1}
+\end{align*}
+
+% ADD e^n results for n=0, n=1 and n>1
 
 \subsection{Bounded Repetition}
 Supplementing the fixed repetition notion, we now add a maximum bound so that $r$ can occur at least $n$ times and at maximum $m-1$ times: $r^{[n,m[}$.
@@ -48,6 +75,9 @@ This also extends for $r^{[m, \inf[}$, which is the same as having $r^m \cdot r^
 	&= bab + b(ab)^*
 \end{align*}
 
+\begin{align*}
+	D_a(e^{n,m})
+\end{align*}
 %For instance, if $m = 2$, we have that $r^{[2, \inf[}$
 
 The regular expression $r^{[2, \inf[}$ will match any $(ab)^k$ with $k \geq 2$.
