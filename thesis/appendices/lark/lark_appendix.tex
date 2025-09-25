@@ -1,0 +1,208 @@
+\appendix
+\chapter{Regular Expression Grammar With Bounded and Fixed Repetition}
+\label{appendix:regexp_lark}
+\begin{lstlisting}[caption={Lark grammar for regular expression parsing (with bounded/fixed repetition support)}]
+	start: rege
+
+	?rege: disjn
+		?disjn:  conjn
+			| rege _UNIONT conjn -> disj
+
+		?conjn: shufflen
+			|conjn _CONJT shufflen -> conj
+
+		?shufflen: concatn
+			| shufflen _SHUFFLET concatn -> shuffle
+
+		?concatn: rep
+			| concatn [_CONCATT] rep -> concat
+
+		?rep: lre
+			| rep _START -> star
+			| rep _PLUST -> plus
+			| rep _OPTIONT  -> option
+			| rep _CARET _LEFBR digit _RIGBR -> pow_min
+			| rep _CARET _LEFBR digit _COMMA digit _LEFBR -> pow_minmax
+			| rep _CARET _LEFBR digit _COMMA _INFTY _LEFBR -> pow_inf
+
+		?lre: base
+			| _NOTT  lre  -> notn
+			| _USHUFFLET  lre -> u_shuffle
+
+		?base: "(" rege ")" | symbol | epsilon | emptyset | sigmas | sigmap
+
+	_START: "*"
+	_SHUFFLET: ":"
+	_CONJT: "&"
+	_NOTT: "~"
+	_CONCATT: "."
+	_UNIONT: "+" | "|"
+	_OPTIONT: "-" | "?"
+	_TUPLET: "/"
+	_USHUFFLET: "!"
+	_CARET: "^"
+	_LEFBR: "["
+	_RIGBR: "]"
+	_INFTY: "..."
+	_COMMA: ","
+	_PLUST: "%"
+
+	digit: /[0-9]+/
+	symbol: /[a-zA-Z0-9]/
+
+	epsilon: "@epsilon"
+	emptyset: "@empty_set"
+	sigmap: "@sigmaP"
+	sigmas: "@sigmaS"
+
+	%ignore /[ \t\f\"]+/
+\end{lstlisting}
+
+\chapter{Repetition Regular Expression Builder Cases}
+\label{appendix:regexp_builders}
+\begin{lstlisting}[language=Python, caption={pow\_min: Fixed/Lower-bound-infinite Repetition Case}]
+	def pow_min(self, s, inf=False):
+		(arg, n_r) = s
+		n = int(n_r.children[0].value)
+		if inf:
+			if n == 0:
+				r = CStar(arg, sigma=self.sigma)
+			elif n == 1:
+				r = CPlus(arg, sigma=self.sigma)
+			else:
+				r = CCount(arg, n, -1, sigma=self.sigma)
+		else:
+			r = CPower(arg, n, sigma=self.sigma)
+		
+		return r
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={pow\_minmax: Bounded Repetition Case}]
+	def pow_minmax(self, s):
+		(arg, n_mi, n_ma) = s
+		n_min = n_mi.children[0].value
+		n_max = n_ma.children[0].value
+		
+		r = CCount(arg, n_min, n_max, sigma=self.sigma)
+		
+		if n_max != "inf":
+			if n_max == n_min:
+				r = CAtom(arg, self.sigma)
+
+		return r
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={pow\_inf: Lower-bound-infinite Repetition Case}]
+	def pow_inf(self, s):
+		return self.pow_min(s, True)
+\end{lstlisting}
+
+\chapter{Modified Position Automaton}
+\begin{algorithm}
+	\caption{\textsc{nfaPosCount}($R$): Construct Special Position Automaton}
+	\label{alg:nfaPosCount}
+	\begin{small}
+		\begin{algorithmic}[1]
+			\Require Regular expression $R$
+			\Ensure NFA $A$
+			
+			\State $A \gets$ new empty NFA
+			\State $i \gets A.\text{addInitialState}()$
+			\State $A.\text{addTransitionStar}(i, i)$ \Comment{Accept any symbol from $\Sigma$}
+			
+			\State $f_R \gets R.\text{marked}()$
+			\State $\text{stack} \gets$ empty stack
+			\State $\text{addedStates} \gets$ empty map
+			
+			\ForAll{$p \in First(f_R)$}
+			\State $q \gets A.\text{addState}(p)$
+			\State $\text{addedStates}[p] \gets q$
+			\State $\text{stack}.\text{push}((p, q))$
+			\State $A.\text{addTransition}(i, p, q)$
+			\EndFor
+			
+			% \State $\text{FollowSets} \gets Follow(f_R)$
+			
+			\While{stack is not empty}
+			\State $(s, s_{\text{idx}}) \gets \text{stack}.\text{pop}()$
+			\ForAll{$t \in Follow(f_R, s)$}
+			\If{$t \in \text{addedStates}$}
+			\State $q \gets \text{addedStates}[t]$
+			\Else
+			\State $q \gets A.\text{addState}(t)$
+			\State $\text{addedStates}[t] \gets q$
+			\State $\text{stack}.\text{push}((t, q))$
+			\EndIf
+			\State $A.\text{addTransition}(s_{\text{idx}}, t, q)$
+			\EndFor
+			\EndWhile
+			
+			\State $e \gets A.\text{addState}()$
+			\State $A.\text{addTransitionStar}(e, e)$
+			
+			\ForAll{$p \in f_R.\text{Last}()$}
+			\If{$p \in \text{addedStates}$}
+			\State $A.\text{addFinal}(\text{addedStates}[p])$
+			\State $A.\text{addTransitionStar}(\text{addedStates}[p], e)$
+			\EndIf
+			\EndFor
+			
+		\end{algorithmic}
+	\end{small}
+\end{algorithm}
+
+\chapter{Multiple Matching Evaluator}
+\begin{algorithm}
+	\caption{\textsc{tableMatcher}$(A, s)$: Modified Position Automaton Multi-matcher}
+	\label{alg:table-matcher}
+	\begin{small}
+		\begin{algorithmic}[1]
+			\Require $A = (\Sigma, Q, \delta, I, F)$: NFA
+			\Require $s$: input string
+			\Ensure $M$: mapping from final states to lists of match positions
+			
+			\State $symbols \gets$ list with $\varepsilon$ prepended to $s$
+			\State $currentRow \gets$ empty map from states to list of position pairs
+			\State $finalMatches \gets$ empty map from states to list of matches
+			\State $position \gets 0$
+			
+			\ForAll{$sym$ in $symbols$}
+			\If{$sym = \varepsilon$}
+			\ForAll{$q_0 \in I$}
+			\State $currentRow[q_0] \gets [(0, 0)]$
+			\EndFor
+			\Else
+			\State $nextRow \gets$ empty map
+			\If{$sym \in \Sigma$}
+			\ForAll{$q \in$ \textbf{keys}($currentRow$)}
+			% \State $transitions \gets \delta(q, sym)$
+			\If{$|\delta(q, sym)| > 0$}
+			\ForAll{$q' \in \delta(q, sym)$}
+			\ForAll{$(start, \_) \in currentRow[q]$}
+			\If{$q' = q$ and $q' \in I$}
+			\State append $(position, position)$ to $nextRow[q']$
+			\Else
+			\State append $(start, position)$ to $nextRow[q']$
+			\If{$q' \in F$}
+			\State append $(start, position)$ to $finalMatches[q']$
+			\EndIf
+			\EndIf
+			\EndFor
+			\EndFor
+			\EndIf
+			\EndFor
+			\Else
+			\Comment{Symbol not in $\Sigma$; treat as fresh start}
+			\ForAll{$q_0 \in I$}
+			\State $nextRow[q_0] \gets [(position, position)]$
+			\EndFor
+			\EndIf
+			\State $currentRow \gets nextRow$
+			\State $position \gets position + 1$
+			\EndIf
+			\EndFor
+			\State \Return $finalMatches$
+		\end{algorithmic}
+	\end{small}
+\end{algorithm}
+

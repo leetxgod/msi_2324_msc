@@ -1,0 +1,19 @@
+%\appendix
+%\chapter{Repetition Regular Expression Builder Cases}
+%\label{appendix:regexp_builders}
+%\begin{lstlisting}[caption={pow\_min: Fixed Repetition Case}]
+%	def pow_min(self, s, inf=False):
+%	(arg, n_r) = s
+%	n = int(n_r.children[0].value)
+%	if inf:
+%	if n == 0:
+%	r = CStar(arg, sigma=self.sigma)
+%	elif n == 1:
+%	r = CPlus(arg, sigma=self.sigma)
+%	else:
+%	r = CCount(arg, n, -1, sigma=self.sigma)
+%	else:
+%	r = CPower(arg, n, sigma=self.sigma)
+%	
+%	return r
+%\end{lstlisting}

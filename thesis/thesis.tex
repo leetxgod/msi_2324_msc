@@ -78,6 +78,9 @@ pdfpagelabels=false
 \newtheorem{defn}{Definition}[section]
 \newtheorem{thm}{Theorem}[section]
 
+\newcommand{\N}{{\mathbb{N}_{0}}}
+\newcommand{\Npos}{{\mathbb{N}^{+}}}
+
 
 \begin{document}
 
@@ -128,6 +131,8 @@ pdfpagelabels=false
 %\chapter{Desenvolvimento}\label{chap:dese}
 \include{chapters/matching/matching}
 
+\include{chapters/conclusion/conclusion}
+
 %\chapter{Resultados e análise}\label{chap:results}
 % \include{chap-results} 
 
@@ -140,6 +145,9 @@ pdfpagelabels=false
 %\include{appendices/algorithms/nfa-pos-count}
 %\include{appendices/algorithms/table-matcher}
 %% \include{app1}
+
+\include{appendices/lark/lark_appendix}
+%\include{appendices/code/builder_cases}
 
 %% references
 %\renewcommand{\bibname}{Referências} % o babel portuguese coloca Bibliografia

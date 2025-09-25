@@ -1,8 +1,150 @@
+%One can find all matches over an input string by constructing the modified position automaton from a regular expression and then simulating the automaton's transitions over the input string.
+%The algorithm presented in this section is designed to track the start and end positions of all matches, including overlapping ones, without relying on backtracking.
+
+
+%We can enable overlapped matching by modifying the position automaton's construction using the algorithm described on  \ref{alg:nfaPosCount}.
+%For instance, consider the following regular expression:
+%\begin{gather*}
+%	r = (ab+ba)^2
+%\end{gather*}
+
+%\begin{algorithm}[H]
+%\caption{\textsc{nfaPosCount}($R$): Construct Special Position Automaton}
+%\label{alg:nfaPosCount}
+%\begin{small}
+%\begin{algorithmic}[1]
+%\Require Regular expression $R$
+%\Ensure NFA $A$
+%
+%\State $A \gets$ new empty NFA
+%\State $i \gets A.\text{addInitialState}()$
+%\State $A.\text{addTransitionStar}(i, i)$ \Comment{Accept any symbol from $\Sigma$}
+%
+%\State $f_R \gets R.\text{marked}()$
+%\State $\text{stack} \gets$ empty stack
+%\State $\text{addedStates} \gets$ empty map
+%
+%\ForAll{$p \in First(f_R)$}
+%    \State $q \gets A.\text{addState}(p)$
+%    \State $\text{addedStates}[p] \gets q$
+%    \State $\text{stack}.\text{push}((p, q))$
+%    \State $A.\text{addTransition}(i, p, q)$
+%\EndFor
+%
+%% \State $\text{FollowSets} \gets Follow(f_R)$
+%
+%\While{stack is not empty}
+%    \State $(s, s_{\text{idx}}) \gets \text{stack}.\text{pop}()$
+%    \ForAll{$t \in Follow(f_R, s)$}
+%        \If{$t \in \text{addedStates}$}
+%            \State $q \gets \text{addedStates}[t]$
+%        \Else
+%            \State $q \gets A.\text{addState}(t)$
+%            \State $\text{addedStates}[t] \gets q$
+%            \State $\text{stack}.\text{push}((t, q))$
+%        \EndIf
+%        \State $A.\text{addTransition}(s_{\text{idx}}, t, q)$
+%    \EndFor
+%\EndWhile
+%
+%\State $e \gets A.\text{addState}()$
+%\State $A.\text{addTransitionStar}(e, e)$
+%
+%\ForAll{$p \in f_R.\text{Last}()$}
+%    \If{$p \in \text{addedStates}$}
+%        \State $A.\text{addFinal}(\text{addedStates}[p])$
+%        \State $A.\text{addTransitionStar}(\text{addedStates}[p], e)$
+%    \EndIf
+%\EndFor
+%
+%\end{algorithmic}
+%\end{small}
+%\end{algorithm}
+
+%\section{Automata-Based Matching}
+%
+%Given a regular expression $R$, one can construct an NFA $A$ such that $L(A) = L(R)$. Matching then reduces to verifying whether the automaton $A$ accepts the input string $s$. In DFA-based engines, each character of the input leads to a deterministic transition from one state to another, resulting in a guaranteed linear-time match. In contrast, NFA-based engines may involve branching paths due to nondeterminism and can require simulating multiple transitions concurrently.
+
+% \section{Backtracking and Performance Implications}
+
+% Many practical regular expression engines (such as those in Java, Perl, and Python) implement matching using \emph{backtracking}, which simulates an NFA by exploring all possible paths through the automaton recursively. While this allows support for rich and flexible patterns, it can introduce performance issues in certain cases. In particular, patterns with nested or ambiguous quantifiers may cause excessive backtracking, leading to exponential runtime in the worst case—a phenomenon known as \emph{regular expression denial of service} (ReDoS).
+%\section {Matching with the Modified Position Automaton}
+
+%\begin{algorithm}[H]
+%\caption{\textsc{tableMatcher}$(A, s)$: Modified Position Automaton Multi-matcher}
+%\label{alg:table-matcher}
+%\begin{small}
+%\begin{algorithmic}[1]
+%\Require $A = (\Sigma, Q, \delta, I, F)$: NFA
+%\Require $s$: input string
+%\Ensure $M$: mapping from final states to lists of match positions
+%
+%\State $symbols \gets$ list with $\varepsilon$ prepended to $s$
+%\State $currentRow \gets$ empty map from states to list of position pairs
+%\State $finalMatches \gets$ empty map from states to list of matches
+%\State $position \gets 0$
+%
+%\ForAll{$sym$ in $symbols$}
+%    \If{$sym = \varepsilon$}
+%        \ForAll{$q_0 \in I$}
+%            \State $currentRow[q_0] \gets [(0, 0)]$
+%        \EndFor
+%    \Else
+%        \State $nextRow \gets$ empty map
+%        \If{$sym \in \Sigma$}
+%            \ForAll{$q \in$ \textbf{keys}($currentRow$)}
+%                % \State $transitions \gets \delta(q, sym)$
+%                \If{$|\delta(q, sym)| > 0$}
+%                    \ForAll{$q' \in \delta(q, sym)$}
+%                        \ForAll{$(start, \_) \in currentRow[q]$}
+%                            \If{$q' = q$ and $q' \in I$}
+%                                \State append $(position, position)$ to $nextRow[q']$
+%                            \Else
+%                                \State append $(start, position)$ to $nextRow[q']$
+%                                \If{$q' \in F$}
+%                                    \State append $(start, position)$ to $finalMatches[q']$
+%                                \EndIf
+%                            \EndIf
+%                        \EndFor
+%                    \EndFor
+%                \EndIf
+%            \EndFor
+%        \Else
+%            \Comment{Symbol not in $\Sigma$; treat as fresh start}
+%            \ForAll{$q_0 \in I$}
+%                \State $nextRow[q_0] \gets [(position, position)]$
+%            \EndFor
+%        \EndIf
+%        \State $currentRow \gets nextRow$
+%        \State $position \gets position + 1$
+%    \EndIf
+%\EndFor
+%\State \Return $finalMatches$
+%\end{algorithmic}
+%\end{small}
+%\end{algorithm}
+
+%\clearpage
+
 \chapter{Matching}\label{chap:matching}
 % Matching is used to search, validate, or extract parts of text based on these patterns. For example, a regex can be used to find all dates in a document or to ensure a password meets certain rules.
 
 \emph{Matching} is the process of checking whether a piece of text fits a specific pattern described using a regular expression (regex).
 In this chapter, we will discuss the different approaches to matching regular expressions, the implications of using them, and the performance considerations that arise from these choices. Furthermore, we will also present a novel approach based on a modified position automata, which aims to mitigate the performance issues associated with traditional regex engines while preserving some of the extended expressiveness of regex patterns.
+
+\section{Multiple Matching}
+\label{sec:multimatching}
+The definition of single matching was introduced in \ref{defn:single_matching}. Now, the concept of multiple matching is simply to get all the matches of a given regular expression within an input text.
+We can define it formally like so,
+\begin{defn}
+	Let $r \in RegExp(\Sigma)$, $(i,j) \in \Npos^2$ where $j>i$, and $t \in \Sigma^\star$.
+	\begin{align*}
+		\text{matches($r$, $t$)} = \{
+			(i,j) \mid \exists w \in L(r), \ t \in \Sigma^i w \Sigma^j
+		\}
+	\end{align*}
+\end{defn}
+Informally, we want to capture the positions in $t$ where a matching substring is between a prefix of length $i$ and a suffix of length $j$.
 
 \section{Overlapped versus Non-Overlapped Matching}
 \label{sec:overlap-vs-nonoverlap}
@@ -12,7 +154,7 @@ In the context of regular expression matching, two distinct paradigms exist: \em
 \subsection*{Overlapped Matching}
 Overlapped matching refers to finding all possible matches of a pattern in an input string. This is typically achieved by attempting a match starting at every index of the input. It is more exhaustive and useful in domains where no potential match should be missed, such as bioinformatics (DNA pattern searching).
 
-For example, the indexed string $w = a_0 a_1 a_2 a_3$, when matched against using the pattern $aa$, will yield the following matched substrings:
+For example, the indexed string $w = a_0 a_1 a_2 a_3$, when matched against using the pattern $r=aa$, will yield the following matched substrings:
 
 \begin{itemize}
 	\item $w_{[0,2[} = {\color{red}{aa}}aa$
@@ -23,146 +165,69 @@ For example, the indexed string $w = a_0 a_1 a_2 a_3$, when matched against usin
 \subsection*{Non-Overlapped Matching}
 Non-overlapped matching (also referred to as \emph{disjoint}, \emph{standard}, or in some engines, \emph{greedy} matching) finds matches sequentially from left to right, and once a match is found, it advances the input pointer beyond the match. Unlike overlapped matchers, where overlapping is a feature by default, greedy matchers will often depend on the lookahead assertions to do so.
 
-Using the same pattern $aa$ on $w = a_0 a_1 a_2 a_3$, a non-overlapped matcher may return:
+Using the same pattern $r=aa$ on $w = a_0 a_1 a_2 a_3$, a non-overlapping matcher may return:
 
 \begin{itemize}
 	\item $w_{[0,2[} = {\color{red}{aa}}aa$
 	\item $w_{[2,4[} = aa{\color{red}{aa}}$
 \end{itemize}
 
+As an example, this is the exact behaviour that PCRE2 demonstrates when trying to match for $aa$ on an input text $aaaa$.
+
 To summarize, overlapped matching provides a more complete view of potential matches, but at a higher computational cost. It is particularly well-suited to automata-based approaches like the modified position automaton described in this work.
 
 
-\section{Modified Position Automata}
-A \emph{position automaton} is a type of nondeterministic finite automaton (NFA).
-We can enable overlapped matching by modifying the position automaton's construction using the algorithm described on  \ref{alg:nfaPosCount}.
-
-\begin{algorithm}[H]
-\caption{\textsc{nfaPosCount}($R$): Construct Special Position Automaton}
-\label{alg:nfaPosCount}
-\begin{small}
-\begin{algorithmic}[1]
-\Require Regular expression $R$
-\Ensure NFA $A$
-
-\State $A \gets$ new empty NFA
-\State $i \gets A.\text{addInitialState}()$
-\State $A.\text{addTransitionStar}(i, i)$ \Comment{Accept any symbol from $\Sigma$}
-
-\State $f_R \gets R.\text{marked}()$
-\State $\text{stack} \gets$ empty stack
-\State $\text{addedStates} \gets$ empty map
-
-\ForAll{$p \in First(f_R)$}
-    \State $q \gets A.\text{addState}(p)$
-    \State $\text{addedStates}[p] \gets q$
-    \State $\text{stack}.\text{push}((p, q))$
-    \State $A.\text{addTransition}(i, p, q)$
-\EndFor
-
-% \State $\text{FollowSets} \gets Follow(f_R)$
-
-\While{stack is not empty}
-    \State $(s, s_{\text{idx}}) \gets \text{stack}.\text{pop}()$
-    \ForAll{$t \in Follow(f_R, s)$}
-        \If{$t \in \text{addedStates}$}
-            \State $q \gets \text{addedStates}[t]$
-        \Else
-            \State $q \gets A.\text{addState}(t)$
-            \State $\text{addedStates}[t] \gets q$
-            \State $\text{stack}.\text{push}((t, q))$
-        \EndIf
-        \State $A.\text{addTransition}(s_{\text{idx}}, t, q)$
-    \EndFor
-\EndWhile
-
-\State $e \gets A.\text{addState}()$
-\State $A.\text{addTransitionStar}(e, e)$
-
-\ForAll{$p \in f_R.\text{Last}()$}
-    \If{$p \in \text{addedStates}$}
-        \State $A.\text{addFinal}(\text{addedStates}[p])$
-        \State $A.\text{addTransitionStar}(\text{addedStates}[p], e)$
-    \EndIf
-\EndFor
-
-\end{algorithmic}
-\end{small}
-\end{algorithm}
-
-\section{Automata-Based Matching}
-
-Given a regular expression $R$, one can construct an NFA $A$ such that $L(A) = L(R)$. Matching then reduces to verifying whether the automaton $A$ accepts the input string $s$. In DFA-based engines, each character of the input leads to a deterministic transition from one state to another, resulting in a guaranteed linear-time match. In contrast, NFA-based engines may involve branching paths due to nondeterminism and can require simulating multiple transitions concurrently.
-
-% \section{Backtracking and Performance Implications}
-
-% Many practical regular expression engines (such as those in Java, Perl, and Python) implement matching using \emph{backtracking}, which simulates an NFA by exploring all possible paths through the automaton recursively. While this allows support for rich and flexible patterns, it can introduce performance issues in certain cases. In particular, patterns with nested or ambiguous quantifiers may cause excessive backtracking, leading to exponential runtime in the worst case—a phenomenon known as \emph{regular expression denial of service} (ReDoS).
-
-For example, consider the following regex pattern:
-\begin{verbatim}
-	^(a+)+$
-\end{verbatim}
-
-\section {Matching with the Modified Position Automaton}
-One can find all matches over an input string by constructing the modified position automaton from a regular expression and then simulating the automaton's transitions over the input string. The algorithm presented in this section is designed to track the start and end positions of all matches, including overlapping ones, without relying on backtracking.
-
-\begin{algorithm}[H]
-\caption{\textsc{tableMatcher}$(A, s)$: Modified Position Automaton Multi-matcher}
-\label{alg:table-matcher}
-\begin{small}
-\begin{algorithmic}[1]
-\Require $A = (\Sigma, Q, \delta, I, F)$: NFA
-\Require $s$: input string
-\Ensure $M$: mapping from final states to lists of match positions
-
-\State $symbols \gets$ list with $\varepsilon$ prepended to $s$
-\State $currentRow \gets$ empty map from states to list of position pairs
-\State $finalMatches \gets$ empty map from states to list of matches
-\State $position \gets 0$
-
-\ForAll{$sym$ in $symbols$}
-    \If{$sym = \varepsilon$}
-        \ForAll{$q_0 \in I$}
-            \State $currentRow[q_0] \gets [(0, 0)]$
-        \EndFor
-    \Else
-        \State $nextRow \gets$ empty map
-        \If{$sym \in \Sigma$}
-            \ForAll{$q \in$ \textbf{keys}($currentRow$)}
-                % \State $transitions \gets \delta(q, sym)$
-                \If{$|\delta(q, sym)| > 0$}
-                    \ForAll{$q' \in \delta(q, sym)$}
-                        \ForAll{$(start, \_) \in currentRow[q]$}
-                            \If{$q' = q$ and $q' \in I$}
-                                \State append $(position, position)$ to $nextRow[q']$
-                            \Else
-                                \State append $(start, position)$ to $nextRow[q']$
-                                \If{$q' \in F$}
-                                    \State append $(start, position)$ to $finalMatches[q']$
-                                \EndIf
-                            \EndIf
-                        \EndFor
-                    \EndFor
-                \EndIf
-            \EndFor
-        \Else
-            \Comment{Symbol not in $\Sigma$; treat as fresh start}
-            \ForAll{$q_0 \in I$}
-                \State $nextRow[q_0] \gets [(position, position)]$
-            \EndFor
-        \EndIf
-        \State $currentRow \gets nextRow$
-        \State $position \gets position + 1$
-    \EndIf
-\EndFor
-\State \Return $finalMatches$
-\end{algorithmic}
-\end{small}
-\end{algorithm}
-
-\clearpage
-
-As an example, consider the following regular expression $R$ and input string $w$:
+\section{Modified Position Automaton}
+In order to perform multiple matching, we had to use a different automaton. A \emph{position automaton} is a construction that transforms a regular expression into a nondeterministic finite automaton (NFA) (\ref{chap:prelim:pos_auto}). The key component to this construction is the fact that each state corresponds to a position in the regular expression.
+For instance, let $r = a^{2,4}$. This expression can be built using Brzozowski's derivatives construction. The resulting DFA can be seen below:
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto,initial text=]
+		\node[state,initial]            (q0) {0};
+		\node[state]           [right=of q0] (q1) {1};
+		\node[state,accepting] [right=of q1] (q2) {2};
+		\node[state,accepting] [right=of q2] (q3) {3};
+		\node[state]           [right=of q3] (q4) {4};
+		
+		\path[->]
+		(q0) edge node {$a$} (q1)
+		(q1) edge node {$a$} (q2)
+		(q2) edge node {$a$} (q3)
+		(q3) edge node {$a$} (q4)
+		(q4) edge[loop above] node {$a$} ();
+	\end{tikzpicture}
+	\caption{DFA resulting from Brzozowski's derivatives construction for the expression $r=a^{2,4}$.}
+\end{figure}
+As seen above, there is no distinct branching of states. This means that we can't track the positions for each match, nor can we continually input text into the automaton.
+Now, building using the modified position automaton construction from \ref{alg:nfaPosCount} results in the NFA represented below:
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt, node distance=2cm, on grid, auto, initial text=]
+		\node[state, initial]            (q0) {0};
+		\node[state]           [above right=of q0] (q1) {1};
+		\node[state, accepting]           [right=of q1]       (q5) {5};
+		\node[state] [right=of q5]      (q6) {6};
+		\node[state]           [below right=of q0] (q2) {2};
+		\node[state]           [right=of q2]       (q3) {3};
+		\node[state, accepting] [right=of q3]      (q4) {4};
+		
+		% Transitions
+		\path[->]
+		(q0) edge[loop below] node {$a$} ()
+		edge node {$a$} (q1)
+		edge node {$a$} (q2)
+		(q1) edge node {$a$} (q5)
+		(q2) edge node {$a$} (q3)
+		(q3) edge node {$a$} (q4)
+		(q5) edge node {$a$} (q6)
+		(q4) edge node {$a$} (q6)
+		(q6) edge[loop right] node {$a$} ();
+	\end{tikzpicture}
+	\caption{NFA resulting from the modified position automaton construction for the expression $r=a^{2,4}$.}
+\end{figure}
+This NFA now contains two different branches, one that captures all the matches for $aa$ and another one that captures all the matches for $aaa$. Also, it can continuously match due to the loops on states $0$ and $6$.
+To demonstrate the matcher logic, it is better to implement a more complex regular expression.
+Consider the following regular expression $R$ and input word $w$:
 \begin{center}
 	$R = (aa+aaa)(aaa+aa)$ \break
 	$w = aaaaabaaaaa$
@@ -173,14 +238,11 @@ We can separate $R$ into two matching groups:
 	\item The first group $(aa+aaa)$ will match either two or three $a$ symbols (e.g. $aaa$ will yield three overlapped matches: ${\color{red}{aa}}a$, $a{\color{red}{aa}}$ and ${\color{red}{aaa}}$).
 	\item The second group $(aaa+aa)$ will also match either two or three $a$ symbols, much like the first group.
 \end{itemize}
-
-
-
 The Glushkov automaton construction for $R$ is as follows:
 
 \begin{figure}[H]
 	\centering
-	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
 		\node[state, initial] (q0) {$q_0$};
 		\node[state] (q2) [above right=of q0] {$q_2$};
 		\node[state] (q3) [right=of q2] {$q_3$};
@@ -194,18 +256,18 @@ The Glushkov automaton construction for $R$ is as follows:
 		\node[state] (q6) [right=of q10] {$q_6$};
 		\node[state,accepting] (q7) [right=of q6] {$q_7$};
 		
-		\path[->]	(q0)	edge	node	{a} (q1)
-		edge	node	{a} (q2)
-		(q1)	edge	node	{a} (q10)
-		(q10)	edge	node	{a} (q6)
-		(q10)	edge	node	{a} (q5)
-		(q6)	edge	node	{a} (q7)
-		(q2)	edge	node	{a} (q3)
-		(q3)	edge	node	{a} (q4)
-		(q4)	edge	node	{a} (q5)
-		(q4)	edge	node	{a} (q6)
-		(q5)	edge	node	{a} (q8)
-		(q8)	edge	node	{a} (q9);
+		\path[->]	(q0)	edge	node	{$a$} (q1)
+		edge	node	{$a$} (q2)
+		(q1)	edge	node	{$a$} (q10)
+		(q10)	edge	node	{$a$} (q6)
+		(q10)	edge	node	{$a$} (q5)
+		(q6)	edge	node	{$a$} (q7)
+		(q2)	edge	node	{$a$} (q3)
+		(q3)	edge	node	{$a$} (q4)
+		(q4)	edge	node	{$a$} (q5)
+		(q4)	edge	node	{$a$} (q6)
+		(q5)	edge	node	{$a$} (q8)
+		(q8)	edge	node	{$a$} (q9);
 	\end{tikzpicture}
 	\caption{Default Glushkov automaton}
 \end{figure}
@@ -216,7 +278,7 @@ Meanwhile, the modified position automaton for this regular expression can be co
 
 \begin{figure}[H]
 	\centering
-	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto]
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
 		\node[state, initial] (q0) {$q_0$};
 		\node[state] (q2) [above right=of q0] {$q_2$};
 		\node[state] (q3) [right=of q2] {$q_3$};
@@ -232,22 +294,22 @@ Meanwhile, the modified position automaton for this regular expression can be co
 		
 		\node[state] (q11) [below right=of q9,right=of q7] {$q_{11}$};
 		
-		\path[->]	(q0)	edge	node	{a} (q1)
-		edge	node	{a} (q2)
-		edge [loop above] node {$\sigma$} ()
-		(q1)	edge	node	{a} (q10)
-		(q10)	edge	node	{a} (q6)
-		(q10)	edge	node	{a} (q5)
-		(q6)	edge	node	{a} (q7)
-		(q7)	edge	node	{$\sigma$} (q11)
-		(q2)	edge	node	{a} (q3)
-		(q3)	edge	node	{a} (q4)
-		(q4)	edge	node	{a} (q5)
-		(q4)	edge	node	{a} (q6)
-		(q5)	edge	node	{a} (q8)
-		(q8)	edge	node	{a} (q9)
-		(q9)	edge	node	{$\sigma$} (q11)
-		(q11)	edge [loop below] node {$\sigma$} ();
+		\path[->]	(q0)	edge	node	{$a$} (q1)
+		edge	node	{$a$} (q2)
+		edge [loop above] node {$\Sigma$} ()
+		(q1)	edge	node	{$a$} (q10)
+		(q10)	edge	node	{$a$} (q6)
+		(q10)	edge	node	{$a$} (q5)
+		(q6)	edge	node	{$a$} (q7)
+		(q7)	edge	node	{$\Sigma$} (q11)
+		(q2)	edge	node	{$a$} (q3)
+		(q3)	edge	node	{$a$} (q4)
+		(q4)	edge	node	{$a$} (q5)
+		(q4)	edge	node	{$a$} (q6)
+		(q5)	edge	node	{$a$} (q8)
+		(q8)	edge	node	{$a$} (q9)
+		(q9)	edge	node	{$\Sigma$} (q11)
+		(q11)	edge [loop below] node {$\Sigma$} ();
 	\end{tikzpicture}
 	\caption{Modified Glushkov automaton}
 	\label{fig:modified_glushkov_automaton}
@@ -300,7 +362,7 @@ The result is a table that maps each accepting state to a set of index pairs, ea
 First, we always have to account for $\varepsilon$, since there is the possibility of having the empty word and we also want to match against it.
 After that, every symbol $s \in w$ is processed sequentially.
 
-At each step, the algorithm updates a row that maps the automaton's (represented in \ref{fig:modified_glushkov_automaton}) states to sets of position intervals $(i,j)$, such that the substring $w_{ij}$ corresponds to a valid match, whether it is overlapped or not.\\
+At each step, the algorithm updates a row that maps the automaton's (represented in \ref{fig:modified_glushkov_automaton}) states to sets of position intervals $(i,j)$, such that the substring $w_{ij}$ corresponds to a valid match, whether it is overlapped or not.
 
 Transitions are computed for each input symbol using the automaton's $\delta$ function. When a final state is reached, the interval is stored as a successful match. Furthermore, during this process, only the last symbol's computed transitions and position intervals are preserved because they always carry over to the current symbol's computation.
 
@@ -343,7 +405,45 @@ For those states, the resulting match table yields the following:
 	\end{minipage}
 \end{table}
 
-Recalling the regular expression used $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$, 
+As seen above, we are able to get all the matches possible (even overlapped ones) for the given input word $w$, along with their positions.
+
+\section{Implementation in FAdo}
+In order to support these new operations in \textit{FAdo}, a new class was created. This new \texttt{matchNFA} class inherits from the \texttt{NFA} class. In it, several methods were implemented.
+\begin{lstlisting}[language=Python]
+	class matchNFA(NFA):
+		def __init__(self):
+			NFA.__init__(self)
+		
+		def table_matcher(self, input_text: str):
+			...
+			
+		def enum_matches(self, match_table: dict, input_text: str):
+			match_count = 0
+			for entry in pos_tab:
+				print(f"State {entry} matches ({len(set(pos_tab[entry]))}):")
+				match_set = set(pos_tab[entry])
+				match_count += len(match_set)
+				for match in sorted(match_set):
+					first_index = string[0:match[0]]
+					second_index = string[match[1]:]
+					print("Match:", colored(first_index, 'red') + colored(string[match[0]:match[1]], 'green') + colored(second_index, 'red'), "=>", match)
+			print("Total matches:", match_count)
+	
+	def nfaPosCount(self: RegExp):
+		...
+	
+	setattr(RegExp, "nfaPosCount", nfaPosCount)
+\end{lstlisting}
+
+\begin{itemize}
+	\item \texttt{table\_matcher} is the algorithm (can be seen in \ref{alg:table-matcher}) that creates the matching table, 
+	\item \texttt{enum\_matches} is the algorithm that displays the formatted matching table data,
+	\item \texttt{nfaPosCount} is the modified position automaton builder (can be seen in \ref{alg:nfaPosCount}).
+\end{itemize}
+
+The \texttt{nfaPosCount} function is defined outside of \texttt{matchNFA}'s scope because, even though it can be fully integrated into \texttt{FAdo}, it still isn't. The \texttt{setattr} function is used to add this method to the \texttt{RegExp} class after it has been defined, so that it can later be used in other components of \texttt{FAdo}.
+
+%Recalling the regular expression used $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$, 
 
 %As shown in \ref{fig:pos_match_tbl}, the algorithm parses every input symbol. 
 

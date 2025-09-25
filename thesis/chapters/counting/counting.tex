@@ -5,50 +5,99 @@ In this chapter, we will explore the concept of counting in the context of forma
 In formal language theory, counting refers to the ability of a language or an automaton to enforce numeric constraints over the number of symbols or patterns within strings. Specifically, it deals with the ability to recognize whether certain elements occur a specified number of times—or in a specific numerical relationship to others.
 Current tools are already able to do this, including some non-backtracking matchers.
 
-\section{Derivatives of operations in Extended Regular Expressions}
-Given a word $w = xyz$ and a regular expression $\alpha$, $w \in L(\alpha)$ if $\varepsilon(D_w(\alpha)) = \varepsilon$.
+\section{Derivatives of operations in Extended Regular Expressions} %TODO: CHANGE THIS
+Given a word $w = xyz$ and a regular expression $\alpha$, $w \in L(\alpha)$ if $\varepsilon(d_w(\alpha)) = \varepsilon$.
 In order to match with fixed and bounded repetition, one must first solve the derivatives for those operations.
 
-%So, in order to match regular expressions, one must first solve the derivatives for fixed and bounded repetition.
-
-\break
+\begin{thm}
+	Given $e \in RegExp(\Sigma)$, the following holds:
+	\begin{align*}
+		\varepsilon(e) + e = e
+	\end{align*}
+\end{thm}
+\begin{proof}
+	Let $e \in RegExp(\Sigma)$. The proof is by iterating through both possible scenarios where $\varepsilon \in L(e)$ and $\varepsilon \notin L(e)$.
+	For $\varepsilon \in L(e)$, we have that $\varepsilon(e) = \varepsilon$. And so,
+	\begin{align*}
+		& \varepsilon(e) + e = e \\
+		& \Rightarrow \varepsilon + e = e \\
+		& \Rightarrow e = e
+	\end{align*}
+	holds. On the other hand, for $\varepsilon \notin L(e)$, we have that $\varepsilon(e) = \emptyset$. Therefore,
+	\begin{align*}
+		& \varepsilon(e) + e = e \\
+		& \Rightarrow \emptyset + e = e \\
+		& \Rightarrow e = e
+	\end{align*}
+	also holds.
+\end{proof}
 
 \subsection{Fixed Repetition}
 For a fixed repetition, we need $r$ to occur $n$ times, resulting in the notion $r^n$.
-
-%\noindent Given $r = ab$ such that $r^2 = abab$, we have:
-%\begin{align*}
-%	D_a(r^2) &= D_a(r \cdot r) \\
-%	&= D_a(abab)  \\
-%	&= D_a(a)bab + D_a(bab) \\
-%	&= \varepsilon bab + \emptyset \\
-%	&= bab
-%\end{align*}
-
 % PROOF
-\noindent Given $e \in RegExp(\Sigma)$, we want to show that
-\begin{align*}
-	D_a(e^n) &= D_a(e)e^{n-1}, \quad n>1.
-\end{align*}
+%\begin{thm}
+%	Given $e \in RegExp(\Sigma)$ and $n \in \Npos$, we have that
+%	\begin{align*}
+%		d_a(e^n) = d_a(e)e^{n-1}
+%	\end{align*}
+%	is true.
+%\end{thm}
+%\begin{proof}
+%	Let $e \in RegExp(\Sigma)$ and $n \in \Npos$. The following holds:
+%	\begin{align*}
+%		d_a(e) = d_a(e)e^0 = d_a(e)
+%	\end{align*}
+%	We can also suppose that
+%	\begin{align*}
+%		d_a(e^{n-1}) = d_a(e)e^{n-2}
+%	\end{align*}
+%	And so, we can use the results above to do the following:
+%	\begin{align*}
+%		d_a(e^n) &= d_a(ee^{n-1}) \\
+%		&= d_a(e)e^{n-1} + \varepsilon(e)d_a(e^{n-1}) \\
+%		&= d_a(e)e^{n-1} + \varepsilon(e)d_a(e)e^{n-2} \\
+%		&= (d_a(e)e + \varepsilon(e)d_a(e))e^{n-2} \\
+%		&= (d_a(e)(e+\varepsilon(e)))e^{n-2} \\
+%		&= d_a(e)e^{n-1}
+%	\end{align*}
+%\end{proof}
+\begin{thm}
+	\label{thm:fixed_repetition_derivative}
+	Given $e \in RegExp(\Sigma)$ and $n \in \Npos$, we have:
+	\begin{align*}
+		d_a(e^n) = d_a(e)\,e^{n-1}.
+	\end{align*}
+\end{thm}
 
-\noindent It is true that
-\begin{align*}
-	D_a(e) = D_a(e)e^0 = D_a(e). 
-\end{align*}
+\begin{proof}
+	We proceed by induction on $n \in \Npos$. For the base case \( n = 1 \),
+	\begin{align*}
+		d_a(e^1) = d_a(e) = d_a(e)e^0 = d_a(e)\varepsilon = d_a(e).
+	\end{align*}
+	Since the identity holds for \(n = 1\), lets assume that the identity holds for some \(n-1 \geq 1\), i.e.,
+	\begin{align*}
+		d_a(e^{n-1}) = d_a(e)e^{n-2}.
+	\end{align*}
+	We want to show it holds for \(n\). Using the product rule:
+	\begin{align*}
+		d_a(e^n) &= d_a(ee^{n-1}) \\
+		&= d_a(e) e^{n-1} + \varepsilon(e) d_a(e^{n-1}) \\
+		&= d_a(e) e^{n-1} + \varepsilon(e) d_a(e) e^{n-2} \\
+		&= d_a(e) \left(e^{n-1} + \varepsilon(e) e^{n-2}\right) \\
+		&= d_a(e) \left(ee^{n-2} + \varepsilon(e) e^{n-2}\right) \\
+		&= d_a(e) (e + \varepsilon(e))e^{n-2} \\
+		&= d_a(e) e^{n-1}.
+	\end{align*}
+	This completes the induction.
+\end{proof}
 
-\noindent We can also suppose that
+As an example, let $r = ab$ such that $r^2 = abab$. Replacing with the theorem above:
 \begin{align*}
-	D_a(e^{n-1}) = D_a(e)e^{n-2}.
-\end{align*}
-
-\noindent We have that
-\begin{align*}
-	D_a(e^n) &= D_a(ee^{n-1}) \\
-	&= D_a(e)e^{n-1} + \varepsilon(e)D_a(e^{n-1}) \\
-	&= D_a(e)e^{n-1} + \varepsilon(e)D_a(e)e^{n-2} \\
-	&= (D_a(e)e + \varepsilon(e)D_a(e))e^{n-2} \\
-	&= (D_a(e)(e+\varepsilon(e)))e^{n-2} \\
-	&= D_a(e)e^{n-1}
+	d_a(r^2) &= d_a(r \cdot r) \\
+	&= d_a(abab)  \\
+	&= d_a(a)bab + d_a(bab) \\
+	&= \varepsilon bab + \emptyset \\
+	&= bab
 \end{align*}
 
 % ADD e^n results for n=0, n=1 and n>1
@@ -56,53 +105,152 @@ For a fixed repetition, we need $r$ to occur $n$ times, resulting in the notion 
 \subsection{Bounded Repetition}
 Supplementing the fixed repetition notion, we now add a maximum bound so that $r$ can occur at least $n$ times and at maximum $m-1$ times: $r^{n,m}$.
 
-Given $r = ab$ such that $r^2 = abab$ and $r^3 = ababab$, we have:
+\begin{thm}
+	Given $e \in RegExp(\Sigma)$, $n \in \Npos$, $m > n$, and $a \in \Sigma$, we have:
+	\begin{align*}
+		d_a(e^{n,m}) =
+		\begin{cases}
+			d_a(e) e^{n-1,m-1}, & \text{if } n > 1, \\
+			d_a(e) + d_a(e) e^{1,m-1}, & \text{if } n = 1.
+		\end{cases}
+	\end{align*}
+\end{thm}
+
+\begin{proof}
+	Let $e \in RegExp(\Sigma)$ and let $n, m \in \Npos$ with $m > n$. By definition of bounded iteration:
+	\begin{align*}
+		e^{n,m} &= \sum_{i=n}^{m} e^i,
+	\end{align*}
+	and by the linearity of derivatives over sums:
+	\begin{align*}
+		d_a(e^{n,m}) &= \sum_{i=n}^{m} d_a(e^i).
+	\end{align*}
+	Using the known identity $d_a(e^i) = d_a(e) e^{i-1}$, we have:
+	\begin{align*}
+		d_a(e^{n,m}) &= \sum_{i=n}^{m} d_a(e) e^{i-1} \\
+		&= d_a(e) \sum_{i=n}^{m} e^{i-1}.
+	\end{align*}
+	Letting $j = i - 1$, this becomes:
+	\begin{align*}
+		d_a(e^{n,m}) &= d_a(e) \sum_{j=n-1}^{m-1} e^j = d_a(e) e^{n-1,m-1}.
+	\end{align*}
+	Considering both cases, for $n > 1$, the expression is already in its final form:
+	\begin{align*}
+		d_a(e^{n,m}) = d_a(e) e^{n-1,m-1}.
+	\end{align*}
+	And for $n = 1$, we have:
+	\begin{align*}
+		d_a(e^{1,m}) &= d_a(e) e^{0,m-1} \\
+		&= d_a(e) + d_a(e) e^{1,m-1}.
+	\end{align*}
+	This completes the proof.
+\end{proof}
+Furthermore, we can include the infinite upper bound: $r^{n,\infty}$.
 \begin{align*}
-	D_a(r^{[2,4[}) &= D_a(abab) + D_a(ababab) \\
-	&= D_a(abab) + D_a(ababab) \\
-	&= D_a(a)bab + D_a(bab) + D_a(a)babab + D_a(babab) \\
+	r^{n,\infty} = r^nr^\star
+\end{align*}
+We can simplify it even more, depending on the value of $n$. Assuming $n=0$:
+\begin{align*}
+	r^{0,\infty} = r^0r^\star = \varepsilon r^\star =  r^\star
+\end{align*}
+Lastly, for $n=1$:
+\begin{align*}
+	r^{1,\infty} = r^1r^\star = rr^\star =  r^+
+\end{align*}
+
+\begin{thm}
+	Given $e \in RegExp(\Sigma)$, $n \in \N$ and $a \in \Sigma$, we have:
+	\begin{align*}
+		d_a(e^{n,\infty}) =
+		\begin{cases}
+			d_a(e)e^{n-1}e^\star, & \text{if } n>0, \\
+			d_a(e)e^*, & \text{otherwise}.
+		\end{cases}
+	\end{align*}
+\end{thm}
+\begin{proof}
+	Let $e \in RegExp(\Sigma)$, $n \in \N$, and $a \in \Sigma$. We have,
+	\begin{align*}
+		d_a(e^{n,\infty}) &= d_a(e^ne^\star) \\
+		&= d_a(e^n)e^\star. %\\
+%		\intertext{using \ref{thm:fixed_repetition_derivative}:}
+%		&= d_a(e)e^{n-1}e^\star
+	\end{align*}
+	Now, if $n>0$, we can use \ref{thm:fixed_repetition_derivative}:
+	\begin{align*}
+		d_a(e^n)e^\star &= d_a(e)e^{n-1}e^\star.
+	\end{align*}
+	Otherwise, if $n=0$, we can just replace accordingly:
+	\begin{align*}
+		d_a(e^ne^\star) = d_a(e^0e^\star) = d_a(e^*) = d_a(e)e^*.
+	\end{align*}
+	This concludes the proof.
+\end{proof}
+For instance, given $r = ab$ such that $r^2 = abab$ and $r^3 = ababab$, we have:
+\begin{align*}
+	d_a(r^{[2,4[}) &= d_a(abab) + d_a(ababab) \\
+	&= d_a(abab) + d_a(ababab) \\
+	&= d_a(a)bab + d_a(bab) + d_a(a)babab + d_a(babab) \\
 	&= \varepsilon bab + \emptyset + babab + \emptyset \\
-	&= bab + babab
+	&= bab + babab.
 \end{align*}
-
-This also extends for $r^{[m, \inf[}$, which is the same as having $r^m \cdot r^*$:
-
+Extending to the infinity case, $r^{[2, \inf[}$:
 \begin{align*}
-	D_a(r^{[2,\inf[}) &= D_a(abab) + D_a((ab)^*) \\
-	&= D_a(a)bab + D_a(bab) + D_a(ab)\cdot(ab)^* \\
-	&= \varepsilon bab + \emptyset + (D_a(a)b + D_a(b)) \cdot (ab)^* \\
+	d_a(r^{[2,\inf[}) &= d_a(abab) + d_a((ab)^*) \\
+	&= d_a(a)bab + d_a(bab) + d_a(ab)\cdot(ab)^* \\
+	&= \varepsilon bab + \emptyset + (d_a(a)b + d_a(b)) \cdot (ab)^* \\
 	&= bab + (\varepsilon b + \emptyset) \cdot (ab)^* \\
-	&= bab + b(ab)^*
+	&= bab + b(ab)^*.
 \end{align*}
 
-\noindent Given $e \in RegExp(\Sigma)$, $n>=1$ and $m>n$ we want to show that
-\begin{align*}
-	D_a(e^{n,m}) &= \sum_{i=n}^{m} D_a(e^i) \\
-	&= \sum_{i=n}^{m} (D_a(e))e^{i-1} \\
-	&= D_a(e) \sum_{j=n-1}^{m-1} e^j \\
-	&= D_a(e) e^{n-1,m-1}
-\end{align*}
-
-\noindent So, for $n=1$ we have that
-\begin{align*}
-	D_a(e^{n,m}) &= D_a(e)e^{0,m-1} \\
-	&= D_a(e) + (D_a(e))e^{1,m-1}
-\end{align*}
-
-\noindent And, for $n>=1$ we have that
-\begin{align*}
-	D_a(e^{n,m}) &= (D_a(e))e^{n-1,m-1}
-\end{align*}
 %For instance, if $m = 2$, we have that $r^{[2, \inf[}$
 
-The regular expression $r^{[2, \inf[}$ will match any $(ab)^k$ with $k \geq 2$.
+%The regular expression $r^{[2, \inf[}$ will match any $(ab)^k$ with $k \geq 2$.
+
+%Given $w = abababab$ and $m = 2$,  will match 
+
+%The string $abababab$ can be matched by $r^{[2, \inf[}$
+
+%\begin{thm}
+%	Given $e \in RegExp(\Sigma)$, $n \in \Npos$ and $m>n$, we have that
+%	\begin{align*}
+%	%	d_a(e^{n,m}) = d_a(e) e^{n-1,m-1}
+%	d_a(e^{n,m}) = \begin{cases}
+%		d_a(e)e^{n-1,m-1} & n>1 \\
+%		d_a(e)+(d_a(e))e^{1,m-1} & n=1
+%	\end{cases}
+%	\end{align*}
+%	is true.
+%\end{thm}
+%\begin{proof}
+%	Let $e \in RegExp(\Sigma)$. We first need to simplify the main expression:
+%	\begin{align*}
+%		d_a(e^{n,m}) &= \sum_{i=n}^{m} d_a(e^i) \\
+%		&= \sum_{i=n}^{m} (d_a(e))e^{i-1} \\
+%		&= d_a(e) \sum_{j=n-1}^{m-1} e^j \\
+%		&= d_a(e) e^{n-1,m-1}
+%	\end{align*}
+%	Thus, for $n=1$, we have that
+%	\begin{align*}
+%		d_a(e^{n,m}) &= d_a(e)e^{0,m-1} \\
+%		&= d_a(e) + (d_a(e))e^{1,m-1}
+%	\end{align*}
+%	And lastly, for $n>=1$ we have that
+%	\begin{align*}
+%		d_a(e^{n,m}) &= (d_a(e))e^{n-1,m-1}
+%	\end{align*}
+%\end{proof}
+
+%For instance, if $m = 2$, we have that $r^{[2, \inf[}$
+
+%The regular expression $r^{[2, \inf[}$ will match any $(ab)^k$ with $k \geq 2$.
 
 %Given $w = abababab$ and $m = 2$,  will match 
 
 %The string $abababab$ can be matched by $r^{[2, \inf[}$
 
 
-\section{Class implementation in FAdo}
+\section{Implementation in FAdo}
 In order to implement these new syntactic constructs of extended regular expressions in FAdo, we added exact-power and counted-repetition nodes to the regular expression abstract syntax tree and define their derivatives, partial derivatives and linear form cases.
 
 \subsection{CPower}
@@ -130,20 +278,14 @@ In order to integrate the class fully with \textit{FAdo}, some more methods had 
 		for head in arg_lf:
 			lf[head] = set()
 			for tail in arg_lf[head]:
-				if self.n == 0:
-					lf[head].add(CEmptySet(self.Sigma))
-				elif self.n == 1:
-					lf[head].add(CEpsilon(self.Sigma))
-				else:
-					lf[head].add(CPower(self.arg, self.n-1, self.Sigma))
-	
+				lf[head].add(self.derivative(head))
 		return lf
 
 	def partialDerivatives(self, sigma):
 		return self.arg.partialDerivatives(sigma)
 	
 	def derivative(self, sigma):
-		if str(sigma) in str(self.arg):
+		if str(sigma) in str(self.Sigma):
 			if self.n == 0:
 				return CEmptySet(sigma)
 			elif self.n == 1:
@@ -154,7 +296,178 @@ In order to integrate the class fully with \textit{FAdo}, some more methods had 
 			return CEmptySet(sigma)
 \end{lstlisting}
 
+\subsection{CCount}
+\textit{CCount} is the class responsible for the construction of regular expressions using the bounded repetition operator.
 
 
-\section{Extended Regular Expressions in FAdo}
-Recalling back from \ref{chap:prelim:extended_re}, in order to support extended regular expressions, one needs to extend the base class for unary operations in FAdo
+\begin{lstlisting}[language=Python]
+	class CCount(Unary):
+		def __init__(self, arg, min, max = None, sigma = None):
+			self.arg = arg
+			self.min = int(min)
+			self.max = "inf" if max == -1 or max == "inf" else int(max)-1
+			self.Sigma = sigma
+	
+			if self.min==0:
+				self._ewp = True
+\end{lstlisting}
+
+As shown above, and much like \textit{CPower}, the class also inherits from \textit{Unary}. The constructor adjusts the bounds accordingly and sets the empty word property based on whether the minimum repetition is zero.
+
+To fully integrate the class with \textit{FAdo}, several methods are implemented, including string representation, partial derivatives, linear form computation, and marking functions:
+
+\begin{lstlisting}[language=Python]
+	def derivative(self, sigma):
+		if str(sigma) in str(self.Sigma):
+			if self.max == "inf" or self.max == None:
+				if self.min == 0:
+					return CConcat(self.arg.derivative(sigma), CStar(self.arg, self.Sigma))
+				else:
+					return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, self.max, sigma), self.Sigma)
+			else:
+				if self.max > 1:
+					if self.min == 0:
+						return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min, int(self.max), self.Sigma))
+					else:
+						return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, int(self.max), self.Sigma))
+				elif self.max == 1:
+					return self.arg.derivative(sigma)
+				else:
+					CEpsilon(sigma)
+		else:
+			return CEmptySet(sigma)
+		
+	def partialDerivatives(self, sigma):
+		arg_pdset = self.arg.partialDerivatives(sigma)
+		pds = set()
+		for pd in arg_pdset:
+			if pd.emptysetP():
+				pds.add(CEmptySet(self.Sigma))
+			elif pd.epsilonP():
+				pds.add(self)
+			else:
+				pds.add(CConcat(pd, self, self.Sigma))
+		return pds
+\end{lstlisting}
+
+The \texttt{linearForm} method is exactly the same as \texttt{CPower}'s.
+
+%\begin{lstlisting}[language=Python]
+%	def linearForm(self):
+%		arg_lf = self.arg.linearForm()
+%		lf = dict()
+%		for head in arg_lf:
+%			lf[head] = set()
+%			for tail in arg_lf[head]:
+%				lf[head].add(self.derivative(head))
+%		return lf
+%\end{lstlisting}
+
+\subsection{Grammar}
+For ease of use and protoyping, we utilized \textit{FAdo}'s ability to parse a regular expression using a common Python \textit{string}. To do this, \textit{FAdo} utilizes a library called Lark. Lark is a modern, fast and flexible parsing toolkit for Python that supports both LALR(1) and Earley parsers, enabling the parsing of all context-free grammars with features like EBNF, AST generation, and grammar composition \cite{lark_parser}.
+The new grammar can be seen in \ref{appendix:regexp_lark} and the most notable changes are the following:
+\begin{lstlisting}
+	| rep _CARET _LEFBR digit _RIGBR -> pow_min
+	| rep _CARET _LEFBR digit _COMMA digit _LEFBR -> pow_minmax
+	| rep _CARET _LEFBR digit _COMMA _INFTY _LEFBR -> pow_inf
+\end{lstlisting}
+These rules (along with some more utilitary definitions such as the \texttt{\_LEFBR} and \texttt{\_RIGBR}, which are the symbols '\texttt{\string[}' and '\texttt{\string]}') will route the following cases (code in Appendix \ref{appendix:regexp_builders}):
+\begin{itemize}
+	\item \textbf{pow\_min}: For the cases $r^{n}$ and $r^{n,\infty}$, where $r \in RegExp(\Sigma)$ and $n \in \Npos$
+	\item \textbf{pow\_minmax}: For the case $r^{n,m}$, where $r \in RegExp(\Sigma)$ and $n \in \Npos, m>n$
+	\item \textbf{pow\_inf}: Calls \textit{pow\_min} with a special argument that selects the infinity case
+\end{itemize}
+
+\section{Single Matching}
+When referring to matching in the context of regular expressions, one typically means simply determining whether a given word is a member of the language defined by a specific regular expression.
+We can define this problem formally as:
+\begin{defn}
+	\label{defn:single_matching}
+	Given $e \in RegExp(\Sigma)$ and a word $w \in \Sigma^\star$, we say that $w$ matches $e$ if $w \in L(e)$.
+\end{defn}
+
+To look for matches using \textit{FAdo}, we first need to choose a regular expression. For the sake of this example, let $r = ab + ba$. Informally, this regular expression will match any $ab$ or $ba$ character sequences in an input text. To do this, we first need to import the grammar using Lark and parse the regular expression to get a parsed syntax tree. With this tree, we can use \textit{FAdo}'s \texttt{BuildRegexp} class and invoke its \texttt{transform} method, which will iteratively transform each of the trees nodes into abstract \textit{FAdo} class objects:
+\begin{lstlisting}[language=Python]
+	r = "ab+ba"
+	regGrammar = lark.Lark.open("lang/regexp_test.lark", start="rege", parser="lalr")
+	tree = regGrammar.parse(r)
+	reg : RegExp = BuildRegexp(context={"sigma": None}).transform(tree)
+	reg.setSigma(reg.setOfSymbols())
+\end{lstlisting}
+We now have a regular expression object. We can use it to build a DFA using Brzozowski's derivatives construction:
+\begin{lstlisting}[language=Python]
+	dfa_z = reg.dfaBrzozowski()
+\end{lstlisting}
+Finally, having a DFA object, we can then use the \texttt{evalWordP} function to verify if $w \in L(r)$ for a given $w \in \Sigma^\star$, which can be, for this example, $w = ab$:
+\begin{lstlisting}[language=Python,label={code:eval_word_dfa}]
+	w = "ab"
+	if dfa_z.evalWordP(w):
+		print("w belongs to the language of r")
+	else:
+		print("w does not belong to the language of r")
+\end{lstlisting}
+With the result being:
+\begin{lstlisting}[language=Python]
+	w belongs to the language of r
+\end{lstlisting}
+We can do the exact same with the new syntax. Let $r = (ab)^{1,3}$. First, parse the regular expression and display it:
+\begin{lstlisting}[language=Python]
+	r = "(ab)^[1,3["
+	tree = regGrammar.parse(r)
+	reg : RegExp = BuildRegexp(context={"sigma": None}).transform(tree)
+	reg.setSigma(reg.setOfSymbols())
+	dfa_z = reg.dfaBrzozowski()
+	dfa_z.display()
+\end{lstlisting}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
+		
+		% --- States ---
+		\node[state, initial] (q0) {0};
+		\node[state]          (q1) [above right=of q0] {1};
+		\node[state]          (q2) [below right=of q0] {2};
+		\node[state, accepting]         (q3) [right=22mm of q1] {3};
+		\node[state]          (q4) [right=22mm of q2] {4};
+		\node[state]          (q5) [above right=of q3] {5};
+		\node[state]          (q6) [right=20mm of q3] {6};
+		\node[state, accepting]         (q7) [right=22mm of q6] {7};
+		\node[state]          (q8) [right=22mm of q7] {8};
+		
+		% --- Transitions ---
+		\path[->]
+		(q0) edge node {$b$} (q1)
+		edge[swap] node {$a$} (q2)
+		
+		(q1) edge[loop above] node {$b, a$} ()
+		
+		(q2) edge node {$b$} (q3)
+		edge[swap] node {$a$} (q4)
+		
+		(q4) edge[loop below] node {$b, a$} ()
+		
+		(q3) edge node {$b$} (q5)
+		edge[swap] node {$a$} (q6)
+		
+		(q5) edge[loop above] node {$b, a$} ()
+		
+		(q6) edge node {$b$} (q7)
+		edge[bend right=40, swap] node {$a$} (q8)
+		
+		(q7) edge node {$b, a$} (q8)
+		
+		(q8) edge[loop right] node {$b, a$} ();
+	\end{tikzpicture}
+	\caption{Diagram of the DFA built using Brzozowski's method for the regular expression $r = (ab)^{1,3}$.}
+	\label{fig:dfa_brzozowski_counting}
+\end{figure}
+Then, try to match $w = ab$ using the same code from \ref{code:eval_word_dfa}, which yields the following:
+\begin{lstlisting}[language=Python]
+	w belongs to the language of r
+\end{lstlisting}
+Trying again with a text that does not match, $w = ababab$, yields:
+\begin{lstlisting}[language=Python]
+	w does not belong to the language of r
+\end{lstlisting}
+%Formally, .

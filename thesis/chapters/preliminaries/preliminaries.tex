@@ -203,7 +203,6 @@ If the language of a regular expression $\alpha$ contains the empty word, then t
 To effectively compare regular expressions and discuss their equivalence in automata construction, it is useful to define a notion of similarity based on basic algebraic properties. The following definition, adapted from Brzozowski's work in \cite{brzozowski_derivatives}, formalizes this concept:
 \begin{defn} [\cite{brzozowski_derivatives}]
 	Two regular expressions are similar if one can be transformed into the other using only the following rules:
-	
 	\begin{align*}
 		& r + r = r, \\
 		& p + q = q + p, \\
@@ -517,7 +516,7 @@ In the end, a single fragment represents the entire regular expression. The resu
 In 1964, Brzozowski \cite{brzozowski_derivatives} proposed a method of constructing deterministic finite automata using derivatives, where consequent derivations of a regular expression would result in the states and their transitions with respect to the symbol derived.
 
 \begin{defn}[Brzozowski's Automaton \cite{brzozowski_derivatives}]
-	Let $\alpha \in \textbf{RegExp}$ be a regular expression defined over $\Sigma$. Brzozowski's automaton for the regular expression $\alpha$ is defined as the deterministic finite automaton $\mathcal{D} = (Q, \Sigma, q_0, \delta, F)$. $Q$ is the set of all dissimilar derivatives of $\alpha$, $q_0$ is the initial state ($q_0 \in Q$), $\delta$ is the transition function defined by $\delta: Q \times \Sigma \rightarrow Q$ such that $\delta (q,a) = d_a(q)$ for all $a \in \Sigma$ and $q \in Q$, and the set of final states is $F = \{q \in Q \, | \, \varepsilon(q) = \varepsilon\}$.
+	Let $\alpha \in RegExp(\Sigma)$. Brzozowski's automaton for the regular expression $\alpha$ is defined as the deterministic finite automaton $\mathcal{D} = (Q, \Sigma, q_0, \delta, F)$. $Q$ is the set of all dissimilar derivatives of $\alpha$, $q_0$ is the initial state ($q_0 \in Q$), $\delta$ is the transition function defined by $\delta: Q \times \Sigma \rightarrow Q$ such that $\delta (q,a) = d_a(q)$ for all $a \in \Sigma$ and $q \in Q$, and the set of final states is $F = \{q \in Q \, | \, \varepsilon(q) = \varepsilon\}$.
 \end{defn}
 
 For instance, let $\alpha = (ad+d^*)db$ over $\Sigma = \{a,b,d\}$. The transition function $\delta$ is defined for a Brzozowski's automaton $\mathcal{D}$ of $\alpha$ as:
@@ -690,6 +689,7 @@ That is, to compute the set of partial derivatives of $\alpha$ with respect to a
 
 
 \subsection{Position Automata}
+\label{chap:prelim:pos_auto}
 %https://www.dcc.fc.up.pt/~nam/resources/publica/dlt16.pdf
 
 % To first recall the notion of \emph{position automata} (also known as \emph{Glushkov automata}), one must first understand the idea of marking each occurrence of a symbol in a regular expression with a unique position. This transforms a regular expression into a \emph{marked regular expression}, where each letter is indexed according to its position in the expression when read left to right. The position automaton is then constructed from this marked version by associating each position with a distinct state, and defining transitions based on the structural analysis of the expression.
@@ -699,9 +699,9 @@ The \emph{position automaton}, also known as the \emph{Glushkov automaton}, is a
 Given a regular expression $r$, the Glushkov automaton $M_r$ is defined based on four key position-based functions:
 
 \begin{itemize}
-    \item \textbf{first$(r)$}: the set of positions that can appear first in some word of the language $\mathcal{L}(r)$.
-    \item \textbf{last$(r)$}: the set of positions that can appear last in some word of $\mathcal{L}(r)$.
-    \item \textbf{follow$(r, x)$}: for each position $x$, the set of positions that can immediately follow $x$ in some word of $\mathcal{L}(r)$.
+    \item \textbf{first$(r)$}: the set of positions that can appear first in some word of the language $L(r)$.
+    \item \textbf{last$(r)$}: the set of positions that can appear last in some word of $L(r)$.
+    \item \textbf{follow$(r, x)$}: for each position $x$, the set of positions that can immediately follow $x$ in some word of $L(r)$.
     \item \textbf{symbol$(x)$}: for each position $x$, symbol$(x)$ represents the symbol on that position.
 \end{itemize}
 
@@ -715,7 +715,7 @@ The Glushkov automaton $M_r = (Q, \Sigma, \delta, q_0, F)$ is constructed as fol
         \item $\delta(q_0, a) = \{ x \in \text{first}(r) \mid \text{symbol}(x) = a \}$
         \item $\delta(x, a) = \{ y \in \text{follow}(r, x) \mid \text{symbol}(y) = a \}$
     \end{itemize}
-    \item The set of final states $F$ is $\text{last}(r)$; if $\varepsilon \in \mathcal{L}(r)$, then $q_0$ is also final.
+    \item The set of final states $F$ is $\text{last}(r)$; if $\varepsilon \in L(r)$, then $q_0$ is also final.
 \end{itemize}
 
 This automaton captures the structural flow of $E$ by tracing symbol sequences as state transitions. It is $\varepsilon$-free and has one state per symbol occurrence, which results in at most a quadratic number of transitions with respect to the size of $E$.
@@ -781,6 +781,3 @@ To represent any and all base constructions of a regular expressions, FAdo defin
 \end{itemize}
 
 In order to parse expressions into FAdo's classes and types, \emph{lark} was used. \emph{lark} is a parsing toolkit for Python. It can parse all context-free languages.
-
-
-
