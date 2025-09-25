@@ -7,6 +7,20 @@ class CPlus(Unary):
 
     _strP = __str__
 
+    def linearForm(self):
+        arg_lf = self.arg.linearForm()
+        lf = dict()
+        for head in arg_lf:
+            lf[head] = set()
+            for tail in arg_lf[head]:
+                if tail.emptysetP():
+                    lf[head].add(CEmptySet(self.Sigma))
+                elif tail.epsilonP():
+                    lf[head].add(CPlus(self.arg, self.Sigma))
+                else:
+                    lf[head].add(CConcat(tail, CPlus(self.arg, self.Sigma), self.Sigma))
+        return lf
+
     def _final(self):
         """ Nipkow auxiliary function final
 

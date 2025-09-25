@@ -31,30 +31,46 @@ class CPower(Unary):
     def ewp(self):
         return self.n==0
 
+    # def linearForm(self):
+    #     arg_lf = self.arg.linearForm()
+    #     #print(arg_lf)
+    #     # print(self.arg)
+    #     lf = dict()
+    #     for head in arg_lf:
+    #         lf[head] = set()
+    #         for tail in arg_lf[head]:
+    #             # lf[head].add(self.derivative(self.Sigma))
+    #             # if tail.emptysetP():
+    #             # 	lf[head].add(CEmptySet(self.Sigma))
+    #             # else:
+
+    #             lf[head].add(self.derivative(head))
+
+    #             # if self.n == 0:
+    #             #     lf[head].add(CEmptySet(self.Sigma))
+    #             # elif self.n == 1:
+    #             #     lf[head].add(CEpsilon(self.Sigma))
+    #             # else:
+    #             #     print(head)
+    #             #     lf[head].add(self.derivative(head))
+    #                 # lf[head].add(CPower(self.arg, self.n-1, self.Sigma))
+    #     return lf
+
     def linearForm(self):
         arg_lf = self.arg.linearForm()
-        #print(arg_lf)
         lf = dict()
         for head in arg_lf:
             lf[head] = set()
             for tail in arg_lf[head]:
-                # if tail.emptysetP():
-                # 	lf[head].add(CEmptySet(self.Sigma))
-                # else:
-                if self.n == 0:
-                    lf[head].add(CEmptySet(self.Sigma))
-                elif self.n == 1:
-                    lf[head].add(CEpsilon(self.Sigma))
-                else:
-                    lf[head].add(CPower(self.arg, self.n-1, self.Sigma))
-
+                lf[head].add(self.derivative(head))
         return lf
 
     def partialDerivatives(self, sigma):
         return self.arg.partialDerivatives(sigma)
 
     def derivative(self, sigma):
-        if str(sigma) in str(self.arg):
+        # if str(sigma) in str(self.arg):
+        if str(sigma) in str(self.Sigma):
             if self.n == 0:
                 return CEmptySet(sigma)
             elif self.n == 1:
@@ -155,18 +171,23 @@ class CCount(Unary):
         return self.ewp()
 
     def derivative(self, sigma):
-        if str(sigma) in str(self.arg) and str(sigma) != "":
+        # if str(sigma) in str(self.arg) and str(sigma) != "":
+        if str(sigma) in str(self.Sigma):
             if self.max == "inf" or self.max == None:
                 if self.min == 0: # means it was 1 -> [1, ...] -> argder.CStar
                     return CConcat(self.arg.derivative(sigma), CStar(self.arg, self.Sigma))
                 else:
                     return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, self.max, sigma), self.Sigma)
             else:
-                if self.min == 0:
-                    return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min, int(self.max), self.Sigma))
+                if self.max > 1:
+                    if self.min == 0:
+                        return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min, int(self.max), self.Sigma))
+                    else:
+                        return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, int(self.max), self.Sigma))
+                elif self.max == 1:
+                    return self.arg.derivative(sigma)
                 else:
-                    return CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, int(self.max), self.Sigma))
-                    
+                    CEpsilon(sigma)
         else:
             return CEmptySet(sigma)
 
@@ -181,54 +202,65 @@ class CCount(Unary):
             else:
                 pds.add(CConcat(pd, self, self.Sigma))
         return pds
-
-    def linearForm(self): # https://www.dcc.fc.up.pt/~nam/resources/publica/51480046.pdf
-        def nested(values):
-            if not values:
-                return None
-            elif len(values) == 1:
-                return values[0]
-            else:
-                return CDisj(values[0], nested(values[1:]))
-
+    
+    def linearForm(self):
         arg_lf = self.arg.linearForm()
+        #print(arg_lf)
+        # print(self.arg)
         lf = dict()
         for head in arg_lf:
             lf[head] = set()
             for tail in arg_lf[head]:
-                if tail.emptysetP():
-                    lf[head].add(CEmptySet(self.Sigma))
-                elif tail.epsilonP():
-                    if self.max == "inf" or self.max == None:
-                        if self.min - 1 == 0:
-                            lf[head].add(CStar(self.arg, self.Sigma))
-                        else:
-                            lf[head].add(CConcat(CPower(self.arg, self.min-1, self.Sigma), CStar(self.arg, self.Sigma), self.Sigma))
-                    else:
-                        mav = int(self.max)
-                        lst = []
-                        for i in range(self.min-1, mav):
-                            if i > 0:
-                                lst.append(CPower(self.arg, i, self.Sigma))
-                            else:
-                                lst.append(CEpsilon(self.Sigma))
-
-                        lf[head].add(nested(lst))
-                else:
-                    if self.max == "inf" or self.max == None:
-                        if self.min - 1 == 0:
-                            lf[head].add(CConcat(tail, CStar(self.arg, self.Sigma)))
-                        else:
-                            lf[head].add(CConcat(tail, CConcat(CPower(self.arg, self.min-1, self.Sigma), CStar(self.arg, self.Sigma), self.Sigma)))
-                    else:
-                        mav = int(self.max)
-                        lst = []
-                        for i in range(self.min, mav):
-                            lst.append(CPower(self.arg, i, self.Sigma))
-
-                        lf[head].add(CConcat(tail, nested(lst), self.Sigma))
-
+                lf[head].add(self.derivative(head))
         return lf
+
+    # def linearForm(self): # https://www.dcc.fc.up.pt/~nam/resources/publica/51480046.pdf
+    #     def nested(values):
+    #         if not values:
+    #             return None
+    #         elif len(values) == 1:
+    #             return values[0]
+    #         else:
+    #             return CDisj(values[0], nested(values[1:]))
+
+    #     arg_lf = self.arg.linearForm()
+    #     lf = dict()
+    #     for head in arg_lf:
+    #         lf[head] = set()
+    #         for tail in arg_lf[head]:
+    #             if tail.emptysetP():
+    #                 lf[head].add(CEmptySet(self.Sigma))
+    #             elif tail.epsilonP():
+    #                 if self.max == "inf" or self.max == None:
+    #                     if self.min - 1 == 0:
+    #                         lf[head].add(CStar(self.arg, self.Sigma))
+    #                     else:
+    #                         lf[head].add(CConcat(CPower(self.arg, self.min-1, self.Sigma), CStar(self.arg, self.Sigma), self.Sigma))
+    #                 else:
+    #                     mav = int(self.max)
+    #                     lst = []
+    #                     for i in range(self.min-1, mav):
+    #                         if i > 0:
+    #                             lst.append(CPower(self.arg, i, self.Sigma))
+    #                         else:
+    #                             lst.append(CEpsilon(self.Sigma))
+
+    #                     lf[head].add(nested(lst))
+    #             else:
+    #                 if self.max == "inf" or self.max == None:
+    #                     if self.min - 1 == 0:
+    #                         lf[head].add(CConcat(tail, CStar(self.arg, self.Sigma)))
+    #                     else:
+    #                         lf[head].add(CConcat(tail, CConcat(CPower(self.arg, self.min-1, self.Sigma), CStar(self.arg, self.Sigma), self.Sigma)))
+    #                 else:
+    #                     mav = int(self.max)
+    #                     lst = []
+    #                     for i in range(self.min, mav):
+    #                         lst.append(CPower(self.arg, i, self.Sigma))
+
+    #                     lf[head].add(CConcat(tail, nested(lst), self.Sigma))
+
+    #     return lf
 
     def followListsD(self, lists=None):
         # print("self", self)
@@ -272,7 +304,8 @@ def pow_min(self, s, inf=False):
         if n == 0:
             r = CStar(arg, sigma=self.sigma)
         elif n == 1:
-            r = CPlus(arg, sigma=self.sigma)
+            r = CConcat(arg, CStar(arg), self.sigma)
+            # r = CPlus(arg, sigma=self.sigma)
         else:
             r = CCount(arg, n, -1, sigma=self.sigma)
     else:
