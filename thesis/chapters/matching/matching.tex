@@ -130,11 +130,11 @@
 % Matching is used to search, validate, or extract parts of text based on these patterns. For example, a regex can be used to find all dates in a document or to ensure a password meets certain rules.
 
 \emph{Matching} is the process of checking whether a piece of text fits a specific pattern described using a regular expression (regex).
-In this chapter, we will discuss the different approaches to matching regular expressions, the implications of using them, and the performance considerations that arise from these choices. Furthermore, we will also present a novel approach based on a modified position automata, which aims to mitigate the performance issues associated with traditional regex engines while preserving some of the extended expressiveness of regex patterns.
+In this chapter, we will discuss the different approaches to matching regular expressions and their differences, the implications of using them, and the performance considerations that arise from these choices. Furthermore, due to the importance of multiple matching and the lack of tools that accomplish it, we will also contribute with a novel approach based on a modified position automaton and matcher, with the focus of mitigating the performance issues associated with traditional regex engines while preserving some of the extended expressiveness of regex patterns.
 
 \section{Multiple Matching}
 \label{sec:multimatching}
-The definition of single matching was introduced in \ref{defn:single_matching}. Now, the concept of multiple matching is simply to get all the matches of a given regular expression within an input text.
+The definition of single matching was introduced in Definition~\ref{defn:single_matching}. Now, the concept of multiple matching is simply to get all the matches of a given regular expression within an input text.
 We can define it formally like so,
 \begin{defn}
 	Let $r \in RegExp(\Sigma)$, $(i,j) \in \Npos^2$ where $j>i$, and $t \in \Sigma^\star$.
@@ -145,6 +145,7 @@ We can define it formally like so,
 	\end{align*}
 \end{defn}
 Informally, we want to capture the positions in $t$ where a matching substring is between a prefix of length $i$ and a suffix of length $j$.
+In this chapter, we will use the term \textit{matching} to refer to \textit{multiple matching} or \textit{all matching}.
 
 \section{Overlapped versus Non-Overlapped Matching}
 \label{sec:overlap-vs-nonoverlap}
@@ -198,8 +199,12 @@ For instance, let $r = a^{2,4}$. This expression can be built using Brzozowski's
 	\end{tikzpicture}
 	\caption{DFA resulting from Brzozowski's derivatives construction for the expression $r=a^{2,4}$.}
 \end{figure}
-As seen above, there is no distinct branching of states. This means that we can't track the positions for each match, nor can we continually input text into the automaton.
-Now, building using the modified position automaton construction from \ref{alg:nfaPosCount} results in the NFA represented below:
+%Having an input text such as $w = aaa$, we should be able to match 3 distinct patterns using multiple matching. Trying with the DFA:
+For single matching, a typical matcher should be able to match in $O(n)$ using this DFA, where $n$ is the length of the input string. However, this DFA does not allow for overlapped matching. The matcher would need to be restarted after each starting position, leading to a running time complexity of $O(n^2)$.
+So, in order to perform overlapped matching in linear time, the automaton must be constructed using a modified position automaton construction.
+%This means that we can't track the positions for each match, nor can we continually input text into the automaton.
+%In order to track the position for each match, the position automaton construction must be modified. 
+Using Algorithm~\ref{alg:nfaPosCount} to build an NFA for $r$ results in the NFA represented below:
 \begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[shorten >=1pt, node distance=2cm, on grid, auto, initial text=]
@@ -227,9 +232,9 @@ Now, building using the modified position automaton construction from \ref{alg:n
 \end{figure}
 This NFA now contains two different branches, one that captures all the matches for $aa$ and another one that captures all the matches for $aaa$. Also, it can continuously match due to the loops on states $0$ and $6$.
 To demonstrate the matcher logic, it is better to implement a more complex regular expression.
-Consider the following regular expression $R$ and input word $w$:
+Consider the following regular expression $s$ and input word $w$:
 \begin{center}
-	$R = (aa+aaa)(aaa+aa)$ \break
+	$s = (aa+aaa)(aaa+aa)$ \break
 	$w = aaaaabaaaaa$
 \end{center}
 
@@ -238,8 +243,8 @@ We can separate $R$ into two matching groups:
 	\item The first group $(aa+aaa)$ will match either two or three $a$ symbols (e.g. $aaa$ will yield three overlapped matches: ${\color{red}{aa}}a$, $a{\color{red}{aa}}$ and ${\color{red}{aaa}}$).
 	\item The second group $(aaa+aa)$ will also match either two or three $a$ symbols, much like the first group.
 \end{itemize}
-The Glushkov automaton construction for $R$ is as follows:
 
+The normal position automaton construction for $s$ is as follows, considering the marked version $(a_1a_2+a_3a_4a_5)(a_6a_7a_8+a_9a_{10})$:
 \begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
@@ -269,13 +274,11 @@ The Glushkov automaton construction for $R$ is as follows:
 		(q5)	edge	node	{$a$} (q8)
 		(q8)	edge	node	{$a$} (q9);
 	\end{tikzpicture}
-	\caption{Default Glushkov automaton}
+	\caption{Unmodified position automaton construction of $s$}
 \end{figure}
 
 
-Meanwhile, the modified position automaton for this regular expression can be constructed using the algorithm presented in \ref{alg:nfaPosCount}, resulting in the following:
-
-
+Meanwhile, the modified position automaton for this regular expression can be constructed using the Algorithm~\ref{alg:nfaPosCount}, resulting in the following:
 \begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid, auto,initial text=]
@@ -311,14 +314,14 @@ Meanwhile, the modified position automaton for this regular expression can be co
 		(q9)	edge	node	{$\Sigma$} (q11)
 		(q11)	edge [loop below] node {$\Sigma$} ();
 	\end{tikzpicture}
-	\caption{Modified Glushkov automaton}
+	\caption{Modified position automaton construction of $s$}
 	\label{fig:modified_glushkov_automaton}
 \end{figure}
 
 
 %One can then apply the matching algorithm (\ref{alg:table-matcher}) to an input string, resulting in the following match table:
 
-When we apply the matching algorithm (\ref{alg:table-matcher}) to an input string, it will traverse the automaton and record all positions where matches occur. This approach ensures that we can find all possible matches, including those that overlap, without falling into the exponential blowup trap of backtracking.
+When we match using Algorithm~\ref{alg:table-matcher} to an input string, it will traverse the automaton and record all positions where matches occur. This approach ensures that we can find all possible matches, including those that overlap, without falling into the exponential blowup trap of backtracking.
 
 The result is a table that maps each accepting state to a set of index pairs, each indicating the start and end of a successful match. For instance, applying this process to $R = (aa+aaa)(aaa+aa)$ and $w = aaaaabaaaaa$ will yield the following table:
 
@@ -362,17 +365,17 @@ The result is a table that maps each accepting state to a set of index pairs, ea
 First, we always have to account for $\varepsilon$, since there is the possibility of having the empty word and we also want to match against it.
 After that, every symbol $s \in w$ is processed sequentially.
 
-At each step, the algorithm updates a row that maps the automaton's (represented in \ref{fig:modified_glushkov_automaton}) states to sets of position intervals $(i,j)$, such that the substring $w_{ij}$ corresponds to a valid match, whether it is overlapped or not.
+At each step, the algorithm updates a row that maps the automaton's (represented in Figure~\ref{fig:modified_glushkov_automaton}) states to sets of position intervals $(i,j)$, such that the substring $w_{ij}$ corresponds to a valid match, whether it is overlapped or not.
 
 Transitions are computed for each input symbol using the automaton's $\delta$ function. When a final state is reached, the interval is stored as a successful match. Furthermore, during this process, only the last symbol's computed transitions and position intervals are preserved because they always carry over to the current symbol's computation.
 
-The automaton on \ref{fig:modified_glushkov_automaton} shows that:
+The automaton on Figure~\ref{fig:modified_glushkov_automaton} shows that:
 
 \begin{center}
 	$F = \{q_7, q_9\}$
 \end{center}
 
-For those states, the resulting match table yields the following:
+For those states, the resulting match table is represented by Table~\ref{tab:left-highlights} and Table~\ref{tab:left-highlights1}.
 
 \begin{table}[H]
 	\centering
@@ -405,7 +408,7 @@ For those states, the resulting match table yields the following:
 	\end{minipage}
 \end{table}
 
-As seen above, we are able to get all the matches possible (even overlapped ones) for the given input word $w$, along with their positions.
+As seen in the tables, we are able to get all the matches possible (even overlapped ones) for the given input word $w$, along with their positions.
 
 \section{Implementation in FAdo}
 In order to support these new operations in \textit{FAdo}, a new class was created. This new \texttt{matchNFA} class inherits from the \texttt{NFA} class. In it, several methods were implemented.
@@ -436,12 +439,86 @@ In order to support these new operations in \textit{FAdo}, a new class was creat
 \end{lstlisting}
 
 \begin{itemize}
-	\item \texttt{table\_matcher} is the algorithm (can be seen in \ref{alg:table-matcher}) that creates the matching table, 
+	\item \texttt{table\_matcher} is the algorithm (can be seen in Table~\ref{alg:table-matcher}) that creates the matching table, 
 	\item \texttt{enum\_matches} is the algorithm that displays the formatted matching table data,
-	\item \texttt{nfaPosCount} is the modified position automaton builder (can be seen in \ref{alg:nfaPosCount}).
+	\item \texttt{nfaPosCount} is the modified position automaton builder (can be seen in Algorithm~\ref{alg:nfaPosCount}).
 \end{itemize}
 
 The \texttt{nfaPosCount} function is defined outside of \texttt{matchNFA}'s scope because, even though it can be fully integrated into \texttt{FAdo}, it still isn't. The \texttt{setattr} function is used to add this method to the \texttt{RegExp} class after it has been defined, so that it can later be used in other components of \texttt{FAdo}.
+
+\section{Limitations}
+There are some caveats regarding this modified position automaton construction and the table-based matcher.
+
+\subsection{Match Table Size}
+The match table can grow large. Practically, each input symbol will result in a new "step" in the table. Each step on the table will store data for multiple states (some can be empty, but they fill up continually). In the worst case, meaning that there are positions for each of the states, this will scale with the number of states.
+Ultimately, storing sets of intervals per state per position is done with space complexity of $O(m \cdot n)$, where $m$ is the total number of states and $n$ is the length of the input text.
+
+\subsection{Construction Size}
+Although the position automaton construction is linear in the number of symbol occurrences, bounded repetitions such as $a^{m,n}$ get unrolled into $a^m + a^{m+1} + \cdots + a^n$. Therefore, large bounds or nested counts will inflate the automaton and, therefore, slow down its construction.
+Having the regular expression $a^{1,50}$, for instance. Figure~\ref{fig:shortened_large_automaton} represents a shortened version of this construction.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[shorten >=1pt,node distance=1.8cm,on grid,auto,initial text=]
+		\node[state, initial] (q0) at (0,0) {$q_0$};
+		\node[state] (qfin) at (10,0) {$q_n$};
+		
+		\node[state, accepting] (q1) at (1.5,3) {$q_1$};
+		
+		\node[state] (q2) at (1.5,2) {$q_2$};
+		\node[state, accepting] (q20) at (3,2) {$q_{20}$};
+		
+		
+		\node[state] (q3) at (1.5,1) {$q_3$};
+		\node[state] (q30) at (3,1) {$q_{30}$};
+		\node[state, accepting] (q31) at (4.5,1) {$q_{31}$};
+		
+		\node[state] (q4) at (1.5,0) {$q_4$};
+		\node[state] (q40) at (3,0) {$q_{40}$};
+		\node[state] (q41) at (4.5,0) {$q_{41}$};
+		\node[state, accepting] (q42) at (6,0) {$q_{42}$};
+		
+		\node (qj) at (5,-1) {$\cdots$};
+		
+		\path[->]
+		(q0) edge [loop below] node {$a$} ()
+		edge [bend left=2.5cm] node {$a$} (q1)
+		edge [bend left=2cm] node {$a$} (q2)
+		edge [bend left] node {$a$} (q3)
+		edge node {$a$} (q4)
+		edge [bend right=0.5cm] node {$a$} (qj)
+		
+		(qj) edge [bend right=0.5cm] node {$a$} (qfin)
+		
+		(q2) edge node {$a$} (q20)
+		
+		(q3) edge node {$a$} (q30)
+		(q30) edge node {$a$} (q31)
+		
+		(q4) edge node {$a$} (q40)
+		(q40) edge node {$a$} (q41)
+		(q41) edge node {$a$} (q42)
+		
+		(q1) edge [bend left=0.7cm] node {$a$} (qfin)
+		(q20) edge [bend left=0.5cm] node {$a$} (qfin)
+		(q31) edge [bend left=0.3cm] node {$a$} (qfin)
+		(q42) edge node {$a$} (qfin)
+		
+		(qfin) edge [loop below] node {$a$} ()
+		;
+	\end{tikzpicture}
+	\caption{Abbreviated representation of the large modified position automaton.}
+	\label{fig:shortened_large_automaton}
+\end{figure}
+
+Any automatons constructed for a regular expression that are constituted by a singe bounded repetition operator such as $a^{n,m}$ will have $\sum_{n=1}^{m-1} n + 2$ states. Therefore, the automaton for the expression $a^{1,50}$ contains 1227 states.
+
+It is important to note that bounded repetitions are the worst case scenario for this construction. This blow up does not usually happen with the other operators.
+
+%\section{Other Implementations}
+
+
+
 
 %Recalling the regular expression used $R = (aa+aaa)(aaa+aa)$ and input string $w = aaaaabaaaaa$, 
 

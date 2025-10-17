@@ -83,7 +83,7 @@ This utility works by convering glob expressions into JavaScript's \textit{RegEx
 The utility has millions of downloads, as it is an essential component of \textbf{npm}.
 
 On the 18th of October 2022, a new CVE was introduced: \textbf{CVE-2022-3517}.
-The report showed that all of minimatch's versions below 3.0.5 were vulnerable to a ReDoS attack similar to the one described in \ref{intro:case_studies:stack_overflow}.
+The report showed that all of minimatch's versions below 3.0.5 were vulnerable to a ReDoS attack similar to the one described in Subsection~\ref{intro:case_studies:stack_overflow}.
 The culprit for this was a function called \textit{braceExpand}, which is responsible for expanding brace patterns in glob strings. This is commonly known as brace expansion and is often seen in Unix shells (such as bash). 
 The function contained a regular expression that would match against given patterns and decide if a brace expansion was in order. The expression used was "/\textbackslash\{.*\textbackslash\}/)", which matches any string containing a single pair of curly braces with any characters inside. But this expression poses an issue:
 

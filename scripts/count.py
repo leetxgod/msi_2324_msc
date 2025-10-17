@@ -66,7 +66,19 @@ class CPower(Unary):
         return lf
 
     def partialDerivatives(self, sigma):
-        return self.arg.partialDerivatives(sigma)
+        pd_set = set()
+        if str(sigma) in str(self.Sigma):
+            if self.n == 0:
+                return {CEmptySet(sigma)}
+            elif self.n == 1:
+                pd_set = self.arg.partialDerivatives(sigma)
+                pd_set.update(CEpsilon(sigma))
+                return {CConcat(self.arg.partialDerivatives(sigma), CEpsilon(sigma))}
+            else:
+                return {CConcat(self.arg.partialDerivatives(sigma), CPower(self.arg, self.n-1, self.Sigma))}
+        else:
+            return {CEmptySet(sigma)}
+
 
     def derivative(self, sigma):
         # if str(sigma) in str(self.arg):
@@ -192,16 +204,43 @@ class CCount(Unary):
             return CEmptySet(sigma)
 
     def partialDerivatives(self, sigma):
-        arg_pdset = self.arg.partialDerivatives(sigma)
-        pds = set()
-        for pd in arg_pdset:
-            if pd.emptysetP():
-                pds.add(CEmptySet(self.Sigma))
-            elif pd.epsilonP():
-                pds.add(self)
+        if str(sigma) in str(self.Sigma):
+            if self.max == "inf" or self.max == None:
+                if self.min == 0: # means it was 1 -> [1, ...] -> argder.CStar
+                    return {CConcat(self.arg.derivative(sigma), CStar(self.arg, self.Sigma))}
+                else:
+                    return {CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, self.max, sigma), self.Sigma)}
             else:
-                pds.add(CConcat(pd, self, self.Sigma))
-        return pds
+                if self.max > 1:
+                    if self.min == 0:
+                        return {CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min, int(self.max), self.Sigma))}
+                    else:
+                        return {CConcat(self.arg.derivative(sigma), CCount(self.arg, self.min-1, int(self.max), self.Sigma))}
+                elif self.max == 1:
+                    return {self.arg.derivative(sigma)}
+                else:
+                    {CEpsilon(sigma)}
+        else:
+            return {CEmptySet(sigma)}
+
+
+        # if self.n == 0:
+        #     return {CEmptySet(sigma)}
+        # elif self.n == 1:
+        #     return {CConcat(self.arg.partialDerivatives(sigma), CEpsilon(sigma))}
+        # else:
+        #     return {CConcat(self.arg.partialDerivatives(sigma), CPower(self.arg, self.n-1, self.Sigma))}
+
+        # arg_pdset = self.arg.partialDerivatives(sigma)
+        # pds = set()
+        # for pd in arg_pdset:
+        #     if pd.emptysetP():
+        #         pds.add(CEmptySet(self.Sigma))
+        #     elif pd.epsilonP():
+        #         pds.add(self)
+        #     else:
+        #         pds.add(CConcat(pd, self, self.Sigma))
+        # return pds
     
     def linearForm(self):
         arg_lf = self.arg.linearForm()

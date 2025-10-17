@@ -132,7 +132,7 @@ class matchNFA(NFA):
         # ROW -> {state_id_1: [(s1,e1)], state_id_2: [(s1,e1), (s2,e2)]} .. 
 
         for sym in nw:
-            print("Symbol:", sym, "Counter:", symbol_counter)
+            # print("Symbol:", sym, "Counter:", symbol_counter)
             if sym == CEpsilon():
                 for initial_state in self.Initial:
                     # last_row[s] = (0,0)
@@ -184,16 +184,18 @@ class matchNFA(NFA):
         return (final_positions_table)
 
 
-    def enum_matches(self, pos_tab: dict, string: str):
+    def enum_matches(self, pos_tab: dict, string: str, ignore_matches: bool = False):
         match_count = 0
         for entry in pos_tab:
-            print(f"State {entry} matches ({len(set(pos_tab[entry]))}):")
+            if not ignore_matches:
+                print(f"State {entry} matches ({len(set(pos_tab[entry]))}):")
             match_set = set(pos_tab[entry])
             match_count += len(match_set)
             for match in sorted(match_set):
                 first_index = string[0:match[0]]
                 second_index = string[match[1]:]
-                print("Match:", colored(first_index, 'red') + colored(string[match[0]:match[1]], 'green') + colored(second_index, 'red'), "=>", match)
+                if not ignore_matches:
+                    print("Match:", colored(first_index, 'red') + colored(string[match[0]:match[1]], 'green') + colored(second_index, 'red'), "=>", match)
         print("Total matches:", match_count)
                     
 def nfaPosCount(self: RegExp):

@@ -1,7 +1,7 @@
 \chapter{State of the Art}\label{chap:art}
 
 \section{Introduction}
-Regular expressions (regex) remain one of the most powerful and widely adopted tools for string pattern matching across programming languages, search tools, and data processing pipelines. While their theoretical foundation lies in formal language theory, the practical implementation of regex engines often diverges from the idealized models. This chapter mentions the state of the art in regex engine designs and regex language features, with a particular focus on performance trade-offs, security concerns, and evolving capabilities.
+Regular expressions (regex) remain one of the most powerful and widely adopted tools for string matching across programming languages, search tools, and data processing pipelines. While their theoretical foundation lies in formal language theory, the practical implementation of regex engines often diverges from the idealized models. This chapter summarizes the state of the art in regex engine designs and regex language features, with a particular focus on performance trade-offs, security concerns, and evolving capabilities.
 
 \section{Regex Syntax Variants}
 \label{sec:regex_syntax}
@@ -18,11 +18,32 @@ Beyond the theoretical framework of regular expressions lies a diverse set of pr
 %
 %POSIX regular expressions do not support many advanced features common in other regex dialects. For example, they lack support for backreferences, lookahead/lookbehind assertions, non-greedy quantifiers, and conditional expressions. This makes POSIX regexes more limited in expressiveness but often easier to reason about and implement efficiently.
 
+\subsection{POSIX Regular Expressions}
+The POSIX (Portable Operating System Interface) standard defines a family of regular expression syntaxes intended to promote consistency across UNIX-like systems. POSIX defines two primary levels of syntax: \textit{Basic Regular Expressions} (BRE) and \textit{Extended Regular Expressions} (ERE). These are used in many command-line utilities such as \texttt{grep} \cite{sw_grep}, \texttt{sed} \cite{sw_sed}, and \texttt{awk} \cite{sw_gawk}.
+
+In BRE, several metacharacters (such as parentheses, curly braces, and the plus sign) must be escaped to be interpreted as operators. For example:
+\begin{itemize}
+	\item \texttt{a\textbackslash\{3\textbackslash\}} matches exactly three consecutive \texttt{a}'s (\texttt{aaa}, for instance).
+	\item \texttt{\textbackslash(a\textbar b\textbackslash)} matches either \texttt{a} or \texttt{b} using grouping and alternation.
+\end{itemize}
+
+In contrast, ERE relaxes these constraints and allows a more expressive and readable syntax without requiring escapes for most metacharacters. For example:
+\begin{itemize}
+	\item \texttt{a\{3\}} matches \texttt{aaa} (three consecutive \texttt{a}'s).
+	\item \texttt{a+} matches one or more \texttt{a}'s.
+	\item \texttt{a|b} matches either \texttt{a} or \texttt{b}.
+	\item \texttt{(abc)?} matches either \texttt{abc} or $\varepsilon$.
+\end{itemize}
+
+A defining feature of POSIX regular expressions is their \textit{leftmost-longest match} semantics. When multiple matches are possible, the engine must return the one that starts at the earliest position in the input and is the longest among those starting at that position. This requirement ensures deterministic behavior but can increase the complexity of the matching algorithm. \cite{regex_opengroup}
+
+%As seen, the POSIX standard does not support many advanced features common in other regex dialects. For instance, they lack support for backreferences. When these are introduced, the resulting languages are non-regular, meaning that they cannot be recognized by finite automata.
+
+POSIX regular expressions do not support many advanced features common in other regex dialects. For example, they lack support for backreferences, lookahead/lookbehind assertions, non-greedy quantifiers, and conditional expressions. This makes POSIX regexes more limited in expressiveness but often easier to reason about and implement efficiently.
+
 \subsection{PCRE: Perl-Compatible Regular Expressions}
-
 PCRE (Perl-Compatible Regular Expressions) define an expressive and flexible regex syntax, modeled after the pattern language used in the Perl programming language. It has become the standard for regular expression syntax in many modern programming environments, including PHP, Python, JavaScript, and others.
-
-PCRE introduces a wide range of features that go far beyond the capabilities of POSIX regexes. These include:
+PCRE introduces a wide range of features that go far beyond the capabilities of POSIX regexes and theoretical regular languages. These include:
 
 \begin{itemize}
 	\item \textbf{Backreferences}, allowing a pattern to refer to previously matched groups.\\
@@ -50,36 +71,17 @@ PCRE introduces a wide range of features that go far beyond the capabilities of 
 	\end{itemize}
 \end{itemize}
 
-The added power of PCRE comes at the cost of increased complexity in both the syntax and the engine. To support these features, most PCRE-compatible engines rely on backtracking-based evaluation, which explores all potential matching paths through a pattern. While this approach enables support for advanced constructs, it also introduces the risk of exponential-time behavior in certain patterns—especially those involving nested quantifiers or ambiguous alternations.
+The added power of PCRE comes at the cost of increased complexity in both the syntax, generative expressivity and the engine. To support these features, most PCRE-compatible engines rely on backtracking-based evaluation, which explores all potential matching paths through a pattern. While this approach enables support for advanced constructs, it also introduces the risk of exponential-time behavior in certain patterns—especially those involving nested quantifiers or ambiguous alternations.
 
-\subsection{POSIX Regular Expressions}
 
-The POSIX (Portable Operating System Interface) standard defines a family of regular expression syntaxes intended to promote consistency across UNIX-like systems. POSIX defines two primary levels of syntax: \textit{Basic Regular Expressions} (BRE) and \textit{Extended Regular Expressions} (ERE). These are used in many command-line utilities such as \texttt{grep} \cite{sw_grep}, \texttt{sed} \cite{sw_sed}, and \texttt{awk} \cite{sw_gawk}.
-
-In BRE, several metacharacters (such as parentheses, curly braces, and the plus sign) must be escaped to be interpreted as operators. For example:
-\begin{itemize}
-	\item \texttt{a\textbackslash\{3\textbackslash\}} matches exactly three consecutive \texttt{a}'s (\texttt{aaa}, for instance).
-	\item \texttt{\textbackslash(a\textbar b\textbackslash)} matches either \texttt{a} or \texttt{b} using grouping and alternation.
-\end{itemize}
-
-In contrast, ERE relaxes these constraints and allows a more expressive and readable syntax without requiring escapes for most metacharacters. For example:
-\begin{itemize}
-	\item \texttt{a\{3\}} matches \texttt{aaa} (three consecutive \texttt{a}'s).
-	\item \texttt{a+} matches one or more \texttt{a}'s.
-	\item \texttt{a|b} matches either \texttt{a} or \texttt{b}.
-	\item \texttt{(abc)?} matches either \texttt{abc} or $\varepsilon$.
-\end{itemize}
-
-A defining feature of POSIX regular expressions is their \textit{leftmost-longest match} semantics. When multiple matches are possible, the engine must return the one that starts at the earliest position in the input and is the longest among those starting at that position. This requirement ensures deterministic behavior but can increase the complexity of the matching algorithm. \cite{regex_opengroup}
-
-%As seen, the POSIX standard does not support many advanced features common in other regex dialects. For instance, they lack support for backreferences. When these are introduced, the resulting languages are non-regular, meaning that they cannot be recognized by finite automata.
-
-POSIX regular expressions do not support many advanced features common in other regex dialects. For example, they lack support for backreferences, lookahead/lookbehind assertions, non-greedy quantifiers, and conditional expressions. This makes POSIX regexes more limited in expressiveness but often easier to reason about and implement efficiently.
 
 \section{Engine Architectures}
 %Regex engines are typically implemented using one of the following architectures:
-Regular expressions are most commonly used to look for patterns of strings, known as matching. The basis for this operation are the regular expression engines.
+Regular expressions are most commonly used to look for a pattern in a string. This is generally called \emph{matching}.
+The basis for this operation are the regular expression engines.
 At a high level, regex engines can be grouped by how they traverse the implicit nondeterministic automaton of a pattern.
+
+%Regular expressions are most commonly used to look for patterns of strings, known as matching. The basis for this operation are the regular expression engines.
 %Backtracking engines explore one path at a time, pushing alternative choices on a stack; NFA simulation engines keep all active states in parallel; DFA and hybrid engines trade memory for predictable time; and high-throughput engines emphasize vectorization and streaming.
 
 \subsection{Backtracking NFA}
@@ -102,7 +104,7 @@ Each DFA state represents a set of possible continuations in the pattern, allowi
 
 In search mode, DFA-based engines typically return the leftmost match. Many implementations are also designed to return the leftmost-longest match by continuing the scan while remembering the last encountered accepting state. Because the DFA encodes all matching possibilities in advance, the matching process is entirely deterministic and independent of the syntactic order of alternatives in the pattern.
 
-One practical consideration in DFA-based matching is the potential growth of the automaton during the compilation phase. In the worst case, the number of DFA states can grow exponentially with respect to the size of the regular expression, particularly for patterns involving complex nesting or alternation. While this does not affect runtime performance during matching — which remains linear — the memory and time costs of building the DFA can be significant. To address this, many modern implementations adopt strategies such as lazy DFA construction or hybrid evaluation models that balance determinism with scalability.
+One practical consideration in DFA-based matching is the potential growth of the automaton during the compilation phase. In the worst case, the number of DFA states can grow exponentially with respect to the size of the regular expression, particularly for patterns involving complex nesting or alternation. While this does not affect runtime performance during matching — which remains linear with respect to the size of the input — the memory and time costs of building the DFA can be significant. To address this, many modern implementations adopt strategies such as lazy DFA construction or hybrid evaluation models that balance determinism with scalability.
 
 
 %A DFA-based matcher is driven by the input text rather than by the pattern. After compiling the pattern into a deterministic automaton, the engine scans the input once, advancing a single current state per character with no need to branch or revisit earlier positions. Intuitively, each DFA state encodes all viable continuations of the match; this removes the need for backtracking and yields predictable, linear-time behavior in the length of the input. In search mode, DFA-style engines are typically implemented to report the leftmost match, and many implementations further return the leftmost-longest match by continuing to advance while remembering the last accepting position. Because the traversal is deterministic, there is no notion of “trying one alternative before another”: the match policy is fixed by the automaton, not by the syntactic order of subexpressions.
@@ -112,7 +114,7 @@ One practical consideration in DFA-based matching is the potential growth of the
 \subsection{Hybrid}
 Hybrid engines try to take the best of both worlds in both NFAs and DFAs. They perform a depth-first search through the space of matches. At each point of nondeterminism—due to alternation, optional constructs, or unbounded quantifiers — they choose one option to continue and save the others as choice points on an internal stack. If a later step fails, the engine pops a choice point and resumes from there. This approach yields intuitive behavior and supports rich features, including capturing groups, backreferences, and look-around. However, in the presence of ambiguous subpatterns under repetition, the number of explored paths can grow exponentially, making these engines particularly susceptible to ReDoS.
 
-Spencer’s classic backtracking implementation is perhaps the best known and most used, embodying closely the architecture described above. Conceptually, its state comprises the current regex node, the current input index, and a stack of saved alternatives. Consider the pattern \texttt{(a|aa)+\$} against the input \texttt{aaaa\ldots a} without a trailing \texttt{b}. The matcher repeatedly chooses the left alternative \texttt{a}, consuming a single character while saving a choice point for the \texttt{aa} branch at each iteration. At the end of input it fails to satisfy the end anchor, so it begins to backtrack, popping choice points and trying to repartition the run of \texttt{a}s using \texttt{aa} segments. The number of such partitions grows exponentially with the length of the input, and the engine must examine many of them before determining there is no match. This example illustrates how overlapping alternatives inside a quantifier, combined with a terminal failure, can lead directly to catastrophic backtracking.
+Spencer’s classic backtracking implementation is perhaps the best known and most used, embodying closely the architecture described above. Conceptually, its state comprises the current regex node, the current input index, and a stack of saved alternatives. Consider the pattern \texttt{(a|aa)+b\$} against the input \texttt{aaaa\ldots a} without a trailing \texttt{b}. The matcher repeatedly chooses the left alternative \texttt{a}, consuming a single character while saving a choice point for the \texttt{aa} branch at each iteration. At the end of input it fails to satisfy the end anchor, so it begins to backtrack, popping choice points and trying to repartition the run of \texttt{a}s using \texttt{aa} segments. The number of such partitions grows exponentially with the length of the input, and the engine must examine many of them before determining there is no match. This example illustrates how overlapping alternatives inside a quantifier, combined with a terminal failure, can lead directly to catastrophic backtracking.
 %Great examples of this engine being used widely are the tools GNU egrep and awk.
 The tools GNU egrep and awk use a hybrid approach for this.
 
@@ -121,9 +123,11 @@ Modern regular expression engines vary widely in their design goals, trade-offs,
 
 
 \subsection{RE2}
-RE2 is a regular expression engine developed by Russ Cox at Google, designed to provide predictable performance and strong safety guarantees. Unlike backtracking engines, RE2 avoids features that lead to exponential-time behavior, such as backreferences and arbitrary lookbehinds. By restricting itself to regular languages, RE2 ensures that all matches can be performed in linear time. \cite{russ_cox_regexp3}
+RE2 is a regular expression engine developed by Russ Cox at Google, designed to provide predictable performance and strong safety guarantees. Unlike backtracking engines, RE2 avoids features that lead to exponential-time behavior, such as backreferences and arbitrary lookbehinds. 
+By restricting itself to regular languages, RE2 ensures that all matches can be performed in linear time. \cite{russ_cox_regexp3}
+However, being restricted to regular languages is not enough. It is also good practice to use DFAs or NFAs accordingly, instead of resorting to backtracking.
 
-The engine compiles patterns into automata using a combination of DFA and NFA techniques. For simple match queries, RE2 prefers deterministic finite automata (DFA) for their speed and predictability. When submatch extraction is needed, it may fall back to an NFA simulation, provided the regex satisfies certain properties (e.g., being one-pass). \cite{russ_cox_regexp3}
+The engine compiles patterns into automata using a combination of DFA and NFA techniques. For simple match queries, RE2 prefers deterministic finite automata (DFA) for their speed and predictability. When submatch extraction (identifying not just whether a string matches a regular expression, but also which specific substrings of the input match particular subexpressions) is needed, it may fall back to an NFA simulation, provided the regex satisfies certain properties (e.g., being one-pass). \cite{russ_cox_regexp3}
 
 By trading off advanced features like backreferences for performance and safety, RE2 provides a robust alternative to PCRE-style engines, especially in environments where worst-case behavior must be avoided.
 
@@ -164,7 +168,7 @@ REVEALER was evaluated on over 29,000 Java regexes and successfully identified a
 \subsection{ReScue}
 %ReScue is a technique for detecting ReDoS vulnerabilities in modern regex engines. Unlike traditional static or black-box fuzzing approaches, ReScue leverages the structure of extended nondeterministic finite automata used internally by engines such as Java’s \texttt{java.util.regex}. The tool operates in three stages: a seeding phase that uses a genetic algorithm to generate diverse input strings covering as many e-NFA states as possible; an incubating phase that evolves those seeds toward strings with high cost-effectiveness (i.e., many matching steps per character); and a pumping phase that trims and expands the most promising strings to maximize backtracking behavior. This combination allows ReScue to discover complex vulnerabilities hidden in deep, non-regular constructs such as lookarounds and backreferences.
 
-ReScue is a technique for detecting ReDoS vulnerabilities in modern regex engines. It can generate special input strings that, when submitted as an input to a pre-defined regex engine, will lead to ReDoS. To do this, it starts by exploring the regex engine's behaviors under various inputs, which is called the \textit{seeding phase}. These inputs are selected and evaluated on how many of the e-NFA states they reach, regardless of the time it takes to reach them. After that, it will use the selected strings from the seeding phase and apply "mutations" to them, this phase is called the \textit{incubating phase}. Lastly, the \textit{pumping phase} will enhance the strings by finding which parts of the string take the longest to process, and copy and paste them one after the other. Parallel to this, it will also trim unnecessary parts of the string in order to retain the attack core (the minimal input responsible for the performance hit). \cite{rescue_paper}
+ReScue is a technique for detecting ReDoS vulnerabilities in modern regex engines. It can generate special input strings that, when submitted as an input to a pre-defined regex engine, will lead to ReDoS. To do this, it starts by exploring the regex engine's behaviors under various inputs, which is called the \textit{seeding phase}. These inputs are selected and evaluated on how many of the $\varepsilon$-NFA states they reach, regardless of the time it takes to reach them. After that, it will use the selected strings from the seeding phase and apply "mutations" to them, this phase is called the \textit{incubating phase}. Lastly, the \textit{pumping phase} will enhance the strings by finding which parts of the string take the longest to process, and copy and paste them one after the other. Parallel to this, it will also trim unnecessary parts of the string in order to retain the attack core (the minimal input responsible for the performance hit). \cite{rescue_paper}
 
 ReScue was evaluated on 29088 real-world regexes and outperformed prior tools including RXXR2, Rexploiter, and SlowFuzz, finding 49\% more exploitable inputs and uncovering ten previously unknown vulnerabilities in popular open-source projects \cite{rescue_paper}.
 

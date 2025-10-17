@@ -1,0 +1,42 @@
+
+
+% \prefacesection{Abstract}
+
+% A long, long time ago... 
+
+% This section should summarize the content of the dissertation, namely: explain the context of problem, describe the problem itself and address the work done to mitigate/solve the problem. Results and/or contributions should be mentioned.
+
+% \prefacesection{Resumo}
+% Há muito, muito tempo
+
+% See the Abstract.
+% Test for real
+% Test
+
+% \prefacesection{Agradecimentos}
+
+% Obrigado a todos, obrigado \ldots
+
+\prefacesection{Acknowledgements}
+First and foremost, I want to thank professors Nelma Moreira and Rogério Reis, who have assisted me this last year. Their help, guidance, willingness and friendliness were fundamental for this work and me.
+Thankfulness will never be enough to describe what I feel for my friends and family, who have helped me carry my woes and solaces along this journey. I am especially grateful to my mom and dad for taking care of me.
+Lastly, I would also like to thank my work colleagues, who have been very thoughtful and patient with me along the way. 
+
+\prefacesection{Abstract}
+%Regular expressions (\emph{regex}) formalize a class of patterns definable over strings, corresponding to the family of regular languages in automata theory. They provide a declarative mechanism for specifying sets of strings, making them central both to theoretical models of computation and to practical applications such as string matching, input validation, and text parsing. Despite their utility, improperly constructed regular expressions can introduce serious security vulnerabilities. One of the most critical threats is the \ac{ReDoS} attack, in which carefully crafted inputs cause the regex engine to perform excessive and redundant processing. This results in dramatic slowdowns or even complete unresponsiveness of the system. \ac{ReDoS} poses a significant risk to web applications, APIs, and other input-facing systems, where user-controlled input is matched against vulnerable patterns.
+\noindent Regular expressions (\emph{regex}) formalize a class of patterns definable over strings, corresponding to the family of regular languages in automata theory. They provide a declarative mechanism for specifying sets of strings, making them central both to theoretical models of computation and to practical applications such as string matching, input validation, and text parsing. Despite their utility, certain implementations of regular expression engines (particularly those based on backtracking) can introduce serious security vulnerabilities when combined with specific patterns. One of the most critical threats is the \ac{ReDoS} attack, in which carefully crafted inputs cause the regex engine to perform excessive and redundant processing. This results in dramatic slowdowns or even complete unresponsiveness of the system. \ac{ReDoS} poses a significant risk to web applications, APIs, and other input-facing systems, where user-controlled input is matched against vulnerable patterns.
+
+\noindent In this work, bounded quantifiers (counting) were implemented in \textit{FAdo}. With this, we also propose a system to address \ac{ReDoS} by transforming regular expressions into a modified position automaton, a \ac{NFA} that tracks the exact start and end positions of all matches within an input string. This structure enables a matching function that computes all match positions, including overlapping ones, without relying on backtracking. By exhaustively and efficiently exploring the automaton's transitions, our approach avoids the exponential blowup typical of vulnerable engines, while preserving a somewhat full regex expressiveness.
+
+\noindent We also review existing solutions present in state-of-the-art programming languages and libraries, such as \emph{RE\#} \cite{resharp_tool_paper} and \emph{Hyperscan} \cite{hyperscan_paper}.
+
+\textbf{Keywords:} regular expressions, ReDoS, position automata, nondeterministic finite automata, pattern matching.
+
+\prefacesection{Resumo}
+\noindent As expressões regulares (\emph{regex}) formalizam uma classe de padrões definíveis sobre cadeias de caracteres, correspondendo à família das linguagens regulares na teoria dos autómatos. Fornecem um mecanismo declarativo para especificar conjuntos de cadeias, sendo, por isso, centrais tanto para modelos teóricos de computação como para aplicações práticas, tais como procura de padrões, validação de dados e análise de texto. Apesar da sua utilidade, certas implementações de motores de expressões regulares (particularmente aqueles baseados em \textit{backtracking}) podem introduzir vulnerabilidades de segurança graves quando utilizam padrões específicos. Uma das ameaças mais críticas é o ataque \ac{ReDoS}, onde certas entradas levam o motor de regex a realizar processamento excessivo e redundante. Isto resulta em lentidões significativas ou mesmo na completa inoperacionalidade do sistema. O \ac{ReDoS} representa um risco significativo para aplicações web, APIs e outros sistemas voltados para entrada de dados, onde a entrada controlada pelo utilizador é comparada com padrões vulneráveis.
+
+\noindent Neste trabalho, foram implementados quantificadores limitados (contagem) no \textit{FAdo}. Com isto, propomos também um sistema para mitigar o \ac{ReDoS}, ao transformar expressões regulares num autómato de posições modificado --- um \ac{NFA} que regista exatamente as posições de início e fim de todas as ocorrências dentro de uma cadeia de entrada. Esta estrutura permite que uma função de \textit{matching} calcule todas as posições de ocorrência, incluindo as sobrepostas, sem recorrer a \textit{backtracking}. Ao explorar de forma exaustiva e eficiente as transições do autómato, a nossa abordagem evita a explosão exponencial típica de motores vulneráveis, mantendo, ao mesmo tempo, uma expressividade relativamente completa das expressões regulares.
+
+\noindent Analisamos também soluções existentes em linguagens e bibliotecas de programação de ponta, como o \emph{RE\#} \cite{resharp_tool_paper} e o \emph{Hyperscan} \cite{hyperscan_paper}.
+
+\textbf{Palavras-chave:} expressões regulares, ReDoS, autómatos de posições, autómatos finitos não deterministas, correspondência de padrões.

@@ -41,6 +41,7 @@
 \usepackage{algpseudocode}
 \usepackage{amsthm}
 \usepackage{amsmath}
+\usepackage[final]{pdfpages}
 
 \usepackage{tikz}
 \usetikzlibrary{automata,positioning}
@@ -84,7 +85,7 @@ pdfpagelabels=false
 
 \begin{document}
 
-\title{Título da Tese}
+\title{Efficient Regular Pattern Matching avoiding Denial of Service}
 \submitionplace{Tese submetida à Faculdade de Ciências da \\
   Universidade do Porto para obtenção do grau de Mestre \\ 
   em Ciência de Computadores}
@@ -93,16 +94,16 @@ pdfpagelabels=false
   Ciências da Universidade do Porto}
 \submitdate{Setembro 2025}
 
-%\includepdf[pages=1]{FrontPage-MSc.pdf}
-%\cleardoublepage
-%\includepdf[pages=2]{FrontPage-MSc.pdf}
-%\cleardoublepage
+\includepdf[pages=1]{cover/new-main.pdf}
+\cleardoublepage
+\includepdf[pages=3]{cover/new-main.pdf}
+\cleardoublepage
+
+\dedicationpage{Dedicado aos meus pais}
 
 \beforepreface%
 
-\include{abs}
-
-\dedicationpage{Dedico a \ldots mim}
+\include{chapters/abstract/abs}
 
 % end of thesis preamble
 \afterpreface%

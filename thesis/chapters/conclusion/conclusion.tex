@@ -1,8 +1,8 @@
 \chapter{Conclusion}
-In this work, we introduced a new approach to address the problem of \ac{ReDoS}, focusing on a solution outside of traditional backtracking engines.
+In this work, we contribute with a new approach to address the problem of \ac{ReDoS}, focusing on a solution outside of traditional backtracking engines.
 We explored the underlying causes of ReDoS vulnerabilities, particularly how certain finite automaton evaluators can lead to catastrophic performance, due to the deviation of the path of theory. To tackle this, we extended \textit{FAdo} to support fixed and bounded repetition operators. To recognize this new grammar, the default Lark grammar present in \textit{FAdo} was modified. The new type of automaton is capable of performing multiple overlapping matching.
 Overall, this work contributes towards safer and more predictable regular expression evaluation by combining formal methods and a new matching strategy.
 
-Future work may turn towards making these algorithms more efficient or integrating them into a larger ecosystem.
+Future work may turn towards making these algorithms more efficient by switching to a different language or integrating them into a larger ecosystem. It would also be very interesting to develop a tool that generates overlapped text datasets
 
 %With this, a new type of automaton was implemented and used to perform multiple overlapping matching.
