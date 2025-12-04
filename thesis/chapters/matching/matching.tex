@@ -200,7 +200,9 @@ For instance, let $r = a^{2,4}$. This expression can be built using Brzozowski's
 	\caption{DFA resulting from Brzozowski's derivatives construction for the expression $r=a^{2,4}$.}
 \end{figure}
 %Having an input text such as $w = aaa$, we should be able to match 3 distinct patterns using multiple matching. Trying with the DFA:
-For single matching, a typical matcher should be able to match in $O(n)$ using this DFA, where $n$ is the length of the input string. However, this DFA does not allow for overlapped matching. The matcher would need to be restarted after each starting position, leading to a running time complexity of $O(n^2)$.
+For single matching, a typical matcher should be able to match in $O(n)$ using this DFA, where $n$ is the length of the input string.
+%However, this DFA does not allow for overlapped matching.
+The matcher would need to be restarted after each starting position, leading to a running time complexity of $O(n^2)$.
 So, in order to perform overlapped matching in linear time, the automaton must be constructed using a modified position automaton construction.
 %This means that we can't track the positions for each match, nor can we continually input text into the automaton.
 %In order to track the position for each match, the position automaton construction must be modified. 
@@ -511,7 +513,7 @@ Having the regular expression $a^{1,50}$, for instance. Figure~\ref{fig:shortene
 	\label{fig:shortened_large_automaton}
 \end{figure}
 
-Any automatons constructed for a regular expression that are constituted by a singe bounded repetition operator such as $a^{n,m}$ will have $\sum_{n=1}^{m-1} n + 2$ states. Therefore, the automaton for the expression $a^{1,50}$ contains 1227 states.
+Any automaton constructed for a regular expression that are constituted by a singe bounded repetition operator such as $a^{n,m}$ will have $\sum_{n=1}^{m-1} n + 2$ states. Therefore, the automaton for the expression $a^{1,50}$ contains 1227 states.
 
 It is important to note that bounded repetitions are the worst case scenario for this construction. This blow up does not usually happen with the other operators.
 

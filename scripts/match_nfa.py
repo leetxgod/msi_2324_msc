@@ -1,5 +1,6 @@
 from new_nfa import *
 from termcolor import colored, cprint
+import io
 
 class CPlus(Unary):
     def __str__(self):
@@ -184,18 +185,41 @@ class matchNFA(NFA):
         return (final_positions_table)
 
 
-    def enum_matches(self, pos_tab: dict, string: str, ignore_matches: bool = False):
+    def enum_matches(self, pos_tab: dict, string: str, ignore_matches: bool = False, file: io.IOBase = None, before_lim: int = -1, after_lim: int = -1):
         match_count = 0
         for entry in pos_tab:
+            if file is not None:
+                file.write(f"State {entry} matches ({len(set(pos_tab[entry]))}):")
             if not ignore_matches:
                 print(f"State {entry} matches ({len(set(pos_tab[entry]))}):")
+            
             match_set = set(pos_tab[entry])
             match_count += len(match_set)
             for match in sorted(match_set):
-                first_index = string[0:match[0]]
-                second_index = string[match[1]:]
+                msi = match[0]
+                mei = match[1]
+
+                if before_lim != -1:
+                    if (msi - before_lim) < 0:
+                        msi = 0
+                    else:
+                        msi -= before_lim
+                
+                if after_lim != -1:
+                    if (mei - after_lim) > len(string):
+                        mei = len(string)
+                    else:
+                        mei += after_lim
+
+                first_index = string[msi:match[0]].replace('\n', '\\n').replace("\r", "\\r")
+                second_index = string[match[1]:mei].replace('\n', '\\n').replace("\r", "\\r")
+
+                # print(msi, match[0], match[1], mei)
+
                 if not ignore_matches:
                     print("Match:", colored(first_index, 'red') + colored(string[match[0]:match[1]], 'green') + colored(second_index, 'red'), "=>", match)
+                if file is not None:
+                    file.write(f"Match: {colored(first_index, 'red')} {colored(string[match[0]:match[1]], 'green')} {colored(second_index, 'red')} => {match}")
         print("Total matches:", match_count)
                     
 def nfaPosCount(self: RegExp):

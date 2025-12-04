@@ -1,8 +1,12 @@
 \chapter{Conclusion}
 In this work, we contribute with a new approach to address the problem of \ac{ReDoS}, focusing on a solution outside of traditional backtracking engines.
-We explored the underlying causes of ReDoS vulnerabilities, particularly how certain finite automaton evaluators can lead to catastrophic performance, due to the deviation of the path of theory. To tackle this, we extended \textit{FAdo} to support fixed and bounded repetition operators. To recognize this new grammar, the default Lark grammar present in \textit{FAdo} was modified. The new type of automaton is capable of performing multiple overlapping matching.
-Overall, this work contributes towards safer and more predictable regular expression evaluation by combining formal methods and a new matching strategy.
+We explored the underlying causes of ReDoS vulnerabilities, particularly how certain finite automaton evaluators can lead to catastrophic performance, due to the deviation of the path of theory. To tackle this, we extended \textit{FAdo} to support fixed and bounded repetition operators. To recognize this new grammar, the default Lark grammar present in \textit{FAdo} was modified. The new type of automaton is capable of performing multiple overlapping matching. In security analysis, for instance, this means that one can find all possible malicious substrings in payloads (e.g., nested injection markers), because attack signatures can overlap and/or nest. Another example is the efficient search for DNA protein patterns, where biological sequences often contain repeating and/or nested patterns.
 
-Future work may turn towards making these algorithms more efficient by switching to a different language or integrating them into a larger ecosystem. It would also be very interesting to develop a tool that generates overlapped text datasets
+Most of the examples (regular expression pattern datasets) we found for this work did not include overlapping. The only way to do so (that we know of, currently implemented in state-of-the-art languages) is using \texttt{lookahead} assertions, and even this strategy does not work well, since they are expensive and hard to read. As a result, limited validation data exists for evaluating overlapping matchers, which makes empirical comparison with other state-of-the-art techniques challenging.
+
+Anyhow, this work contributes towards safer and more predictable regular expression evaluation by combining formal methods and a new matching strategy.
+
+Future work may turn towards making these algorithms more efficient by switching to a different language or integrating them into a larger ecosystem.
+It would also be valuable to develop tools capable of automatically generating text datasets with overlapping patterns for benchmarking and evaluation.
 
 %With this, a new type of automaton was implemented and used to perform multiple overlapping matching.
